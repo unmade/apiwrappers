@@ -1,0 +1,16 @@
+*.egg-info
+pip-wheel-metadata
+dist
+
+.tox
+.venv
+
+__pycache__
+.cache
+.pytest_cache
+.mypy_cache
+
+.coverage
+coverage.*
+
+test-reports

@@ -1,0 +1,15 @@
+[paths]
+source =
+   src
+
+[run]
+branch = true
+source =
+    apiwrappers
+    tests
+parallel = true
+
+[report]
+precision = 2
+fail_under = 100
+show_missing = true
