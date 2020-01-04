@@ -339,7 +339,7 @@ function-naming-style=snake_case
 #function-rgx=
 
 # Good variable names which should always be accepted, separated by a comma.
-good-names=
+good-names=T,
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no
@@ -487,7 +487,7 @@ max-returns=6
 max-statements=30
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=2
+min-public-methods=0
 
 
 [EXCEPTIONS]
