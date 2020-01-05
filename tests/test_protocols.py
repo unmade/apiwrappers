@@ -1,7 +1,8 @@
 # pylint: disable=no-self-use,unused-argument
 
-import asyncio
 from typing import Union
+
+import pytest
 
 from apiwrappers import AsyncDriver, AsyncResponse, Driver, Method, Request, Response
 
@@ -17,9 +18,6 @@ class DriverMock:
         return Response(
             status_code=200,
             url="https://example.com/foos",
-            headers={},
-            cookies={},
-            encoding="utf-8",
             content=b"Hello, World!",
             text=text,
             json=json,
@@ -37,9 +35,6 @@ class AsyncDriverMock:
         return AsyncResponse(
             status_code=200,
             url="https://example.com/foos",
-            headers={},
-            cookies={},
-            encoding="utf-8",
             content=b"Hello, World!",
             text=text,
             json=json,
@@ -65,10 +60,11 @@ def test_driver_protocol():
     assert response.json() == "Hello, World!"
 
 
-def test_async_driver_protocol():
+@pytest.mark.asyncio
+async def test_async_driver_protocol():
     driver = AsyncDriverMock()
     wrapper = APIWrapper("https://example.com", driver=driver)
-    response = asyncio.run(wrapper.list_foo())
+    response = await wrapper.list_foo()
     assert response.status_code == 200
-    assert asyncio.run(response.text()) == "Hello, World!"
-    assert asyncio.run(response.json()) == "Hello, World!"
+    assert await response.text() == "Hello, World!"
+    assert await response.json() == "Hello, World!"
