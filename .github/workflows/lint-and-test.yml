@@ -59,11 +59,17 @@ jobs:
     - name: Test
       run: |
         tox -e py
+        tox -e py-aiohttp
+        tox -e py-requests
+
+    - name: Generate coverage report
+      run: |
+        tox -e coverage
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./test-reports/coverage-py.xml
+          file: ./test-reports/coverage.xml
           flags: unittests
           fail_ci_if_error: true
