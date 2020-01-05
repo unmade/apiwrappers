@@ -1,6 +1,7 @@
 [paths]
 source =
    src
+   .tox/py*/site-packages
 
 [run]
 branch = true
