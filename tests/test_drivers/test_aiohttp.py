@@ -4,8 +4,9 @@ import uuid
 
 import pytest
 
-from apiwrappers import Method, Request
 from apiwrappers.structures import CaseInsensitiveDict
+
+from .wrappers import APIWrapper
 
 pytestmark = [pytest.mark.aiohttp, pytest.mark.asyncio]
 
@@ -17,39 +18,43 @@ async def driver():
     return AioHttpDriver()
 
 
-async def test_fetch(aresponses, driver):
-    body = '{"code": 200, "message": "ok"}'
+async def test_get_text(aresponses, driver):
+    aresponses.add(
+        "example.com", "/", "GET", "Hello, World!",
+    )
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.get_hello_world()
+    assert response.status_code == 200
+    assert await response.text() == "Hello, World!"
+
+
+async def test_get_json(aresponses, driver):
     aresponses.add(
         "example.com",
-        "/users",
-        "POST",
-        aresponses.Response(body=body, content_type="application/json"),
+        "/",
+        "GET",
+        aresponses.Response(
+            body=b'{"message": "Hello, World!"}', content_type="application/json"
+        ),
     )
-    request = Request(
-        Method.POST, "https://example.com", "/users", json={"foo": "bar"},
-    )
-    response = await driver.fetch(request)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.get_hello_world()
     assert response.status_code == 200
-    assert await response.json() == {"code": 200, "message": "ok"}
-    assert await response.text() == body
+    assert await response.json() == {"message": "Hello, World!"}
 
 
 async def test_headers(aresponses, driver):
-    def set_header(request):
+    def echo_headers(request):
         return aresponses.Response(
             status=200,
             headers={"X-Response-ID": request.headers["X-Request-ID"]},
             body=b'{"code": 200, "message": "ok"}',
         )
 
-    aresponses.add("example.com", "/", "POST", set_header)
+    aresponses.add("example.com", "/", "POST", echo_headers)
 
-    request = Request(
-        Method.POST,
-        "https://example.com",
-        "/",
-        headers={"X-Request-ID": str(uuid.uuid4())},
-    )
-    response = await driver.fetch(request)
+    headers = {"X-Request-ID": str(uuid.uuid4())}
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.echo_headers(headers)
     assert isinstance(response.headers, CaseInsensitiveDict)
-    assert response.headers["X-Response-ID"] == request.headers["X-Request-ID"]
+    assert response.headers["X-Response-ID"] == headers["X-Request-ID"]
