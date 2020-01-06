@@ -1,12 +1,17 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
 import uuid
+from typing import TYPE_CHECKING
 
 import pytest
 
 from apiwrappers.structures import CaseInsensitiveDict
 
 from .wrappers import APIWrapper
+
+if TYPE_CHECKING:
+    from apiwrappers.drivers.aiohttp import AioHttpDriver
+
 
 pytestmark = [pytest.mark.aiohttp, pytest.mark.asyncio]
 
@@ -18,7 +23,7 @@ async def driver():
     return AioHttpDriver()
 
 
-async def test_get_text(aresponses, driver):
+async def test_get_text(aresponses, driver: "AioHttpDriver"):
     aresponses.add(
         "example.com", "/", "GET", "Hello, World!",
     )
@@ -28,7 +33,7 @@ async def test_get_text(aresponses, driver):
     assert await response.text() == "Hello, World!"
 
 
-async def test_get_json(aresponses, driver):
+async def test_get_json(aresponses, driver: "AioHttpDriver"):
     aresponses.add(
         "example.com",
         "/",
@@ -43,7 +48,7 @@ async def test_get_json(aresponses, driver):
     assert await response.json() == {"message": "Hello, World!"}
 
 
-async def test_headers(aresponses, driver):
+async def test_headers(aresponses, driver: "AioHttpDriver"):
     def echo_headers(request):
         return aresponses.Response(
             status=200,

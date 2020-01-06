@@ -1,12 +1,16 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
 import uuid
+from typing import TYPE_CHECKING
 
 import pytest
 
 from apiwrappers.structures import CaseInsensitiveDict
 
 from .wrappers import APIWrapper
+
+if TYPE_CHECKING:
+    from apiwrappers.drivers.requests import RequestsDriver
 
 pytestmark = [pytest.mark.requests]
 
@@ -26,7 +30,7 @@ def driver():
     return RequestsDriver()
 
 
-def test_get_text(responses, driver):
+def test_get_text(responses, driver: "RequestsDriver"):
     responses.add(
         "GET", "https://example.com/", body="Hello, World!",
     )
@@ -36,7 +40,7 @@ def test_get_text(responses, driver):
     assert response.text() == "Hello, World!"
 
 
-def test_get_json(responses, driver):
+def test_get_json(responses, driver: "RequestsDriver"):
     responses.add(
         "GET", "https://example.com/", json={"message": "Hello, World!"},
     )
@@ -46,13 +50,13 @@ def test_get_json(responses, driver):
     assert response.json() == {"message": "Hello, World!"}
 
 
-def test_headers(responses, driver):
-    def request_callback(request):
+def test_headers(responses, driver: "RequestsDriver"):
+    def echo_headers(request):
         headers = {"X-Response-ID": request.headers["x-request-id"]}
         return (200, headers, '{"code": 200, "message": "ok"}')
 
     responses.add_callback(
-        responses.POST, "https://example.com", callback=request_callback,
+        responses.POST, "https://example.com", callback=echo_headers,
     )
 
     wrapper = APIWrapper("https://example.com", driver=driver)
