@@ -61,6 +61,9 @@ confidence=
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
 disable=missing-docstring,
+        duplicate-code,
+        no-member,  # rely on mypy, pylint can't recognize methods
+                    # when subclassing from typing.MutableMapping, etc...
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -339,7 +342,8 @@ function-naming-style=snake_case
 #function-rgx=
 
 # Good variable names which should always be accepted, separated by a comma.
-good-names=T,
+good-names=i,
+           T,
            pytestmark,
 
 # Include a hint for the correct naming format with invalid-name.

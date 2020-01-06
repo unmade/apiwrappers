@@ -2,6 +2,7 @@ import requests
 
 from apiwrappers import utils
 from apiwrappers.entities import Request, Response
+from apiwrappers.structures import CaseInsensitiveDict
 
 
 class RequestsDriver:
@@ -9,6 +10,7 @@ class RequestsDriver:
         response = requests.request(
             request.method.value,
             utils.build_url(request.host, request.path),
+            headers=request.headers,
             data=request.data,
             json=request.json,
             timeout=request.timeout,
@@ -21,6 +23,7 @@ class RequestsDriver:
         return Response(
             status_code=int(response.status_code),
             url=response.url,
+            headers=CaseInsensitiveDict(response.headers),
             content=response.content,
             text=text,
             json=response.json,
