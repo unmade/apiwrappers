@@ -5,6 +5,7 @@ from typing import Union
 import pytest
 
 from apiwrappers import AsyncDriver, AsyncResponse, Driver, Method, Request, Response
+from apiwrappers.structures import CaseInsensitiveDict
 
 
 class DriverMock:
@@ -18,6 +19,7 @@ class DriverMock:
         return Response(
             status_code=200,
             url="https://example.com/foos",
+            headers=CaseInsensitiveDict(),
             content=b"Hello, World!",
             text=text,
             json=json,
@@ -35,6 +37,7 @@ class AsyncDriverMock:
         return AsyncResponse(
             status_code=200,
             url="https://example.com/foos",
+            headers=CaseInsensitiveDict(),
             content=b"Hello, World!",
             text=text,
             json=json,
