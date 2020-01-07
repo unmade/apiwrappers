@@ -1,6 +1,7 @@
 from typing import Awaitable, Dict, Generic, TypeVar, Union, overload
 
 from apiwrappers import AsyncDriver, AsyncResponse, Driver, Method, Request, Response
+from apiwrappers.entities import QueryParams
 
 DT = TypeVar("DT", Driver, AsyncDriver)
 
@@ -26,4 +27,12 @@ class APIWrapper(Generic[DT]):
 
     @overload
     def echo_headers(self: APIWrapper[AsyncDriver], headers: Dict[str, str]) -> Awaitable[AsyncResponse]:
+        ...
+
+    @overload
+    def echo_query_params(self: APIWrapper[Driver], query_params: QueryParams) -> Response:
+        ...
+
+    @overload
+    def echo_query_params(self: APIWrapper[AsyncDriver], query_params: QueryParams) -> Awaitable[AsyncResponse]:
         ...

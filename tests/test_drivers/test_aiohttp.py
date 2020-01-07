@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from apiwrappers.entities import QueryParams
 from apiwrappers.structures import CaseInsensitiveDict
 
 from .wrappers import APIWrapper
@@ -63,3 +64,18 @@ async def test_headers(aresponses, driver: "AioHttpDriver"):
     response = await wrapper.echo_headers(headers)
     assert isinstance(response.headers, CaseInsensitiveDict)
     assert response.headers["X-Response-ID"] == headers["X-Request-ID"]
+
+
+async def test_query_params(aresponses, driver: "AioHttpDriver"):
+    def echo_url_path(request):
+        return aresponses.Response(
+            status=200, body=f"{request.url.path}?{request.url.query_string}",
+        )
+
+    query_params: QueryParams = {"type": "user", "id": ["1", "2"], "name": None}
+    path = "/?type=user&id=1&id=2"
+    aresponses.add("example.com", path, "GET", echo_url_path, match_querystring=True)
+
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.echo_query_params(query_params)
+    assert await response.text() == path

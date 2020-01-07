@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from apiwrappers.entities import QueryParams
 from apiwrappers.structures import CaseInsensitiveDict
 
 from .wrappers import APIWrapper
@@ -64,3 +65,16 @@ def test_headers(responses, driver: "RequestsDriver"):
     response = wrapper.echo_headers(headers=headers)
     assert isinstance(response.headers, CaseInsensitiveDict)
     assert response.headers["X-Response-ID"] == headers["X-Request-ID"]
+
+
+def test_query_params(responses, driver: "RequestsDriver"):
+    def echo_url_path(request):
+        return (200, {}, request.path_url)
+
+    query_params: QueryParams = {"type": "user", "id": ["1", "2"], "name": None}
+    path = "/?type=user&id=1&id=2"
+    responses.add_callback("GET", f"https://example.com{path}", callback=echo_url_path)
+
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = wrapper.echo_query_params(query_params)
+    assert response.text() == path
