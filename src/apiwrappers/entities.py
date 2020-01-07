@@ -2,11 +2,22 @@
 
 import enum
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Dict, List, Mapping, Optional, Union
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Union,
+)
 
 from apiwrappers.structures import CaseInsensitiveDict
 
 JSON = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
+QueryParams = Mapping[str, Optional[Iterable[str]]]
 
 
 class Method(enum.Enum):
@@ -24,8 +35,9 @@ class Request:
     host: str
     path: str
     headers: Dict[str, str] = field(default_factory=dict)
+    query_params: QueryParams = field(default_factory=dict)
     data: Optional[Union[Dict[str, str], bytes]] = None
-    json: Optional[Union[dict, List[dict]]] = None
+    json: Optional[JSON] = None
     verify_ssl: bool = True
     timeout: float = 1  # in seconds
 

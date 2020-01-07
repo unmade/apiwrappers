@@ -11,6 +11,7 @@ class RequestsDriver:
             request.method.value,
             utils.build_url(request.host, request.path),
             headers=request.headers,
+            params=request.query_params,
             data=request.data,
             json=request.json,
             timeout=request.timeout,
