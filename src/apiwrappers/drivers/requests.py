@@ -1,3 +1,5 @@
+from http.cookies import SimpleCookie
+
 import requests
 
 from apiwrappers import utils
@@ -10,8 +12,9 @@ class RequestsDriver:
         response = requests.request(
             request.method.value,
             utils.build_url(request.host, request.path),
-            headers=request.headers,
             params=request.query_params,
+            headers=request.headers,
+            cookies=request.cookies,
             data=request.data,
             json=request.json,
             timeout=request.timeout,
@@ -25,6 +28,7 @@ class RequestsDriver:
             status_code=int(response.status_code),
             url=response.url,
             headers=CaseInsensitiveDict(response.headers),
+            cookies=SimpleCookie(response.cookies),
             content=response.content,
             text=text,
             json=response.json,

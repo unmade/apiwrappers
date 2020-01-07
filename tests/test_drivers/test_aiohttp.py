@@ -1,6 +1,7 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
 import uuid
+from http.cookies import SimpleCookie
 from typing import TYPE_CHECKING
 
 import pytest
@@ -79,3 +80,18 @@ async def test_query_params(aresponses, driver: "AioHttpDriver"):
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.echo_query_params(query_params)
     assert await response.text() == path
+
+
+async def test_cookies(aresponses, driver: "AioHttpDriver"):
+    def echo_cookies(request):
+        return aresponses.Response(
+            status=200, headers={"Set-Cookie": request.headers["Cookie"]}
+        )
+
+    aresponses.add("example.com", "/", "GET", echo_cookies)
+
+    cookies = {"csrftoken": "YWxhZGRpbjpvcGVuc2VzYW1l"}
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.echo_cookies(cookies)
+    assert isinstance(response.cookies, SimpleCookie)
+    assert response.cookies["csrftoken"].value == cookies["csrftoken"]

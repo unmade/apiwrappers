@@ -2,6 +2,7 @@
 
 import enum
 from dataclasses import dataclass, field
+from http.cookies import SimpleCookie
 from typing import (
     Any,
     Awaitable,
@@ -34,8 +35,9 @@ class Request:
     method: Method
     host: str
     path: str
-    headers: Dict[str, str] = field(default_factory=dict)
     query_params: QueryParams = field(default_factory=dict)
+    headers: Mapping[str, str] = field(default_factory=dict)
+    cookies: Mapping[str, str] = field(default_factory=dict)
     data: Optional[Union[Dict[str, str], bytes]] = None
     json: Optional[JSON] = None
     verify_ssl: bool = True
@@ -51,6 +53,7 @@ class Response:
     status_code: int
     url: str
     headers: CaseInsensitiveDict[str]
+    cookies: SimpleCookie
     content: bytes
     text: Callable[..., str]
     json: Callable[..., JSON]
@@ -61,6 +64,7 @@ class AsyncResponse:
     status_code: int
     url: str
     headers: CaseInsensitiveDict[str]
+    cookies: SimpleCookie
     content: bytes
     text: Callable[..., Awaitable[str]]
     json: Callable[..., Awaitable[JSON]]

@@ -1,4 +1,4 @@
-from typing import Awaitable, Dict, Generic, TypeVar, Union, overload
+from typing import Awaitable, Dict, Generic, Mapping, TypeVar, Union, overload
 
 from apiwrappers import AsyncDriver, AsyncResponse, Driver, Method, Request, Response
 from apiwrappers.entities import QueryParams
@@ -35,4 +35,12 @@ class APIWrapper(Generic[DT]):
 
     @overload
     def echo_query_params(self: APIWrapper[AsyncDriver], query_params: QueryParams) -> Awaitable[AsyncResponse]:
+        ...
+
+    @overload
+    def echo_cookies(self: APIWrapper[Driver], cookies: Mapping[str, str]) -> Response:
+        ...
+
+    @overload
+    def echo_cookies(self: APIWrapper[AsyncDriver], cookies: Mapping[str, str]) -> Awaitable[AsyncResponse]:
         ...

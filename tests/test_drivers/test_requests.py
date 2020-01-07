@@ -1,6 +1,7 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
 import uuid
+from http.cookies import SimpleCookie
 from typing import TYPE_CHECKING
 
 import pytest
@@ -78,3 +79,16 @@ def test_query_params(responses, driver: "RequestsDriver"):
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = wrapper.echo_query_params(query_params)
     assert response.text() == path
+
+
+def test_cookies(responses, driver: "RequestsDriver"):
+    def echo_cookies(request):
+        return (200, {"Set-Cookie": request.headers["Cookie"]}, "")
+
+    responses.add_callback("GET", "https://example.com", callback=echo_cookies)
+
+    cookies = {"csrftoken": "YWxhZGRpbjpvcGVuc2VzYW1l"}
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = wrapper.echo_cookies(cookies)
+    assert isinstance(response.cookies, SimpleCookie)
+    assert response.cookies["csrftoken"].value == cookies["csrftoken"]
