@@ -1,11 +1,16 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
 import uuid
+from typing import TYPE_CHECKING
 
 import pytest
 
-from apiwrappers import Method, Request
 from apiwrappers.structures import CaseInsensitiveDict
+
+from .wrappers import APIWrapper
+
+if TYPE_CHECKING:
+    from apiwrappers.drivers.requests import RequestsDriver
 
 pytestmark = [pytest.mark.requests]
 
@@ -25,37 +30,37 @@ def driver():
     return RequestsDriver()
 
 
-def test_fetch(responses, driver):
+def test_get_text(responses, driver: "RequestsDriver"):
     responses.add(
-        "POST",
-        "https://example.com/users",
-        body='{"code": 200, "message": "ok"}',
-        status=200,
-        content_type="application/json",
+        "GET", "https://example.com/", body="Hello, World!",
     )
-    request = Request(
-        Method.POST, "https://example.com", "/users", json={"foo": "bar"},
-    )
-    response = driver.fetch(request)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = wrapper.get_hello_world()
     assert response.status_code == 200
-    assert response.text() == '{"code": 200, "message": "ok"}'
-    assert response.json() == {"code": 200, "message": "ok"}
+    assert response.text() == "Hello, World!"
 
 
-def test_headers(responses, driver):
-    def request_callback(request):
+def test_get_json(responses, driver: "RequestsDriver"):
+    responses.add(
+        "GET", "https://example.com/", json={"message": "Hello, World!"},
+    )
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = wrapper.get_hello_world()
+    assert response.status_code == 200
+    assert response.json() == {"message": "Hello, World!"}
+
+
+def test_headers(responses, driver: "RequestsDriver"):
+    def echo_headers(request):
         headers = {"X-Response-ID": request.headers["x-request-id"]}
         return (200, headers, '{"code": 200, "message": "ok"}')
 
     responses.add_callback(
-        responses.POST, "https://example.com", callback=request_callback,
+        responses.POST, "https://example.com", callback=echo_headers,
     )
-    request = Request(
-        Method.POST,
-        "https://example.com",
-        "/",
-        headers={"X-Request-ID": str(uuid.uuid4())},
-    )
-    response = driver.fetch(request)
+
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    headers = {"X-Request-ID": str(uuid.uuid4())}
+    response = wrapper.echo_headers(headers=headers)
     assert isinstance(response.headers, CaseInsensitiveDict)
-    assert response.headers["X-Response-ID"] == request.headers["X-Request-ID"]
+    assert response.headers["X-Response-ID"] == headers["X-Request-ID"]
