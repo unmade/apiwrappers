@@ -106,3 +106,21 @@ def test_send_data(responses, driver: "RequestsDriver", method: str):
 
     response = getattr(wrapper, method)()
     assert response.text() == form_data
+
+
+def test_send_json(responses, driver: "RequestsDriver"):
+    def echo_data(request):
+        return (200, {}, request.body)
+
+    responses.add_callback("POST", "https://example.com", callback=echo_data)
+
+    payload = {
+        "name": "apiwrappers",
+        "tags": ["api", "wrapper"],
+        "pre-release": True,
+        "version": 1,
+    }
+
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = wrapper.send_json(payload)
+    assert response.json() == payload

@@ -50,3 +50,7 @@ class APIWrapper:
             ],
         )
         return self.driver.fetch(request)
+
+    def send_json(self, payload):
+        request = Request(Method.POST, self.host, "/", json=payload,)
+        return self.driver.fetch(request)
