@@ -29,3 +29,7 @@ class APIWrapper:
     def send_json(self, payload):
         request = Request(Method.POST, self.host, "/", json=payload)
         return self.driver.fetch(request)
+
+    def timeout(self, timeout):
+        request = Request(Method.GET, self.host, "/")
+        return self.driver.fetch(request, timeout=timeout)

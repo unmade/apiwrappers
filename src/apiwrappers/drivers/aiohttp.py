@@ -1,17 +1,20 @@
-# pylint: disable=no-self-use
-
 from http.cookies import SimpleCookie
 from typing import Iterable, List, Tuple
 
 import aiohttp
 
 from apiwrappers import utils
-from apiwrappers.entities import AsyncResponse, QueryParams, Request
+from apiwrappers.entities import AsyncResponse, QueryParams, Request, Timeout
 from apiwrappers.structures import CaseInsensitiveDict
+
+DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
 
 class AioHttpDriver:
-    async def fetch(self, request: Request) -> AsyncResponse:
+    def __init__(self, timeout: Timeout = DEFAULT_TIMEOUT):
+        self.timeout = timeout
+
+    async def fetch(self, request: Request, timeout: Timeout = None) -> AsyncResponse:
         async with aiohttp.ClientSession() as session:
             response = await session.request(
                 request.method.value,
@@ -21,8 +24,7 @@ class AioHttpDriver:
                 params=self._prepare_query_params(request.query_params),
                 data=request.data,
                 json=request.json,
-                ssl=request.verify_ssl,
-                timeout=aiohttp.client.ClientTimeout(total=request.timeout),
+                timeout=self._prepare_timeout(timeout),
             )
             return AsyncResponse(
                 status_code=int(response.status),
@@ -45,3 +47,6 @@ class AioHttpDriver:
             else:
                 query_params.append((key, value))
         return tuple(query_params)
+
+    def _prepare_timeout(self, timeout: Timeout) -> Timeout:
+        return timeout or self.timeout

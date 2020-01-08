@@ -3,12 +3,17 @@ from http.cookies import SimpleCookie
 import requests
 
 from apiwrappers import utils
-from apiwrappers.entities import Request, Response
+from apiwrappers.entities import Request, Response, Timeout
 from apiwrappers.structures import CaseInsensitiveDict
+
+DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
 
 class RequestsDriver:
-    def fetch(self, request: Request) -> Response:  # pylint: disable=no-self-use
+    def __init__(self, timeout: Timeout = DEFAULT_TIMEOUT):
+        self.timeout = timeout
+
+    def fetch(self, request: Request, timeout: Timeout = None) -> Response:
         response = requests.request(
             request.method.value,
             utils.build_url(request.host, request.path),
@@ -17,8 +22,7 @@ class RequestsDriver:
             cookies=request.cookies,
             data=request.data,
             json=request.json,
-            timeout=request.timeout,
-            verify=request.verify_ssl,
+            timeout=self._prepare_timeout(timeout),
         )
 
         def text():
@@ -33,3 +37,6 @@ class RequestsDriver:
             text=text,
             json=response.json,
         )
+
+    def _prepare_timeout(self, timeout: Timeout) -> Timeout:
+        return timeout or self.timeout

@@ -3,6 +3,7 @@
 import uuid
 from http.cookies import SimpleCookie
 from typing import TYPE_CHECKING
+from unittest import mock
 
 import pytest
 
@@ -159,3 +160,21 @@ def test_send_json(responses, driver: "RequestsDriver"):
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = wrapper.send_json(payload)
     assert response.json() == payload
+
+
+@pytest.mark.parametrize(["given", "expected"], [(None, 300), (0.5, 0.5), (1, 1)])
+def test_timeout(driver: "RequestsDriver", given, expected):
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with mock.patch("requests.request") as request_mock:
+        wrapper.timeout(given)
+    _, call_kwargs = request_mock.call_args
+    assert call_kwargs["timeout"] == expected
+
+
+def test_no_timeout(driver: "RequestsDriver"):
+    driver.timeout = None
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with mock.patch("requests.request") as request_mock:
+        wrapper.timeout(None)
+    _, call_kwargs = request_mock.call_args
+    assert call_kwargs["timeout"] is None

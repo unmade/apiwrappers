@@ -1,7 +1,7 @@
 from typing import Awaitable, Dict, Generic, Iterable, Mapping, Tuple, TypeVar, Union, overload
 
 from apiwrappers import AsyncDriver, AsyncResponse, Driver, Method, Request, Response
-from apiwrappers.entities import Data, JSON, QueryParams
+from apiwrappers.entities import Data, JSON, Timeout, QueryParams
 
 DT = TypeVar("DT", Driver, AsyncDriver)
 
@@ -59,4 +59,12 @@ class APIWrapper(Generic[DT]):
 
     @overload
     def send_json(self: APIWrapper[AsyncDriver], payload: JSON) -> Awaitable[AsyncResponse]:
+        ...
+
+    @overload
+    def timeout(self: APIWrapper[Driver], timeout: Timeout) -> Response:
+        ...
+
+    @overload
+    def timeout(self: APIWrapper[AsyncDriver], timeout: Timeout) -> Awaitable[AsyncResponse]:
         ...
