@@ -25,6 +25,16 @@ async def driver():
     return AioHttpDriver()
 
 
+async def test_get_content(aresponses, driver: "AioHttpDriver"):
+    aresponses.add(
+        "example.com", "/", "GET", "Hello, World!",
+    )
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.get_hello_world()
+    assert response.status_code == 200
+    assert response.content == b"Hello, World!"
+
+
 async def test_get_text(aresponses, driver: "AioHttpDriver"):
     aresponses.add(
         "example.com", "/", "GET", "Hello, World!",
@@ -97,17 +107,42 @@ async def test_cookies(aresponses, driver: "AioHttpDriver"):
     assert response.cookies["csrftoken"].value == cookies["csrftoken"]
 
 
-@pytest.mark.parametrize("method", ["send_data_as_dict", "send_data_as_tuples"])
-async def test_send_data(aresponses, driver: "AioHttpDriver", method: str):
+async def test_send_data_as_dict(aresponses, driver: "AioHttpDriver"):
     async def echo_data(request):
         return aresponses.Response(status=200, body=await request.text())
 
     aresponses.add("example.com", "/", "POST", echo_data)
 
+    payload = {
+        "name": "apiwrappers",
+        "tags": ["api", "wrapper"],
+        "pre-release": True,
+        "version": 1,
+    }
     form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
     wrapper = APIWrapper("https://example.com", driver=driver)
 
-    response = await getattr(wrapper, method)()
+    response = await wrapper.send_data(payload)
+    assert await response.text() == form_data
+
+
+async def test_send_data_as_tuples(aresponses, driver: "AioHttpDriver"):
+    async def echo_data(request):
+        return aresponses.Response(status=200, body=await request.text())
+
+    aresponses.add("example.com", "/", "POST", echo_data)
+
+    payload = [
+        ("name", "apiwrappers"),
+        ("tags", "api"),
+        ("tags", "wrapper"),
+        ("pre-release", True),
+        ("version", 1),
+    ]
+    form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
+    wrapper = APIWrapper("https://example.com", driver=driver)
+
+    response = await wrapper.send_data(payload)
     assert await response.text() == form_data
 
 

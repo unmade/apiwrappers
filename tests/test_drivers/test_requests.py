@@ -32,6 +32,16 @@ def driver():
     return RequestsDriver()
 
 
+def test_get_content(responses, driver: "RequestsDriver"):
+    responses.add(
+        "GET", "https://example.com/", body="Hello, World!",
+    )
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = wrapper.get_hello_world()
+    assert response.status_code == 200
+    assert response.content == b"Hello, World!"
+
+
 def test_get_text(responses, driver: "RequestsDriver"):
     responses.add(
         "GET", "https://example.com/", body="Hello, World!",
@@ -94,17 +104,42 @@ def test_cookies(responses, driver: "RequestsDriver"):
     assert response.cookies["csrftoken"].value == cookies["csrftoken"]
 
 
-@pytest.mark.parametrize("method", ["send_data_as_dict", "send_data_as_tuples"])
-def test_send_data(responses, driver: "RequestsDriver", method: str):
+def test_send_data_as_dict(responses, driver: "RequestsDriver"):
     def echo_data(request):
         return (200, {}, request.body)
 
     responses.add_callback("POST", "https://example.com", callback=echo_data)
 
+    payload = {
+        "name": "apiwrappers",
+        "tags": ["api", "wrapper"],
+        "pre-release": True,
+        "version": 1,
+    }
     form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
     wrapper = APIWrapper("https://example.com", driver=driver)
 
-    response = getattr(wrapper, method)()
+    response = wrapper.send_data(payload)
+    assert response.text() == form_data
+
+
+def test_send_data_as_tuples(responses, driver: "RequestsDriver"):
+    def echo_data(request):
+        return (200, {}, request.body)
+
+    responses.add_callback("POST", "https://example.com", callback=echo_data)
+
+    payload = [
+        ("name", "apiwrappers"),
+        ("tags", "api"),
+        ("tags", "wrapper"),
+        ("pre-release", True),
+        ("version", 1),
+    ]
+    form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
+    wrapper = APIWrapper("https://example.com", driver=driver)
+
+    response = wrapper.send_data(payload)
     assert response.text() == form_data
 
 
