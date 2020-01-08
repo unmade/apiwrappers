@@ -20,6 +20,7 @@ from apiwrappers.structures import CaseInsensitiveDict
 Data = Union[str, None, Mapping[str, Any], Iterable[Tuple[str, Any]]]
 JSON = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
 QueryParams = Mapping[str, Optional[Iterable[str]]]
+Timeout = Union[int, float, None]
 
 
 class Method(enum.Enum):
@@ -41,8 +42,6 @@ class Request:
     cookies: Mapping[str, str] = field(default_factory=dict)
     data: Data = None
     json: JSON = None
-    verify_ssl: bool = True
-    timeout: float = 1  # in seconds
 
     def __post_init__(self):
         if self.data is not None and self.json is not None:
