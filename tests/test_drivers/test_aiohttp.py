@@ -109,3 +109,25 @@ async def test_send_data(aresponses, driver: "AioHttpDriver", method: str):
 
     response = await getattr(wrapper, method)()
     assert await response.text() == form_data
+
+
+async def test_send_json(aresponses, driver: "AioHttpDriver"):
+    async def echo_data(request):
+        return aresponses.Response(
+            status=200,
+            headers={"Content-Type": "application/json"},
+            body=await request.text(),
+        )
+
+    aresponses.add("example.com", "/", "POST", echo_data)
+
+    payload = {
+        "name": "apiwrappers",
+        "tags": ["api", "wrapper"],
+        "pre-release": True,
+        "version": 1,
+    }
+
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.send_json(payload)
+    assert await response.json() == payload
