@@ -7,16 +7,17 @@ from typing import (
     Any,
     Awaitable,
     Callable,
-    Dict,
     Iterable,
     List,
     Mapping,
     Optional,
+    Tuple,
     Union,
 )
 
 from apiwrappers.structures import CaseInsensitiveDict
 
+Data = Optional[Union[Mapping[str, Iterable[str]], Iterable[Tuple[str, str]]]]
 JSON = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
 QueryParams = Mapping[str, Optional[Iterable[str]]]
 
@@ -38,7 +39,7 @@ class Request:
     query_params: QueryParams = field(default_factory=dict)
     headers: Mapping[str, str] = field(default_factory=dict)
     cookies: Mapping[str, str] = field(default_factory=dict)
-    data: Optional[Union[Dict[str, str], bytes]] = None
+    data: Data = None
     json: Optional[JSON] = None
     verify_ssl: bool = True
     timeout: float = 1  # in seconds

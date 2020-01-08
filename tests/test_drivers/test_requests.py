@@ -92,3 +92,17 @@ def test_cookies(responses, driver: "RequestsDriver"):
     response = wrapper.echo_cookies(cookies)
     assert isinstance(response.cookies, SimpleCookie)
     assert response.cookies["csrftoken"].value == cookies["csrftoken"]
+
+
+@pytest.mark.parametrize("method", ["send_data_as_dict", "send_data_as_tuples"])
+def test_send_data(responses, driver: "RequestsDriver", method: str):
+    def echo_data(request):
+        return (200, {}, request.body)
+
+    responses.add_callback("POST", "https://example.com", callback=echo_data)
+
+    form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
+    wrapper = APIWrapper("https://example.com", driver=driver)
+
+    response = getattr(wrapper, method)()
+    assert response.text() == form_data

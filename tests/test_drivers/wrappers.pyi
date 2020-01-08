@@ -44,3 +44,19 @@ class APIWrapper(Generic[DT]):
     @overload
     def echo_cookies(self: APIWrapper[AsyncDriver], cookies: Mapping[str, str]) -> Awaitable[AsyncResponse]:
         ...
+
+    @overload
+    def send_data_as_dict(self: APIWrapper[Driver]) -> Response:
+        ...
+
+    @overload
+    def send_data_as_dict(self: APIWrapper[AsyncDriver]) -> Awaitable[AsyncResponse]:
+        ...
+
+    # @overload
+    # def send_data_as_tuples(self: APIWrapper[Driver]) -> Response:
+    #     ...
+
+    # @overload
+    # def send_data_as_tuples(self: APIWrapper[AsyncDriver]) -> Awaitable[AsyncResponse]:
+    #     ...

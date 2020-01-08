@@ -21,3 +21,32 @@ class APIWrapper:
     def echo_cookies(self, cookies):
         request = Request(Method.GET, self.host, "/", cookies=cookies)
         return self.driver.fetch(request)
+
+    def send_data_as_dict(self):
+        request = Request(
+            Method.POST,
+            self.host,
+            "/",
+            data={
+                "name": "apiwrappers",
+                "tags": ["api", "wrapper"],
+                "pre-release": True,
+                "version": 1,
+            },
+        )
+        return self.driver.fetch(request)
+
+    def send_data_as_tuples(self):
+        request = Request(
+            Method.POST,
+            self.host,
+            "/",
+            data=[
+                ("name", "apiwrappers"),
+                ("tags", "api"),
+                ("tags", "wrapper"),
+                ("pre-release", True),
+                ("version", 1),
+            ],
+        )
+        return self.driver.fetch(request)

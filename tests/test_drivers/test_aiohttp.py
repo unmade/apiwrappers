@@ -95,3 +95,17 @@ async def test_cookies(aresponses, driver: "AioHttpDriver"):
     response = await wrapper.echo_cookies(cookies)
     assert isinstance(response.cookies, SimpleCookie)
     assert response.cookies["csrftoken"].value == cookies["csrftoken"]
+
+
+@pytest.mark.parametrize("method", ["send_data_as_dict", "send_data_as_tuples"])
+async def test_send_data(aresponses, driver: "AioHttpDriver", method: str):
+    async def echo_data(request):
+        return aresponses.Response(status=200, body=await request.text())
+
+    aresponses.add("example.com", "/", "POST", echo_data)
+
+    form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
+    wrapper = APIWrapper("https://example.com", driver=driver)
+
+    response = await getattr(wrapper, method)()
+    assert await response.text() == form_data
