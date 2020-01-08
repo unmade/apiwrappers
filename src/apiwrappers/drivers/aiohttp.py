@@ -1,5 +1,6 @@
 # pylint: disable=no-self-use
 
+from http.cookies import SimpleCookie
 from typing import Iterable, List, Tuple
 
 import aiohttp
@@ -16,6 +17,7 @@ class AioHttpDriver:
                 request.method.value,
                 utils.build_url(request.host, request.path),
                 headers=request.headers,
+                cookies=request.cookies,
                 params=self._prepare_query_params(request.query_params),
                 data=request.data,
                 json=request.json,
@@ -26,6 +28,7 @@ class AioHttpDriver:
                 status_code=int(response.status),
                 url=str(response.url),
                 headers=CaseInsensitiveDict(response.headers),
+                cookies=SimpleCookie(response.cookies),
                 content=await response.read(),
                 text=response.text,
                 json=response.json,

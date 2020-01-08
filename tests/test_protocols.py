@@ -1,5 +1,6 @@
 # pylint: disable=no-self-use,unused-argument
 
+from http.cookies import SimpleCookie
 from typing import Union
 
 import pytest
@@ -20,6 +21,7 @@ class DriverMock:
             status_code=200,
             url="https://example.com/foos",
             headers=CaseInsensitiveDict(),
+            cookies=SimpleCookie(),
             content=b"Hello, World!",
             text=text,
             json=json,
@@ -38,6 +40,7 @@ class AsyncDriverMock:
             status_code=200,
             url="https://example.com/foos",
             headers=CaseInsensitiveDict(),
+            cookies=SimpleCookie(),
             content=b"Hello, World!",
             text=text,
             json=json,
