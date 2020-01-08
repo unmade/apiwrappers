@@ -3,24 +3,10 @@
 import enum
 from dataclasses import dataclass, field
 from http.cookies import SimpleCookie
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Awaitable, Callable, Mapping
 
 from apiwrappers.structures import CaseInsensitiveDict
-
-Data = Union[str, None, Mapping[str, Any], Iterable[Tuple[str, Any]]]
-JSON = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
-QueryParams = Mapping[str, Optional[Iterable[str]]]
-Timeout = Union[int, float, None]
+from apiwrappers.typedefs import JSON, Data, QueryParams
 
 
 class Method(enum.Enum):

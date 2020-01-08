@@ -4,8 +4,9 @@ from typing import Iterable, List, Tuple
 import aiohttp
 
 from apiwrappers import utils
-from apiwrappers.entities import AsyncResponse, QueryParams, Request, Timeout
+from apiwrappers.entities import AsyncResponse, Request
 from apiwrappers.structures import CaseInsensitiveDict
+from apiwrappers.typedefs import QueryParams, Timeout
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 

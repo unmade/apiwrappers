@@ -1,7 +1,17 @@
-from typing import Awaitable, Dict, Generic, Iterable, Mapping, Tuple, TypeVar, Union, overload
+from typing import (
+    Awaitable,
+    Dict,
+    Generic,
+    Iterable,
+    Mapping,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
 
 from apiwrappers import AsyncDriver, AsyncResponse, Driver, Method, Request, Response
-from apiwrappers.entities import Data, JSON, Timeout, QueryParams
+from apiwrappers.typedefs import JSON, Data, QueryParams, Timeout
 
 DT = TypeVar("DT", Driver, AsyncDriver)
 
