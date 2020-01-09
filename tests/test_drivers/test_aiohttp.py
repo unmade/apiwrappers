@@ -8,6 +8,7 @@ import pytest
 
 from apiwrappers.entities import QueryParams
 from apiwrappers.structures import CaseInsensitiveDict
+from apiwrappers.utils import NoValue
 
 from .wrappers import APIWrapper
 
@@ -168,20 +169,56 @@ async def test_send_json(aresponses, driver: "AioHttpDriver"):
     assert await response.json() == payload
 
 
-@pytest.mark.parametrize(["given", "expected"], [(None, 300), (0.5, 0.5), (1, 1)])
-async def test_timeout(aresponses, driver: "AioHttpDriver", given, expected):
+@pytest.mark.parametrize(
+    ["driver_timeout", "fetch_timeout", "expected"],
+    [
+        (None, None, None),
+        (None, 0.5, 0.5),
+        (300, None, None),
+        (300, 1, 1),
+        (300, NoValue(), 300),
+    ],
+)
+async def test_timeout(
+    aresponses, driver: "AioHttpDriver", driver_timeout, fetch_timeout, expected
+):
     # pylint: disable=protected-access
     # aiohttp calls are hard to mock, instead just fire a call and test private method
     aresponses.add("example.com", "/", "GET")
+    driver.timeout = driver_timeout
     wrapper = APIWrapper("https://example.com", driver=driver)
-    await wrapper.timeout(given)
-    assert driver._prepare_timeout(given) == expected
+    await wrapper.timeout(fetch_timeout)
+    assert driver._prepare_timeout(fetch_timeout) == expected
 
 
 async def test_no_timeout(aresponses, driver: "AioHttpDriver"):
     # pylint: disable=protected-access
+    # aiohttp calls are hard to mock, instead just fire a call and test private method
     aresponses.add("example.com", "/", "GET")
     driver.timeout = None
     wrapper = APIWrapper("https://example.com", driver=driver)
     await wrapper.timeout(None)
     assert driver._prepare_timeout(None) is None
+
+
+@pytest.mark.parametrize(
+    ["driver_ssl", "fetch_ssl", "expected"],
+    [
+        (True, True, True),
+        (True, False, False),
+        (False, False, False),
+        (False, True, True),
+        (False, NoValue(), False),
+        (True, NoValue(), True),
+    ],
+)
+async def test_verify_ssl(
+    aresponses, driver: "AioHttpDriver", driver_ssl, fetch_ssl, expected
+):
+    # pylint: disable=protected-access
+    # aiohttp calls are hard to mock, instead just fire a call and test private method
+    aresponses.add("example.com", "/", "GET")
+    driver.verify_ssl = driver_ssl
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    await wrapper.verify_ssl(fetch_ssl)
+    assert driver._prepare_ssl(fetch_ssl) == expected

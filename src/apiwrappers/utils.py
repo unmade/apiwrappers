@@ -1,5 +1,10 @@
 import os
 import urllib.parse
+from typing import Tuple
+
+
+class NoValue:
+    __slots__: Tuple[str, ...] = tuple()
 
 
 def build_url(host: str, path: str) -> str:

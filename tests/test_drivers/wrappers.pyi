@@ -12,6 +12,7 @@ from typing import (
 
 from apiwrappers import AsyncDriver, AsyncResponse, Driver, Method, Request, Response
 from apiwrappers.typedefs import JSON, Data, QueryParams, Timeout
+from apiwrappers.utils import NoValue
 
 DT = TypeVar("DT", Driver, AsyncDriver)
 
@@ -72,9 +73,17 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def timeout(self: APIWrapper[Driver], timeout: Timeout) -> Response:
+    def timeout(self: APIWrapper[Driver], timeout: Union[Timeout, NoValue]) -> Response:
         ...
 
     @overload
-    def timeout(self: APIWrapper[AsyncDriver], timeout: Timeout) -> Awaitable[AsyncResponse]:
+    def timeout(self: APIWrapper[AsyncDriver], timeout: Union[Timeout, NoValue]) -> Awaitable[AsyncResponse]:
+        ...
+
+    @overload
+    def verify_ssl(self: APIWrapper[Driver], verify_ssl: Union[bool, NoValue]) -> Response:
+        ...
+
+    @overload
+    def verify_ssl(self: APIWrapper[AsyncDriver], verify_ssl: Union[bool, NoValue]) -> Awaitable[AsyncResponse]:
         ...

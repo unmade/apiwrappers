@@ -5,6 +5,7 @@ from apiwrappers.typedefs import Timeout
 
 class Driver(Protocol):
     timeout: Timeout
+    verify_ssl: bool
 
     def fetch(self, request: Request) -> Response:
         ...
@@ -12,6 +13,7 @@ class Driver(Protocol):
 
 class AsyncDriver(Protocol):
     timeout: Timeout
+    verify_ssl: bool
 
     async def fetch(self, request: Request) -> AsyncResponse:
         ...
