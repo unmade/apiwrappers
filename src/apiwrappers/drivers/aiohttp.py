@@ -1,5 +1,5 @@
 from http.cookies import SimpleCookie
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Union
 
 import aiohttp
 
@@ -7,15 +7,22 @@ from apiwrappers import utils
 from apiwrappers.entities import AsyncResponse, Request
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import QueryParams, Timeout
+from apiwrappers.utils import NoValue
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
 
 class AioHttpDriver:
-    def __init__(self, timeout: Timeout = DEFAULT_TIMEOUT):
+    def __init__(self, timeout: Timeout = DEFAULT_TIMEOUT, verify_ssl: bool = True):
         self.timeout = timeout
+        self.verify_ssl = verify_ssl
 
-    async def fetch(self, request: Request, timeout: Timeout = None) -> AsyncResponse:
+    async def fetch(
+        self,
+        request: Request,
+        timeout: Timeout = None,
+        verify_ssl: Union[bool, NoValue] = NoValue(),
+    ) -> AsyncResponse:
         async with aiohttp.ClientSession() as session:
             response = await session.request(
                 request.method.value,
@@ -26,6 +33,7 @@ class AioHttpDriver:
                 data=request.data,
                 json=request.json,
                 timeout=self._prepare_timeout(timeout),
+                ssl=self._prepare_ssl(verify_ssl),
             )
             return AsyncResponse(
                 status_code=int(response.status),
@@ -51,3 +59,8 @@ class AioHttpDriver:
 
     def _prepare_timeout(self, timeout: Timeout) -> Timeout:
         return timeout or self.timeout
+
+    def _prepare_ssl(self, verify_ssl: Union[bool, NoValue]) -> bool:
+        if isinstance(verify_ssl, bool):
+            return verify_ssl
+        return self.verify_ssl
