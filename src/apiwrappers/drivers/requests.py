@@ -20,7 +20,7 @@ class RequestsDriver:
     def fetch(
         self,
         request: Request,
-        timeout: Timeout = None,
+        timeout: Union[Timeout, NoValue] = NoValue(),
         verify_ssl: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         response = requests.request(
@@ -48,10 +48,12 @@ class RequestsDriver:
             json=response.json,
         )
 
-    def _prepare_timeout(self, timeout: Timeout) -> Timeout:
-        return timeout or self.timeout
+    def _prepare_timeout(self, timeout: Union[Timeout, NoValue]) -> Timeout:
+        if isinstance(timeout, NoValue):
+            return self.timeout
+        return timeout
 
     def _prepare_ssl(self, verify_ssl: Union[bool, NoValue]) -> bool:
-        if isinstance(verify_ssl, bool):
-            return verify_ssl
-        return self.verify_ssl
+        if isinstance(verify_ssl, NoValue):
+            return self.verify_ssl
+        return verify_ssl

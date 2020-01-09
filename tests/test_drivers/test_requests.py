@@ -163,11 +163,21 @@ def test_send_json(responses, driver: "RequestsDriver"):
     assert response.json() == payload
 
 
-@pytest.mark.parametrize(["given", "expected"], [(None, 300), (0.5, 0.5), (1, 1)])
-def test_timeout(driver: "RequestsDriver", given, expected):
+@pytest.mark.parametrize(
+    ["driver_timeout", "fetch_timeout", "expected"],
+    [
+        (None, None, None),
+        (None, 0.5, 0.5),
+        (300, None, None),
+        (300, 1, 1),
+        (300, NoValue(), 300),
+    ],
+)
+def test_timeout(driver: "RequestsDriver", driver_timeout, fetch_timeout, expected):
+    driver.timeout = driver_timeout
     wrapper = APIWrapper("https://example.com", driver=driver)
     with mock.patch("requests.request") as request_mock:
-        wrapper.timeout(given)
+        wrapper.timeout(fetch_timeout)
     _, call_kwargs = request_mock.call_args
     assert call_kwargs["timeout"] == expected
 

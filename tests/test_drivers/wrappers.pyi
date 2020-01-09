@@ -73,11 +73,11 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def timeout(self: APIWrapper[Driver], timeout: Timeout) -> Response:
+    def timeout(self: APIWrapper[Driver], timeout: Union[Timeout, NoValue]) -> Response:
         ...
 
     @overload
-    def timeout(self: APIWrapper[AsyncDriver], timeout: Timeout) -> Awaitable[AsyncResponse]:
+    def timeout(self: APIWrapper[AsyncDriver], timeout: Union[Timeout, NoValue]) -> Awaitable[AsyncResponse]:
         ...
 
     @overload

@@ -20,7 +20,7 @@ class AioHttpDriver:
     async def fetch(
         self,
         request: Request,
-        timeout: Timeout = None,
+        timeout: Union[Timeout, NoValue] = NoValue(),
         verify_ssl: Union[bool, NoValue] = NoValue(),
     ) -> AsyncResponse:
         async with aiohttp.ClientSession() as session:
@@ -57,10 +57,12 @@ class AioHttpDriver:
                 query_params.append((key, value))
         return tuple(query_params)
 
-    def _prepare_timeout(self, timeout: Timeout) -> Timeout:
-        return timeout or self.timeout
+    def _prepare_timeout(self, timeout: Union[Timeout, NoValue]) -> Timeout:
+        if isinstance(timeout, NoValue):
+            return self.timeout
+        return timeout
 
     def _prepare_ssl(self, verify_ssl: Union[bool, NoValue]) -> bool:
-        if isinstance(verify_ssl, bool):
-            return verify_ssl
-        return self.verify_ssl
+        if isinstance(verify_ssl, NoValue):
+            return self.verify_ssl
+        return verify_ssl
