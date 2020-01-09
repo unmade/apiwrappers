@@ -169,16 +169,18 @@ async def test_send_json(aresponses, driver: "AioHttpDriver"):
 
 
 @pytest.mark.parametrize(["given", "expected"], [(None, 300), (0.5, 0.5), (1, 1)])
-async def test_timeout(driver: "AioHttpDriver", given, expected):
+async def test_timeout(aresponses, driver: "AioHttpDriver", given, expected):
     # pylint: disable=protected-access
     # aiohttp calls are hard to mock, instead just fire a call and test private method
+    aresponses.add("example.com", "/", "GET")
     wrapper = APIWrapper("https://example.com", driver=driver)
     await wrapper.timeout(given)
     assert driver._prepare_timeout(given) == expected
 
 
-async def test_no_timeout(driver: "AioHttpDriver"):
+async def test_no_timeout(aresponses, driver: "AioHttpDriver"):
     # pylint: disable=protected-access
+    aresponses.add("example.com", "/", "GET")
     driver.timeout = None
     wrapper = APIWrapper("https://example.com", driver=driver)
     await wrapper.timeout(None)

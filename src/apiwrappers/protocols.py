@@ -1,23 +1,17 @@
-import sys
-from typing import Union
-
+from apiwrappers.compat import Protocol
 from apiwrappers.entities import AsyncResponse, Request, Response
-
-if sys.version_info < (3, 8):
-    from typing_extensions import Protocol
-else:
-    from typing import Protocol  # pylint: disable=no-name-in-module
+from apiwrappers.typedefs import Timeout
 
 
 class Driver(Protocol):
-    timeout: Union[int, float, None]
+    timeout: Timeout
 
     def fetch(self, request: Request) -> Response:
         ...
 
 
 class AsyncDriver(Protocol):
-    timeout: Union[int, float, None]
+    timeout: Timeout
 
     async def fetch(self, request: Request) -> AsyncResponse:
         ...

@@ -3,8 +3,9 @@ from http.cookies import SimpleCookie
 import requests
 
 from apiwrappers import utils
-from apiwrappers.entities import Request, Response, Timeout
+from apiwrappers.entities import Request, Response
 from apiwrappers.structures import CaseInsensitiveDict
+from apiwrappers.typedefs import Timeout
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
