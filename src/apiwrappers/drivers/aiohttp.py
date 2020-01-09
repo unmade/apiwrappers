@@ -3,7 +3,7 @@ from typing import Iterable, List, Tuple, Union
 
 import aiohttp
 
-from apiwrappers import utils
+from apiwrappers import exceptions, utils
 from apiwrappers.entities import AsyncResponse, Request
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import QueryParams, Timeout
@@ -24,17 +24,21 @@ class AioHttpDriver:
         verify_ssl: Union[bool, NoValue] = NoValue(),
     ) -> AsyncResponse:
         async with aiohttp.ClientSession() as session:
-            response = await session.request(
-                request.method.value,
-                utils.build_url(request.host, request.path),
-                headers=request.headers,
-                cookies=request.cookies,
-                params=self._prepare_query_params(request.query_params),
-                data=request.data,
-                json=request.json,
-                timeout=self._prepare_timeout(timeout),
-                ssl=self._prepare_ssl(verify_ssl),
-            )
+            try:
+                response = await session.request(
+                    request.method.value,
+                    utils.build_url(request.host, request.path),
+                    headers=request.headers,
+                    cookies=request.cookies,
+                    params=self._prepare_query_params(request.query_params),
+                    data=request.data,
+                    json=request.json,
+                    timeout=self._prepare_timeout(timeout),
+                    ssl=self._prepare_ssl(verify_ssl),
+                )
+            except aiohttp.ClientError as exc:
+                raise exceptions.DriverError from exc
+
             return AsyncResponse(
                 status_code=int(response.status),
                 url=str(response.url),

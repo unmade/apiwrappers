@@ -7,6 +7,7 @@ from unittest import mock
 
 import pytest
 
+from apiwrappers import exceptions
 from apiwrappers.entities import QueryParams
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.utils import NoValue
@@ -209,3 +210,12 @@ def test_verify_ssl(driver: "RequestsDriver", driver_ssl, fetch_ssl, expected):
         wrapper.verify_ssl(fetch_ssl)
     _, call_kwargs = request_mock.call_args
     assert call_kwargs["verify"] == expected
+
+
+def test_reraise_requests_exception(responses, driver: "RequestsDriver"):
+    import requests
+
+    responses.add("GET", "https://example.com", body=requests.RequestException())
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with pytest.raises(exceptions.DriverError):
+        wrapper.exception()

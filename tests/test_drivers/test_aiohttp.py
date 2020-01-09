@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from apiwrappers import exceptions
 from apiwrappers.entities import QueryParams
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.utils import NoValue
@@ -222,3 +223,12 @@ async def test_verify_ssl(
     wrapper = APIWrapper("https://example.com", driver=driver)
     await wrapper.verify_ssl(fetch_ssl)
     assert driver._prepare_ssl(fetch_ssl) == expected
+
+
+async def test_reraise_aiohttp_client_error(aresponses, driver: "AioHttpDriver"):
+    import aiohttp
+
+    aresponses.add("example.com", "/", "GET", response=aiohttp.ClientError())
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with pytest.raises(exceptions.DriverError):
+        await wrapper.exception()
