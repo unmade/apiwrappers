@@ -4,6 +4,8 @@ VT = TypeVar("VT")
 
 
 class CaseInsensitiveDict(MutableMapping[str, VT]):
+    __slots__ = ("_data",)
+
     def __init__(self, data: Optional[Mapping[str, VT]] = None, **kwargs: VT):
         self._data: Dict[str, Tuple[str, VT]] = {}
         if data is not None:
