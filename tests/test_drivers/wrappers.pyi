@@ -10,7 +10,7 @@ from typing import (
     overload,
 )
 
-from apiwrappers import AsyncDriver, AsyncResponse, Driver, Method, Request, Response
+from apiwrappers import AsyncDriver, Driver, Method, Request, Response
 from apiwrappers.typedefs import JSON, Data, QueryParams, Timeout
 from apiwrappers.utils import NoValue
 
@@ -29,7 +29,7 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def get_hello_world(self: APIWrapper[AsyncDriver]) -> Awaitable[AsyncResponse]:
+    def get_hello_world(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
         ...
 
     @overload
@@ -37,7 +37,7 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def echo_headers(self: APIWrapper[AsyncDriver], headers: Dict[str, str]) -> Awaitable[AsyncResponse]:
+    def echo_headers(self: APIWrapper[AsyncDriver], headers: Dict[str, str]) -> Awaitable[Response]:
         ...
 
     @overload
@@ -45,7 +45,7 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def echo_query_params(self: APIWrapper[AsyncDriver], query_params: QueryParams) -> Awaitable[AsyncResponse]:
+    def echo_query_params(self: APIWrapper[AsyncDriver], query_params: QueryParams) -> Awaitable[Response]:
         ...
 
     @overload
@@ -53,7 +53,7 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def echo_cookies(self: APIWrapper[AsyncDriver], cookies: Mapping[str, str]) -> Awaitable[AsyncResponse]:
+    def echo_cookies(self: APIWrapper[AsyncDriver], cookies: Mapping[str, str]) -> Awaitable[Response]:
         ...
 
     @overload
@@ -61,7 +61,7 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def send_data(self: APIWrapper[AsyncDriver], payload: Data) -> Awaitable[AsyncResponse]:
+    def send_data(self: APIWrapper[AsyncDriver], payload: Data) -> Awaitable[Response]:
         ...
 
     @overload
@@ -69,7 +69,7 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def send_json(self: APIWrapper[AsyncDriver], payload: JSON) -> Awaitable[AsyncResponse]:
+    def send_json(self: APIWrapper[AsyncDriver], payload: JSON) -> Awaitable[Response]:
         ...
 
     @overload
@@ -77,7 +77,7 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def timeout(self: APIWrapper[AsyncDriver], timeout: Union[Timeout, NoValue]) -> Awaitable[AsyncResponse]:
+    def timeout(self: APIWrapper[AsyncDriver], timeout: Union[Timeout, NoValue]) -> Awaitable[Response]:
         ...
 
     @overload
@@ -85,7 +85,7 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def verify_ssl(self: APIWrapper[AsyncDriver], verify_ssl: Union[bool, NoValue]) -> Awaitable[AsyncResponse]:
+    def verify_ssl(self: APIWrapper[AsyncDriver], verify_ssl: Union[bool, NoValue]) -> Awaitable[Response]:
         ...
 
     @overload
@@ -93,5 +93,5 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def exception(self: APIWrapper[AsyncDriver]) -> Awaitable[AsyncResponse]:
+    def exception(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
         ...

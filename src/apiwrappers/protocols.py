@@ -1,5 +1,5 @@
 from apiwrappers.compat import Protocol
-from apiwrappers.entities import AsyncResponse, Request, Response
+from apiwrappers.entities import Request, Response
 from apiwrappers.typedefs import Timeout
 
 
@@ -15,5 +15,5 @@ class AsyncDriver(Protocol):
     timeout: Timeout
     verify_ssl: bool
 
-    async def fetch(self, request: Request) -> AsyncResponse:
+    async def fetch(self, request: Request) -> Response:
         ...

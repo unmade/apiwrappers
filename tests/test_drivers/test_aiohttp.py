@@ -47,7 +47,7 @@ async def test_get_text(aresponses, driver: "AioHttpDriver"):
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.get_hello_world()
     assert response.status_code == 200
-    assert await response.text() == "Hello, World!"
+    assert response.text() == "Hello, World!"
 
 
 async def test_get_json(aresponses, driver: "AioHttpDriver"):
@@ -62,7 +62,7 @@ async def test_get_json(aresponses, driver: "AioHttpDriver"):
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.get_hello_world()
     assert response.status_code == 200
-    assert await response.json() == {"message": "Hello, World!"}
+    assert response.json() == {"message": "Hello, World!"}
 
 
 async def test_headers(aresponses, driver: "AioHttpDriver"):
@@ -94,7 +94,7 @@ async def test_query_params(aresponses, driver: "AioHttpDriver"):
 
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.echo_query_params(query_params)
-    assert await response.text() == path
+    assert response.text() == path
 
 
 async def test_cookies(aresponses, driver: "AioHttpDriver"):
@@ -128,7 +128,7 @@ async def test_send_data_as_dict(aresponses, driver: "AioHttpDriver"):
     wrapper = APIWrapper("https://example.com", driver=driver)
 
     response = await wrapper.send_data(payload)
-    assert await response.text() == form_data
+    assert response.text() == form_data
 
 
 async def test_send_data_as_tuples(aresponses, driver: "AioHttpDriver"):
@@ -148,7 +148,7 @@ async def test_send_data_as_tuples(aresponses, driver: "AioHttpDriver"):
     wrapper = APIWrapper("https://example.com", driver=driver)
 
     response = await wrapper.send_data(payload)
-    assert await response.text() == form_data
+    assert response.text() == form_data
 
 
 async def test_send_json(aresponses, driver: "AioHttpDriver"):
@@ -170,7 +170,7 @@ async def test_send_json(aresponses, driver: "AioHttpDriver"):
 
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.send_json(payload)
-    assert await response.json() == payload
+    assert response.json() == payload
 
 
 @pytest.mark.parametrize(
@@ -274,4 +274,4 @@ async def test_invalid_json_response(aresponses, driver: "AioHttpDriver", respon
     wrapper = APIWrapper("https://example.com", driver=driver)
     json_response = await wrapper.get_hello_world()
     with pytest.raises(json.JSONDecodeError):
-        await json_response.json()
+        json_response.json()

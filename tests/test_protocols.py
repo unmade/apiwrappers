@@ -5,46 +5,27 @@ from typing import Union
 
 import pytest
 
-from apiwrappers import AsyncDriver, AsyncResponse, Driver, Method, Request, Response
+from apiwrappers import AsyncDriver, Driver, Method, Request, Response
 from apiwrappers.structures import CaseInsensitiveDict
+
+RESPONSE = Response(
+    status_code=200,
+    url="https://example.com/foos",
+    headers=CaseInsensitiveDict(),
+    cookies=SimpleCookie(),
+    encoding="utf-8",
+    content=b'"Hello, World!"',
+)
 
 
 class DriverMock:
     def fetch(self, request: Request):
-        def text():
-            return "Hello, World!"
-
-        def json():
-            return "Hello, World!"
-
-        return Response(
-            status_code=200,
-            url="https://example.com/foos",
-            headers=CaseInsensitiveDict(),
-            cookies=SimpleCookie(),
-            content=b"Hello, World!",
-            text=text,
-            json=json,
-        )
+        return RESPONSE
 
 
 class AsyncDriverMock:
     async def fetch(self, request: Request):
-        async def text():
-            return "Hello, World!"
-
-        async def json():
-            return "Hello, World!"
-
-        return AsyncResponse(
-            status_code=200,
-            url="https://example.com/foos",
-            headers=CaseInsensitiveDict(),
-            cookies=SimpleCookie(),
-            content=b"Hello, World!",
-            text=text,
-            json=json,
-        )
+        return RESPONSE
 
 
 class APIWrapper:
@@ -62,7 +43,7 @@ def test_driver_protocol():
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = wrapper.list_foo()
     assert response.status_code == 200
-    assert response.text() == "Hello, World!"
+    assert response.text() == '"Hello, World!"'
     assert response.json() == "Hello, World!"
 
 
@@ -72,5 +53,5 @@ async def test_async_driver_protocol():
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.list_foo()
     assert response.status_code == 200
-    assert await response.text() == "Hello, World!"
-    assert await response.json() == "Hello, World!"
+    assert response.text() == '"Hello, World!"'
+    assert response.json() == "Hello, World!"

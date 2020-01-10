@@ -1,9 +1,10 @@
 # pylint: disable=too-many-instance-attributes
 
 import enum
+import json
 from dataclasses import dataclass, field
 from http.cookies import SimpleCookie
-from typing import Awaitable, Callable, Mapping
+from typing import Mapping, cast
 
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import JSON, Data, QueryParams
@@ -41,16 +42,10 @@ class Response:
     headers: CaseInsensitiveDict[str]
     cookies: SimpleCookie
     content: bytes
-    text: Callable[..., str]
-    json: Callable[..., JSON]
+    encoding: str
 
+    def text(self) -> str:
+        return self.content.decode(self.encoding)
 
-@dataclass
-class AsyncResponse:
-    status_code: int
-    url: str
-    headers: CaseInsensitiveDict[str]
-    cookies: SimpleCookie
-    content: bytes
-    text: Callable[..., Awaitable[str]]
-    json: Callable[..., Awaitable[JSON]]
+    def json(self) -> JSON:
+        return cast(JSON, json.loads(self.content.decode(self.encoding)))
