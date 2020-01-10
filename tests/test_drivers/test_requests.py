@@ -1,5 +1,6 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
+import json
 import uuid
 from http.cookies import SimpleCookie
 from typing import TYPE_CHECKING
@@ -7,6 +8,7 @@ from unittest import mock
 
 import pytest
 
+from apiwrappers import exceptions
 from apiwrappers.entities import QueryParams
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.utils import NoValue
@@ -209,3 +211,39 @@ def test_verify_ssl(driver: "RequestsDriver", driver_ssl, fetch_ssl, expected):
         wrapper.verify_ssl(fetch_ssl)
     _, call_kwargs = request_mock.call_args
     assert call_kwargs["verify"] == expected
+
+
+@pytest.mark.parametrize(
+    ["exc_name", "expected"],
+    [
+        ("RequestException", exceptions.DriverError),
+        ("ConnectionError", exceptions.ConnectionFailed),
+        ("Timeout", exceptions.Timeout),
+        ("ConnectTimeout", exceptions.Timeout),
+    ],
+)
+def test_reraise_requests_exceptions(
+    responses, driver: "RequestsDriver", exc_name, expected
+):
+    import requests
+
+    exc_class = getattr(requests, exc_name)
+    responses.add("GET", "https://example.com", body=exc_class())
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with pytest.raises(expected):
+        wrapper.exception()
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"body": b"Plaint Text"},
+        {"body": b"Plaint Text", "content_type": "application/json"},
+    ],
+)
+def test_invalid_json_response(responses, driver: "RequestsDriver", response):
+    responses.add("GET", "https://example.com", **response)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    json_response = wrapper.get_hello_world()
+    with pytest.raises(json.JSONDecodeError):
+        json_response.json()

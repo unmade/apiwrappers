@@ -3,7 +3,7 @@ from typing import Union
 
 import requests
 
-from apiwrappers import utils
+from apiwrappers import exceptions, utils
 from apiwrappers.entities import Request, Response
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import Timeout
@@ -23,20 +23,30 @@ class RequestsDriver:
         timeout: Union[Timeout, NoValue] = NoValue(),
         verify_ssl: Union[bool, NoValue] = NoValue(),
     ) -> Response:
-        response = requests.request(
-            request.method.value,
-            utils.build_url(request.host, request.path),
-            params=request.query_params,
-            headers=request.headers,
-            cookies=request.cookies,
-            data=request.data,
-            json=request.json,
-            timeout=self._prepare_timeout(timeout),
-            verify=self._prepare_ssl(verify_ssl),
-        )
+        try:
+            response = requests.request(
+                request.method.value,
+                utils.build_url(request.host, request.path),
+                params=request.query_params,
+                headers=request.headers,
+                cookies=request.cookies,
+                data=request.data,
+                json=request.json,
+                timeout=self._prepare_timeout(timeout),
+                verify=self._prepare_ssl(verify_ssl),
+            )
+        except requests.Timeout as exc:
+            raise exceptions.Timeout from exc
+        except requests.ConnectionError as exc:
+            raise exceptions.ConnectionFailed from exc
+        except requests.RequestException as exc:
+            raise exceptions.DriverError from exc
 
         def text():
             return response.text
+
+        def json():
+            return response.json()
 
         return Response(
             status_code=int(response.status_code),
@@ -45,7 +55,7 @@ class RequestsDriver:
             cookies=SimpleCookie(response.cookies),
             content=response.content,
             text=text,
-            json=response.json,
+            json=json,
         )
 
     def _prepare_timeout(self, timeout: Union[Timeout, NoValue]) -> Timeout:

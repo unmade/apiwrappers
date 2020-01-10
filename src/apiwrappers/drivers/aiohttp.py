@@ -1,9 +1,10 @@
+import asyncio
 from http.cookies import SimpleCookie
 from typing import Iterable, List, Tuple, Union
 
 import aiohttp
 
-from apiwrappers import utils
+from apiwrappers import exceptions, utils
 from apiwrappers.entities import AsyncResponse, Request
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import QueryParams, Timeout
@@ -24,17 +25,28 @@ class AioHttpDriver:
         verify_ssl: Union[bool, NoValue] = NoValue(),
     ) -> AsyncResponse:
         async with aiohttp.ClientSession() as session:
-            response = await session.request(
-                request.method.value,
-                utils.build_url(request.host, request.path),
-                headers=request.headers,
-                cookies=request.cookies,
-                params=self._prepare_query_params(request.query_params),
-                data=request.data,
-                json=request.json,
-                timeout=self._prepare_timeout(timeout),
-                ssl=self._prepare_ssl(verify_ssl),
-            )
+            try:
+                response = await session.request(
+                    request.method.value,
+                    utils.build_url(request.host, request.path),
+                    headers=request.headers,
+                    cookies=request.cookies,
+                    params=self._prepare_query_params(request.query_params),
+                    data=request.data,
+                    json=request.json,
+                    timeout=self._prepare_timeout(timeout),
+                    ssl=self._prepare_ssl(verify_ssl),
+                )
+            except asyncio.TimeoutError as exc:
+                raise exceptions.Timeout from exc
+            except aiohttp.ClientConnectionError as exc:
+                raise exceptions.ConnectionFailed from exc
+            except aiohttp.ClientError as exc:
+                raise exceptions.DriverError from exc
+
+            async def json():
+                return await response.json(content_type=None)
+
             return AsyncResponse(
                 status_code=int(response.status),
                 url=str(response.url),
@@ -42,7 +54,7 @@ class AioHttpDriver:
                 cookies=SimpleCookie(response.cookies),
                 content=await response.read(),
                 text=response.text,
-                json=response.json,
+                json=json,
             )
 
     @staticmethod

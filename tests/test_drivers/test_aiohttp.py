@@ -1,11 +1,15 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
+import asyncio
+import json
 import uuid
 from http.cookies import SimpleCookie
 from typing import TYPE_CHECKING
+from unittest import mock
 
 import pytest
 
+from apiwrappers import exceptions
 from apiwrappers.entities import QueryParams
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.utils import NoValue
@@ -222,3 +226,52 @@ async def test_verify_ssl(
     wrapper = APIWrapper("https://example.com", driver=driver)
     await wrapper.verify_ssl(fetch_ssl)
     assert driver._prepare_ssl(fetch_ssl) == expected
+
+
+async def test_reraise_client_error(aresponses, driver: "AioHttpDriver"):
+    import aiohttp
+
+    async def client_error(*args, **kwargs):
+        raise aiohttp.ClientError
+
+    with mock.patch.object(aiohttp.ClientSession, "request", client_error):
+        wrapper = APIWrapper("https://example.com", driver=driver)
+        with pytest.raises(exceptions.DriverError) as exc:
+            await wrapper.exception()
+        assert not isinstance(exc.value, exceptions.ConnectionFailed)
+
+
+async def test_reraise_client_connection_error(aresponses, driver: "AioHttpDriver"):
+    import aiohttp
+
+    aresponses.add("example.com", "/", "GET", response=aiohttp.ClientConnectionError())
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with pytest.raises(exceptions.ConnectionFailed):
+        await wrapper.exception()
+
+
+async def test_reraise_timeout_error(aresponses, driver: "AioHttpDriver"):
+    import aiohttp
+
+    async def timeout_error(*args, **kwargs):
+        raise asyncio.TimeoutError
+
+    with mock.patch.object(aiohttp.ClientSession, "request", timeout_error):
+        wrapper = APIWrapper("https://example.com", driver=driver)
+        with pytest.raises(exceptions.Timeout):
+            await wrapper.exception()
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"body": b"Plaint Text"},
+        {"body": b"Plaint Text", "content_type": "application/json"},
+    ],
+)
+async def test_invalid_json_response(aresponses, driver: "AioHttpDriver", response):
+    aresponses.add("example.com", "/", "GET", aresponses.Response(**response))
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    json_response = await wrapper.get_hello_world()
+    with pytest.raises(json.JSONDecodeError):
+        await json_response.json()
