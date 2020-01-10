@@ -5,7 +5,7 @@ from typing import Iterable, List, Tuple, Union
 import aiohttp
 
 from apiwrappers import exceptions, utils
-from apiwrappers.entities import AsyncResponse, Request
+from apiwrappers.entities import Request, Response
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import QueryParams, Timeout
 from apiwrappers.utils import NoValue
@@ -23,7 +23,7 @@ class AioHttpDriver:
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
         verify_ssl: Union[bool, NoValue] = NoValue(),
-    ) -> AsyncResponse:
+    ) -> Response:
         async with aiohttp.ClientSession() as session:
             try:
                 response = await session.request(
@@ -44,17 +44,13 @@ class AioHttpDriver:
             except aiohttp.ClientError as exc:
                 raise exceptions.DriverError from exc
 
-            async def json():
-                return await response.json(content_type=None)
-
-            return AsyncResponse(
+            return Response(
                 status_code=int(response.status),
                 url=str(response.url),
                 headers=CaseInsensitiveDict(response.headers),
                 cookies=SimpleCookie(response.cookies),
                 content=await response.read(),
-                text=response.text,
-                json=json,
+                encoding=response.get_encoding(),
             )
 
     @staticmethod
