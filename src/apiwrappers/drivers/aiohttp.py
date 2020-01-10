@@ -1,3 +1,4 @@
+import asyncio
 from http.cookies import SimpleCookie
 from typing import Iterable, List, Tuple, Union
 
@@ -36,6 +37,10 @@ class AioHttpDriver:
                     timeout=self._prepare_timeout(timeout),
                     ssl=self._prepare_ssl(verify_ssl),
                 )
+            except asyncio.TimeoutError as exc:
+                raise exceptions.Timeout from exc
+            except aiohttp.ClientConnectionError as exc:
+                raise exceptions.ConnectionFailed from exc
             except aiohttp.ClientError as exc:
                 raise exceptions.DriverError from exc
 

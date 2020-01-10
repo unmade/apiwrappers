@@ -1,8 +1,10 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
+import asyncio
 import uuid
 from http.cookies import SimpleCookie
 from typing import TYPE_CHECKING
+from unittest import mock
 
 import pytest
 
@@ -225,10 +227,35 @@ async def test_verify_ssl(
     assert driver._prepare_ssl(fetch_ssl) == expected
 
 
-async def test_reraise_aiohttp_client_error(aresponses, driver: "AioHttpDriver"):
+async def test_reraise_client_error(aresponses, driver: "AioHttpDriver"):
     import aiohttp
 
-    aresponses.add("example.com", "/", "GET", response=aiohttp.ClientError())
+    async def client_error(*args, **kwargs):
+        raise aiohttp.ClientError
+
+    with mock.patch.object(aiohttp.ClientSession, "request", client_error):
+        wrapper = APIWrapper("https://example.com", driver=driver)
+        with pytest.raises(exceptions.DriverError) as exc:
+            await wrapper.exception()
+        assert not isinstance(exc.value, exceptions.ConnectionFailed)
+
+
+async def test_reraise_client_connection_error(aresponses, driver: "AioHttpDriver"):
+    import aiohttp
+
+    aresponses.add("example.com", "/", "GET", response=aiohttp.ClientConnectionError())
     wrapper = APIWrapper("https://example.com", driver=driver)
-    with pytest.raises(exceptions.DriverError):
+    with pytest.raises(exceptions.ConnectionFailed):
         await wrapper.exception()
+
+
+async def test_reraise_timeout_error(aresponses, driver: "AioHttpDriver"):
+    import aiohttp
+
+    async def timeout_error(*args, **kwargs):
+        raise asyncio.TimeoutError
+
+    with mock.patch.object(aiohttp.ClientSession, "request", timeout_error):
+        wrapper = APIWrapper("https://example.com", driver=driver)
+        with pytest.raises(exceptions.Timeout):
+            await wrapper.exception()

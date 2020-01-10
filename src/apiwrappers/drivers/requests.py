@@ -35,6 +35,10 @@ class RequestsDriver:
                 timeout=self._prepare_timeout(timeout),
                 verify=self._prepare_ssl(verify_ssl),
             )
+        except requests.Timeout as exc:
+            raise exceptions.Timeout from exc
+        except requests.ConnectionError as exc:
+            raise exceptions.ConnectionFailed from exc
         except requests.RequestException as exc:
             raise exceptions.DriverError from exc
 

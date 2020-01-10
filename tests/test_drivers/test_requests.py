@@ -212,10 +212,22 @@ def test_verify_ssl(driver: "RequestsDriver", driver_ssl, fetch_ssl, expected):
     assert call_kwargs["verify"] == expected
 
 
-def test_reraise_requests_exception(responses, driver: "RequestsDriver"):
+@pytest.mark.parametrize(
+    ["exc_name", "expected"],
+    [
+        ("RequestException", exceptions.DriverError),
+        ("ConnectionError", exceptions.ConnectionFailed),
+        ("Timeout", exceptions.Timeout),
+        ("ConnectTimeout", exceptions.Timeout),
+    ],
+)
+def test_reraise_requests_exceptions(
+    responses, driver: "RequestsDriver", exc_name, expected
+):
     import requests
 
-    responses.add("GET", "https://example.com", body=requests.RequestException())
+    exc_class = getattr(requests, exc_name)
+    responses.add("GET", "https://example.com", body=exc_class())
     wrapper = APIWrapper("https://example.com", driver=driver)
-    with pytest.raises(exceptions.DriverError):
+    with pytest.raises(expected):
         wrapper.exception()
