@@ -1,6 +1,7 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
 import asyncio
+import json
 import uuid
 from http.cookies import SimpleCookie
 from typing import TYPE_CHECKING
@@ -259,3 +260,18 @@ async def test_reraise_timeout_error(aresponses, driver: "AioHttpDriver"):
         wrapper = APIWrapper("https://example.com", driver=driver)
         with pytest.raises(exceptions.Timeout):
             await wrapper.exception()
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"body": b"Plaint Text"},
+        {"body": b"Plaint Text", "content_type": "application/json"},
+    ],
+)
+async def test_invalid_json_response(aresponses, driver: "AioHttpDriver", response):
+    aresponses.add("example.com", "/", "GET", aresponses.Response(**response))
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    json_response = await wrapper.get_hello_world()
+    with pytest.raises(json.JSONDecodeError):
+        await json_response.json()

@@ -44,6 +44,9 @@ class AioHttpDriver:
             except aiohttp.ClientError as exc:
                 raise exceptions.DriverError from exc
 
+            async def json():
+                return await response.json(content_type=None)
+
             return AsyncResponse(
                 status_code=int(response.status),
                 url=str(response.url),
@@ -51,7 +54,7 @@ class AioHttpDriver:
                 cookies=SimpleCookie(response.cookies),
                 content=await response.read(),
                 text=response.text,
-                json=response.json,
+                json=json,
             )
 
     @staticmethod

@@ -1,5 +1,6 @@
 # pylint: disable=import-outside-toplevel,redefined-outer-name
 
+import json
 import uuid
 from http.cookies import SimpleCookie
 from typing import TYPE_CHECKING
@@ -231,3 +232,18 @@ def test_reraise_requests_exceptions(
     wrapper = APIWrapper("https://example.com", driver=driver)
     with pytest.raises(expected):
         wrapper.exception()
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"body": b"Plaint Text"},
+        {"body": b"Plaint Text", "content_type": "application/json"},
+    ],
+)
+def test_invalid_json_response(responses, driver: "RequestsDriver", response):
+    responses.add("GET", "https://example.com", **response)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    json_response = wrapper.get_hello_world()
+    with pytest.raises(json.JSONDecodeError):
+        json_response.json()

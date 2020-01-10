@@ -45,6 +45,9 @@ class RequestsDriver:
         def text():
             return response.text
 
+        def json():
+            return response.json()
+
         return Response(
             status_code=int(response.status_code),
             url=response.url,
@@ -52,7 +55,7 @@ class RequestsDriver:
             cookies=SimpleCookie(response.cookies),
             content=response.content,
             text=text,
-            json=response.json,
+            json=json,
         )
 
     def _prepare_timeout(self, timeout: Union[Timeout, NoValue]) -> Timeout:
