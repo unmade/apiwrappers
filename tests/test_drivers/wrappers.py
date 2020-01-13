@@ -1,4 +1,11 @@
+from dataclasses import dataclass
+
 from apiwrappers import Method, Request
+
+
+@dataclass
+class User:
+    user_id: int
 
 
 class APIWrapper:
