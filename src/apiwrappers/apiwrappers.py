@@ -3,6 +3,7 @@ from typing import Awaitable, Callable, Generic, Optional, Type, TypeVar, overlo
 
 from apiwrappers.entities import Request
 from apiwrappers.protocols import AsyncDriver, Driver, WrapperLike
+from apiwrappers.utils import getitem
 
 T = TypeVar("T")
 RequestFactory = Callable[..., Request]
@@ -10,8 +11,9 @@ RF = TypeVar("RF", bound=RequestFactory)
 
 
 class Fetch(Generic[T]):
-    def __init__(self, factory: Callable[..., T]):
+    def __init__(self, factory: Callable[..., T], source: Optional[str] = None):
         self.factory: Callable[..., T] = factory
+        self.source = source
         self.request_factory: Optional[RequestFactory] = None
 
     @overload
@@ -50,10 +52,10 @@ class Fetch(Generic[T]):
     def response(self, driver, request):
         if not asyncio.iscoroutinefunction(driver.fetch):
             resp = driver.fetch(request)
-            return self.factory(resp.json())
+            return self.factory(getitem(resp.json(), key=self.source))
 
         async def async_response():
             resp = await driver.fetch(request)
-            return self.factory(resp.json())
+            return self.factory(getitem(resp.json(), key=self.source))
 
         return async_response()
