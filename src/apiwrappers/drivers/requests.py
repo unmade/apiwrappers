@@ -1,10 +1,12 @@
 from http.cookies import SimpleCookie
-from typing import Union
+from typing import List, Type, Union
 
 import requests
 
 from apiwrappers import exceptions, utils
 from apiwrappers.entities import Request, Response
+from apiwrappers.middleware import apply_middleware
+from apiwrappers.protocols import Middleware
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import Timeout
 from apiwrappers.utils import NoValue
@@ -13,10 +15,17 @@ DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
 
 class RequestsDriver:
-    def __init__(self, timeout: Timeout = DEFAULT_TIMEOUT, verify_ssl: bool = True):
+    def __init__(
+        self,
+        *middleware: Type[Middleware],
+        timeout: Timeout = DEFAULT_TIMEOUT,
+        verify_ssl: bool = True
+    ):
         self.timeout = timeout
         self.verify_ssl = verify_ssl
+        self.middleware: List[Type[Middleware]] = list(middleware)
 
+    @apply_middleware
     def fetch(
         self,
         request: Request,

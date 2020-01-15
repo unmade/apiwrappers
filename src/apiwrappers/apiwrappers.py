@@ -6,6 +6,7 @@ from apiwrappers.protocols import AsyncDriver, Driver, WrapperLike
 from apiwrappers.utils import getitem
 
 T = TypeVar("T")
+DT = TypeVar("DT", Driver, AsyncDriver)
 RequestFactory = Callable[..., Request]
 RF = TypeVar("RF", bound=RequestFactory)
 

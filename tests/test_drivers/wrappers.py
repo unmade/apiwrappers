@@ -1,11 +1,4 @@
-from dataclasses import dataclass
-
 from apiwrappers import Method, Request
-
-
-@dataclass
-class User:
-    user_id: int
 
 
 class APIWrapper:
@@ -46,5 +39,9 @@ class APIWrapper:
         return self.driver.fetch(request, verify_ssl=verify_ssl)
 
     def exception(self):
+        request = Request(Method.GET, self.host, "/")
+        return self.driver.fetch(request)
+
+    def middleware(self):
         request = Request(Method.GET, self.host, "/")
         return self.driver.fetch(request)

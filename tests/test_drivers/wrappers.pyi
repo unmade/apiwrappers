@@ -95,3 +95,11 @@ class APIWrapper(Generic[DT]):
     @overload
     def exception(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
         ...
+
+    @overload
+    def middleware(self: APIWrapper[Driver]) -> Response:
+        ...
+
+    @overload
+    def middleware(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
+        ...

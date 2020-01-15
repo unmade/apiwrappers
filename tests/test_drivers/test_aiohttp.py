@@ -14,6 +14,7 @@ from apiwrappers.entities import QueryParams
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.utils import NoValue
 
+from .middleware import RequestMiddleware, ResponseMiddleware
 from .wrappers import APIWrapper
 
 if TYPE_CHECKING:
@@ -275,3 +276,19 @@ async def test_invalid_json_response(aresponses, driver: "AioHttpDriver", respon
     json_response = await wrapper.get_hello_world()
     with pytest.raises(json.JSONDecodeError):
         json_response.json()
+
+
+async def test_middleware(aresponses, driver: "AioHttpDriver"):
+    from apiwrappers.drivers.aiohttp import AioHttpDriver
+
+    def echo_headers(request):
+        return aresponses.Response(
+            status=200, headers=request.headers, body=b'{"code": 200, "message": "ok"}',
+        )
+
+    aresponses.add("example.com", "/", "GET", echo_headers)
+    driver = AioHttpDriver(RequestMiddleware, ResponseMiddleware)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.middleware()
+    assert response.headers["x-request-id"] == "request_middleware"
+    assert response.headers["x-response-id"] == "response_middleware"

@@ -1,11 +1,13 @@
 import asyncio
 from http.cookies import SimpleCookie
-from typing import Iterable, List, Tuple, Union
+from typing import Iterable, List, Tuple, Type, Union
 
 import aiohttp
 
 from apiwrappers import exceptions, utils
 from apiwrappers.entities import Request, Response
+from apiwrappers.middleware import apply_middleware
+from apiwrappers.protocols import AsyncMiddleware
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import QueryParams, Timeout
 from apiwrappers.utils import NoValue
@@ -14,10 +16,17 @@ DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
 
 class AioHttpDriver:
-    def __init__(self, timeout: Timeout = DEFAULT_TIMEOUT, verify_ssl: bool = True):
+    def __init__(
+        self,
+        *middleware: Type[AsyncMiddleware],
+        timeout: Timeout = DEFAULT_TIMEOUT,
+        verify_ssl: bool = True
+    ):
         self.timeout = timeout
         self.verify_ssl = verify_ssl
+        self.middleware: List[Type[AsyncMiddleware]] = list(middleware)
 
+    @apply_middleware
     async def fetch(
         self,
         request: Request,
