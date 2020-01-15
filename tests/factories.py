@@ -20,11 +20,14 @@ def make_response(content: bytes, **kwargs) -> Response:
     return Response(**defaults)
 
 
-def make_driver(response: Response) -> Driver:
+def make_driver(response: Response, *middleware) -> Driver:
     class DriverMock:
         # pylint: disable=unused-argument,no-self-use
         timeout: Timeout = 1
         verify_ssl: bool = True
+
+        def __init__(self, middleware):
+            self.middleware = middleware
 
         def fetch(
             self,
@@ -34,14 +37,17 @@ def make_driver(response: Response) -> Driver:
         ) -> Response:
             return response
 
-    return DriverMock()
+    return DriverMock(middleware)
 
 
-def make_async_driver(response: Response) -> AsyncDriver:
+def make_async_driver(response: Response, *middleware) -> AsyncDriver:
     class AsyncDriverMock:
         # pylint: disable=unused-argument,no-self-use
         timeout: Timeout = 1
         verify_ssl: bool = True
+
+        def __init__(self, middleware):
+            self.middleware = middleware
 
         async def fetch(
             self,
@@ -51,4 +57,4 @@ def make_async_driver(response: Response) -> AsyncDriver:
         ) -> Response:
             return response
 
-    return AsyncDriverMock()
+    return AsyncDriverMock(middleware)

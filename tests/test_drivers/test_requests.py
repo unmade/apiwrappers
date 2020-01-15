@@ -13,6 +13,7 @@ from apiwrappers.entities import QueryParams
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.utils import NoValue
 
+from .middleware import RequestMiddleware, ResponseMiddleware
 from .wrappers import APIWrapper
 
 if TYPE_CHECKING:
@@ -247,3 +248,20 @@ def test_invalid_json_response(responses, driver: "RequestsDriver", response):
     json_response = wrapper.get_hello_world()
     with pytest.raises(json.JSONDecodeError):
         json_response.json()
+
+
+def test_middleware(responses) -> None:
+    from apiwrappers.drivers.requests import RequestsDriver
+
+    def echo_headers(request):
+        headers = request.headers
+        return (200, headers, '{"code": 200, "message": "ok"}')
+
+    responses.add_callback(
+        responses.GET, "https://example.com", callback=echo_headers,
+    )
+    driver = RequestsDriver(RequestMiddleware, ResponseMiddleware)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = wrapper.middleware()
+    assert response.headers["x-request-id"] == "request_middleware"
+    assert response.headers["x-response-id"] == "response_middleware"
