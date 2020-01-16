@@ -16,6 +16,14 @@ Overview
     :alt: Checked with mypy
     :target: http://mypy-lang.org/
 
+.. image:: https://img.shields.io/pypi/v/apiwrappers.svg
+    :alt: PyPI Package latest release
+    :target: https://pypi.org/project/apiwrappers
+
+.. image:: https://img.shields.io/pypi/pyversions/apiwrappers.svg
+    :alt: Supported versions
+    :target: https://pypi.org/project/apiwrappers
+
 .. image:: https://img.shields.io/badge/License-MIT-purple.svg
     :alt: MIT License
     :target: https://github.com/unmade/apiwrappers/blob/master/LICENSE
@@ -37,8 +45,8 @@ Features
 - **Unified interface** - work with different python HTTP client libraries
   in the same way. Currently it supports:
 
-    * `requests <https://requests.readthedocs.io/en/master/>`_
-    * `aiohttp <https://docs.aiohttp.org/en/stable/client.html>`_
+    - `requests <https://requests.readthedocs.io/en/master/>`_
+    - `aiohttp <https://docs.aiohttp.org/en/stable/client.html>`_
 
 - **Customizable** - middleware mechanism to customize request/response
 - **Typed** - library is fully typed and it is relatively easy
