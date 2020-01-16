@@ -19,7 +19,7 @@ class RequestsDriver:
         self,
         *middleware: Type[Middleware],
         timeout: Timeout = DEFAULT_TIMEOUT,
-        verify_ssl: bool = True
+        verify_ssl: bool = True,
     ):
         self.timeout = timeout
         self.verify_ssl = verify_ssl
