@@ -28,7 +28,7 @@ Overview
 that work both with regular and async code.
 
 Features
-==========
+========
 
 - **Fast to code** - bootstrap API wrappers with minimal efforts
   and declarative style
@@ -43,6 +43,16 @@ Features
 - **Customizable** - middleware mechanism to customize request/response
 - **Typed** - library is fully typed and it is relatively easy
   to get fully type annotated wrapper
+
+Installation
+============
+
+.. code-block:: bash
+
+    pip install apiwrappers[requests,aiohttp]
+
+*Note: extras are optional and mainly needed for the final
+user of your future API wrapper*
 
 Quickstart
 ==========
