@@ -4,8 +4,8 @@ from typing import Tuple, Type, Union, overload
 from apiwrappers.compat import Literal
 from apiwrappers.protocols import AsyncDriver, AsyncMiddleware, Driver, Middleware
 from apiwrappers.typedefs import Timeout
-from apiwrappers.utils import NoValue
 
+DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 DRIVER_MAP = {
     "requests": ("apiwrappers.drivers.requests", "RequestsDriver"),
     "aiohttp": ("apiwrappers.drivers.aiohttp", "AioHttpDriver"),
@@ -17,7 +17,8 @@ DRIVERS = Literal["requests", "aiohttp"]
 def make_driver(
     driver_type: Literal["requests"],
     *middleware: Type[Middleware],
-    timeout: Union[NoValue, Timeout] = NoValue(),
+    timeout: Timeout = DEFAULT_TIMEOUT,
+    verify_ssl: bool = True,
 ) -> Driver:
     ...
 
@@ -26,7 +27,8 @@ def make_driver(
 def make_driver(
     driver_type: Literal["aiohttp"],
     *middleware: Type[AsyncMiddleware],
-    timeout: Union[NoValue, Timeout] = NoValue(),
+    timeout: Timeout = DEFAULT_TIMEOUT,
+    verify_ssl: bool = True,
 ) -> AsyncDriver:
     ...
 
@@ -36,16 +38,17 @@ def make_driver(
 def make_driver(
     driver_type: str,
     *middleware: Type[AsyncMiddleware],
-    timeout: Union[NoValue, Timeout] = NoValue(),
+    timeout: Timeout = DEFAULT_TIMEOUT,
+    verify_ssl: bool = True,
 ) -> Union[Driver, AsyncDriver]:
     ...
 
 
-def make_driver(driver_type, *middleware, timeout=NoValue(), verify_ssl=NoValue()):
+def make_driver(driver_type, *middleware, timeout=DEFAULT_TIMEOUT, verify_ssl=True):
     module_name, driver_name = _get_import_params(driver_type)
     module = importlib.import_module(module_name)
     driver = getattr(module, driver_name)
-    return driver(*middleware, timeout, verify_ssl)
+    return driver(*middleware, timeout=timeout, verify_ssl=verify_ssl)
 
 
 def _get_import_params(driver_type: str) -> Tuple[str, str]:
