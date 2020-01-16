@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "apiwrappers"
 version = "0.1.0-alpha"
-description = "*apiwrappers* is a library for building API wrappers that work both with regular and async code"
-keywords = ["api", "wrapper"]
+description = "apiwrappers is a library for building API wrappers that work both with regular and async code"
+keywords = ["api", "wrapper", "http", "client"]
 readme = "README.rst"
 authors = ["Aleksei Maslakov <lesha.maslakov@gmail.com>"]
 license = "MIT"
