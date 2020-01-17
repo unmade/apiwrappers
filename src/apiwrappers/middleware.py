@@ -5,7 +5,7 @@ from typing import (
     Awaitable,
     Callable,
     Generic,
-    Optional,
+    NoReturn,
     TypeVar,
     Union,
     cast,
@@ -92,9 +92,7 @@ class BaseMiddleware(Generic[T]):
     def process_response(self, response: Response) -> Response:
         return response
 
-    def process_exception(
-        self, request: Request, exception: Exception
-    ) -> Optional[Response]:
+    def process_exception(self, request: Request, exception: Exception) -> NoReturn:
         raise exception
 
     def call_next(
@@ -105,7 +103,8 @@ class BaseMiddleware(Generic[T]):
             response = handler(request, *args, **kwargs)
         except Exception as exc:  # pylint: disable=broad-except
             self.process_exception(request, exc)
-        return self.process_response(response)
+        else:
+            return self.process_response(response)
 
     async def call_next_async(
         self, handler: AsyncHandler, request: Request, *args, **kwargs,
@@ -115,4 +114,5 @@ class BaseMiddleware(Generic[T]):
             response = await handler(request, *args, **kwargs)
         except Exception as exc:  # pylint: disable=broad-except
             self.process_exception(request, exc)
-        return self.process_response(response)
+        else:
+            return self.process_response(response)
