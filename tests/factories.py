@@ -2,9 +2,8 @@ from http.cookies import SimpleCookie
 from typing import Any, Dict, Union
 
 from apiwrappers import AsyncDriver, Driver, Request, Response
-from apiwrappers.structures import CaseInsensitiveDict
+from apiwrappers.structures import CaseInsensitiveDict, NoValue
 from apiwrappers.typedefs import Timeout
-from apiwrappers.utils import NoValue
 
 
 def make_response(content: bytes, **kwargs) -> Response:

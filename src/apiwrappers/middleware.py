@@ -14,8 +14,8 @@ from typing import (
 
 from apiwrappers.entities import Request, Response
 from apiwrappers.protocols import AsyncHandler, Handler
+from apiwrappers.structures import NoValue
 from apiwrappers.typedefs import Timeout
-from apiwrappers.utils import NoValue
 
 FuncType = Callable[..., Any]
 FT = TypeVar("FT", bound=FuncType)

@@ -11,8 +11,8 @@ from typing import (
 )
 
 from apiwrappers import AsyncDriver, Driver, Method, Request, Response
+from apiwrappers.structures import NoValue
 from apiwrappers.typedefs import JSON, Data, QueryParams, Timeout
-from apiwrappers.utils import NoValue
 
 DT = TypeVar("DT", Driver, AsyncDriver)
 

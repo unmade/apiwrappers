@@ -4,8 +4,8 @@ from typing import Awaitable, List, Type, TypeVar, Union
 
 from apiwrappers.compat import Protocol
 from apiwrappers.entities import Request, Response
+from apiwrappers.structures import NoValue
 from apiwrappers.typedefs import Timeout
-from apiwrappers.utils import NoValue
 
 T = TypeVar("T", "Driver", "AsyncDriver")
 

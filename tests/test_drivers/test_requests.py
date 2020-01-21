@@ -10,8 +10,7 @@ import pytest
 
 from apiwrappers import exceptions
 from apiwrappers.entities import QueryParams
-from apiwrappers.structures import CaseInsensitiveDict
-from apiwrappers.utils import NoValue
+from apiwrappers.structures import CaseInsensitiveDict, NoValue
 
 from .middleware import RequestMiddleware, ResponseMiddleware
 from .wrappers import APIWrapper
