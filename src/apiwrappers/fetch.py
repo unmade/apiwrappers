@@ -52,11 +52,15 @@ class Fetch(Generic[T]):
 
     def response(self, driver, request):
         if not asyncio.iscoroutinefunction(driver.fetch):
-            resp = driver.fetch(request)
-            return self.factory(getitem(resp.json(), key=self.source))
 
-        async def async_response():
-            resp = await driver.fetch(request)
-            return self.factory(getitem(resp.json(), key=self.source))
+            def wrapper():
+                resp = driver.fetch(request)
+                return self.factory(getitem(resp.json(), key=self.source))
 
-        return async_response()
+        else:
+
+            async def wrapper():
+                resp = await driver.fetch(request)
+                return self.factory(getitem(resp.json(), key=self.source))
+
+        return wrapper()

@@ -50,7 +50,7 @@ def apply_middleware(func: FT) -> FT:
                 handler = wrap(handler)
             return handler(*args, **kwargs)
 
-    return cast(FT, wrapper)
+    return cast(FT, functools.wraps(func)(wrapper))
 
 
 class BaseMiddleware(Generic[T]):
