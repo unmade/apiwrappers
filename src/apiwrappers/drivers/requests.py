@@ -51,6 +51,7 @@ class RequestsDriver:
             raise exceptions.DriverError from exc
 
         return Response(
+            request=request,
             status_code=int(response.status_code),
             url=response.url,
             headers=CaseInsensitiveDict(response.headers),

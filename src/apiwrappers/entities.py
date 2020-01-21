@@ -37,6 +37,7 @@ class Request:
 
 @dataclass
 class Response:
+    request: Request
     status_code: int
     url: str
     headers: CaseInsensitiveDict[str]

@@ -53,6 +53,7 @@ class AioHttpDriver:
                 raise exceptions.DriverError from exc
 
             return Response(
+                request=request,
                 status_code=int(response.status),
                 url=str(response.url),
                 headers=CaseInsensitiveDict(response.headers),
