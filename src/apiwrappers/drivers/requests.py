@@ -7,9 +7,8 @@ from apiwrappers import exceptions, utils
 from apiwrappers.entities import Request, Response
 from apiwrappers.middleware import apply_middleware
 from apiwrappers.protocols import Middleware
-from apiwrappers.structures import CaseInsensitiveDict
+from apiwrappers.structures import CaseInsensitiveDict, NoValue
 from apiwrappers.typedefs import Timeout
-from apiwrappers.utils import NoValue
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
@@ -52,6 +51,7 @@ class RequestsDriver:
             raise exceptions.DriverError from exc
 
         return Response(
+            request=request,
             status_code=int(response.status_code),
             url=response.url,
             headers=CaseInsensitiveDict(response.headers),

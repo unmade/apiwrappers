@@ -1,12 +1,8 @@
 import os
 import urllib.parse
-from typing import Mapping, Optional, Tuple
+from typing import Mapping, Optional
 
 from apiwrappers.typedefs import JSON
-
-
-class NoValue:
-    __slots__: Tuple[str, ...] = tuple()
 
 
 def build_url(host: str, path: str) -> str:

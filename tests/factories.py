@@ -1,14 +1,15 @@
+import dataclasses
 from http.cookies import SimpleCookie
 from typing import Any, Dict, Union
 
-from apiwrappers import AsyncDriver, Driver, Request, Response
-from apiwrappers.structures import CaseInsensitiveDict
+from apiwrappers import AsyncDriver, Driver, Method, Request, Response
+from apiwrappers.structures import CaseInsensitiveDict, NoValue
 from apiwrappers.typedefs import Timeout
-from apiwrappers.utils import NoValue
 
 
 def make_response(content: bytes, **kwargs) -> Response:
     defaults: Dict[str, Any] = {
+        "request": Request(Method.GET, "https://example.com", "/"),
         "status_code": 200,
         "url": "https://example.com/",
         "headers": CaseInsensitiveDict(),
@@ -35,7 +36,7 @@ def make_driver(response: Response, *middleware) -> Driver:
             timeout: Union[Timeout, NoValue] = NoValue(),
             verify_ssl: Union[bool, NoValue] = NoValue(),
         ) -> Response:
-            return response
+            return dataclasses.replace(response, request=request)
 
     return DriverMock(middleware)
 
@@ -55,6 +56,6 @@ def make_async_driver(response: Response, *middleware) -> AsyncDriver:
             timeout: Union[Timeout, NoValue] = NoValue(),
             verify_ssl: Union[bool, NoValue] = NoValue(),
         ) -> Response:
-            return response
+            return dataclasses.replace(response, request=request)
 
     return AsyncDriverMock(middleware)

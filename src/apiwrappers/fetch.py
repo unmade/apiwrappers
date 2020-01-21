@@ -1,8 +1,19 @@
 import asyncio
-from typing import Awaitable, Callable, Generic, Optional, Type, TypeVar, overload
+from typing import (
+    Awaitable,
+    Callable,
+    Generic,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    overload,
+)
 
 from apiwrappers.entities import Request
 from apiwrappers.protocols import AsyncDriver, Driver, WrapperLike
+from apiwrappers.structures import NoValue
+from apiwrappers.typedefs import Timeout
 from apiwrappers.utils import getitem
 
 T = TypeVar("T")
@@ -41,22 +52,38 @@ class Fetch(Generic[T]):
         return request_factory
 
     @overload
-    def response(self, driver: Driver, request: Request) -> T:
+    def response(
+        self,
+        driver: Driver,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
+        verify_ssl: Union[bool, NoValue] = NoValue(),
+    ) -> T:
         # pylint: disable=no-self-use
         ...
 
     @overload
-    def response(self, driver: AsyncDriver, request: Request) -> Awaitable[T]:
+    def response(
+        self,
+        driver: AsyncDriver,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
+        verify_ssl: Union[bool, NoValue] = NoValue(),
+    ) -> Awaitable[T]:
         # pylint: disable=no-self-use
         ...
 
-    def response(self, driver, request):
+    def response(self, driver, request, timeout=NoValue(), verify_ssl=NoValue()):
         if not asyncio.iscoroutinefunction(driver.fetch):
-            resp = driver.fetch(request)
-            return self.factory(getitem(resp.json(), key=self.source))
 
-        async def async_response():
-            resp = await driver.fetch(request)
-            return self.factory(getitem(resp.json(), key=self.source))
+            def wrapper():
+                resp = driver.fetch(request, timeout, verify_ssl)
+                return self.factory(getitem(resp.json(), key=self.source))
 
-        return async_response()
+        else:
+
+            async def wrapper():
+                resp = await driver.fetch(request, timeout, verify_ssl)
+                return self.factory(getitem(resp.json(), key=self.source))
+
+        return wrapper()

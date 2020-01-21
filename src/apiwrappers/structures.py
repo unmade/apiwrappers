@@ -3,6 +3,10 @@ from typing import Dict, Iterator, Mapping, MutableMapping, Optional, Tuple, Typ
 VT = TypeVar("VT")
 
 
+class NoValue:
+    __slots__: Tuple[str, ...] = tuple()
+
+
 class CaseInsensitiveDict(MutableMapping[str, VT]):
     __slots__ = ("_data",)
 
