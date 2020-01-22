@@ -123,7 +123,7 @@ def make_response(
 
 
 def make_response(
-    driver, request, timeout=NoValue, verify_ssl=NoValue, model=None, source=None
+    driver, request, timeout=NoValue(), verify_ssl=NoValue(), model=None, source=None
 ):
     if asyncio.iscoroutinefunction(driver.fetch):
 

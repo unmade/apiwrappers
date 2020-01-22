@@ -1,7 +1,7 @@
 import dataclasses
 import os
 import urllib.parse
-from typing import Any, Mapping, Optional, TypeVar, Union, cast
+from typing import Any, Mapping, Optional, TypeVar, Union, cast, get_type_hints
 
 from apiwrappers.typedefs import JSON
 
@@ -36,9 +36,10 @@ def _fromjson(obj, data):
     # pylint: disable=too-many-return-statements,too-many-branches
     if dataclasses.is_dataclass(obj):
         kwargs = {}
+        hints = get_type_hints(obj)
         for field in dataclasses.fields(obj):
             try:
-                kwargs[field.name] = _fromjson(field.type, data[field.name])
+                kwargs[field.name] = _fromjson(hints[field.name], data[field.name])
             except KeyError:
                 if field.default is not dataclasses.MISSING:
                     kwargs[field.name] = field.default
