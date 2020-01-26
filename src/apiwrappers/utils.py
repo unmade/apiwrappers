@@ -33,7 +33,7 @@ def fromjson(obj: T, data: JSON) -> T:
 
 
 def _fromjson(obj, data):
-    # pylint: disable=too-many-return-statements,too-many-branches
+    # pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
     if dataclasses.is_dataclass(obj):
         kwargs = {}
         hints = get_type_hints(obj)
@@ -72,4 +72,26 @@ def _fromjson(obj, data):
                 return _fromjson(args[0], data)
             raise TypeError("Union is not supported")
         raise TypeError("Abstract types is not supported")
+    if is_namedtuple(obj):
+        field_types = obj._field_types  # pylint: disable=protected-access
+        field_defaults = obj._field_defaults  # pylint: disable=protected-access
+        if isinstance(data, list):
+            return obj(
+                *[_fromjson(tp, item) for tp, item in zip(field_types.values(), data)]
+            )
+        if isinstance(data, dict):
+            kwargs = {}
+            for field_name, tp in field_types.items():
+                try:
+                    kwargs[field_name] = fromjson(tp, data[field_name])
+                except KeyError:
+                    if field_name not in field_defaults:
+                        raise
+                    kwargs[field_name] = field_defaults[field_name]
+            return obj(**kwargs)
+        raise ValueError(f"Expected value to be list or dict, got: {type(data)}")
     return obj(data)
+
+
+def is_namedtuple(obj) -> bool:
+    return issubclass(obj, tuple) and hasattr(obj, "_fields")

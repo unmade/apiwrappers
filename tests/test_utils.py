@@ -1,7 +1,7 @@
 import enum
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Set, Tuple, Union
 
 import pytest
 
@@ -232,7 +232,7 @@ def test_abstract_types_fromjson() -> None:
     assert str(excinfo.value) == "Abstract types is not supported"
 
 
-def test_enum_from_json() -> None:
+def test_enum_fromjson() -> None:
     class Genre(enum.Enum):
         indie = 1
         shoegaze = 2
@@ -244,3 +244,45 @@ def test_enum_from_json() -> None:
     data = {"genre": 1}
     song = utils.fromjson(Song, data)
     assert song.genre == Genre.indie
+
+
+@pytest.mark.parametrize("data", [[1, 0], {"x": 1, "y": 0}])
+def test_namedtuple_fromjson(data) -> None:
+    class Position(NamedTuple):
+        x: int
+        y: int
+
+    position = utils.fromjson(Position, data)
+    assert position == Position(1, 0)
+
+
+def test_namedtuple_fromjson_defaults() -> None:
+    class Position(NamedTuple):
+        x: int
+        y: int = 0
+
+    data = {"x": 1}
+    position = utils.fromjson(Position, data)
+    assert position == Position(1, 0)
+
+
+def test_namedtuple_fromjson_without_defaults() -> None:
+    class Position(NamedTuple):
+        x: int
+        y: int
+
+    data = {"x": 1}
+    with pytest.raises(KeyError):
+        utils.fromjson(Position, data)
+
+
+def test_namedtuple_fromjson_invalid_type() -> None:
+    class Position(NamedTuple):
+        x: int
+        y: int = 0
+
+    data = 1
+    with pytest.raises(ValueError) as excinfo:
+        utils.fromjson(Position, data)
+
+    assert str(excinfo.value) == "Expected value to be list or dict, got: <class 'int'>"
