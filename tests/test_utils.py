@@ -165,7 +165,7 @@ def test_list_from_not_list():
     with pytest.raises(ValueError) as excinfo:
         utils.fromjson(Album, data)
 
-    assert str(excinfo.value) == "Expected value to be list, got: <class 'dict'>"
+    assert str(excinfo.value) == "Expected `List`, got: <class 'dict'>"
 
 
 def test_dict_fromjson() -> None:
@@ -187,7 +187,7 @@ def test_dict_from_not_dict():
     with pytest.raises(ValueError) as excinfo:
         print(utils.fromjson(Album, data))
 
-    assert str(excinfo.value) == "Expected value to be mapping, got: <class 'list'>"
+    assert str(excinfo.value) == "Expected `Mapping`, got: <class 'list'>"
 
 
 def test_default_field_value_fromjson() -> None:
@@ -285,4 +285,4 @@ def test_namedtuple_fromjson_invalid_type() -> None:
     with pytest.raises(ValueError) as excinfo:
         utils.fromjson(Position, data)
 
-    assert str(excinfo.value) == "Expected value to be list or dict, got: <class 'int'>"
+    assert str(excinfo.value) == "Expected `List` or `Mapping`, got: <class 'int'>"
