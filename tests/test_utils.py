@@ -1,3 +1,4 @@
+import enum
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union
@@ -229,3 +230,17 @@ def test_abstract_types_fromjson() -> None:
         utils.fromjson(Config, data)
 
     assert str(excinfo.value) == "Abstract types is not supported"
+
+
+def test_enum_from_json() -> None:
+    class Genre(enum.Enum):
+        indie = 1
+        shoegaze = 2
+
+    @dataclass
+    class Song:
+        genre: Genre
+
+    data = {"genre": 1}
+    song = utils.fromjson(Song, data)
+    assert song.genre == Genre.indie
