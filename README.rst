@@ -105,38 +105,6 @@ let's build our first API wrapper:
 
 .. code-block:: python
 
-    from typing import Awaitable, Generic, List, Mapping, TypeVar, overload
-
-    from apiwrappers import AsyncDriver, Driver, Method, Request, Response, make_driver
-
-    T = TypeVar("T", Driver, AsyncDriver)
-
-
-    class Github(Generic[T]):
-        def __init__(self, host: str, driver: T):
-            self.host = host
-            self.driver: T = driver
-
-        @overload
-        def get_repos(self: "Github[Driver]", username: str) -> Response:
-            ...
-
-        @overload
-        def get_repos(self: "Github[AsyncDriver]", username: str) -> Awaitable[Response]:
-            ...
-
-        def get_repos(self, username: str):
-            request = Request(Method.GET, self.host, f"/users/{username}/repos")
-            return self.driver.fetch(request)
-
-Here we defined one method of the `api.github.com <https://api.github.com>`_
-to get all user repos by username.
-
-However, using this wrapper we need to deal with json, which is untyped,
-and wouldn't it be nice to just know what we get. Let's fix that:
-
-.. code-block:: python
-
     from dataclasses import dataclass
     from typing import Awaitable, Generic, List, TypeVar, overload
 
