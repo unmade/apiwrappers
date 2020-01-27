@@ -91,11 +91,12 @@ to try this code interactively*
 
 .. code-block:: python
 
+    >>> from apiwrappers import Method, Request, make_driver
+    >>> request = Request(Method.GET, "https://example.org", "/")
     >>> driver = make_driver("aiohttp")
     >>> response = await driver.fetch(request)
     >>> response.status_code
     200
-
 
 Writing a simple API wrapper
 ----------------------------
@@ -108,7 +109,7 @@ let's build our first API wrapper:
     from dataclasses import dataclass
     from typing import Awaitable, Generic, List, TypeVar, overload
 
-    from apiwrappers import AsyncDriver, Driver, Method, Request, make_response
+    from apiwrappers import AsyncDriver, Driver, Method, Request, fetch
 
     T = TypeVar("T", Driver, AsyncDriver)
 
@@ -134,10 +135,10 @@ let's build our first API wrapper:
 
         def get_repos(self, username: str):
             request = Request(Method.GET, self.host, f"/users/{username}/repos")
-            return make_response(self.driver, request, model=List[Repo])
+            return fetch(self.driver, request, model=List[Repo])
 
 Here we defined ``Repo`` dataclass that describes what we want
-to get from response and pass it to the ``make_response`` function.
+to get from response and pass it to the ``fetch`` function.
 
 Now, our API wrapper is ready for use:
 

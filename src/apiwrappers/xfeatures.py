@@ -1,8 +1,8 @@
 from typing import Awaitable, Callable, Generic, Optional, Type, TypeVar, overload
 
 from apiwrappers.entities import Request
-from apiwrappers.factories import make_response
 from apiwrappers.protocols import AsyncDriver, Driver, WrapperLike
+from apiwrappers.shortcuts import fetch
 
 T = TypeVar("T")
 RequestFactory = Callable[..., Request]
@@ -30,9 +30,7 @@ class Fetch(Generic[T]):
     def __get__(self, obj, objtype):
         def wrapper(*args, **kwargs):
             request = self.request_factory(obj, *args, **kwargs)
-            return make_response(
-                obj.driver, request, model=self.model, source=self.source
-            )
+            return fetch(obj.driver, request, model=self.model, source=self.source)
 
         return wrapper
 
