@@ -5,7 +5,8 @@ from typing import Generic, TypeVar
 
 import pytest
 
-from apiwrappers import AsyncDriver, Driver, Fetch, Method, Request
+from apiwrappers import AsyncDriver, Driver, Method, Request
+from apiwrappers.xfeatures import Fetch
 
 from . import factories
 

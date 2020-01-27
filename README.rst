@@ -168,10 +168,10 @@ and don't forget to ``await`` method call:
      ...
     ]
 
-Expiremental Features
+Experimental Features
 ---------------------
 
-As expirement, there is also a ``Fetch`` descriptor.
+As experiment, there is also a ``Fetch`` descriptor.
 ``Fetch`` helps reduce boilerplate and lets you write wrappers
 in almost declarative way:
 
@@ -182,7 +182,8 @@ in almost declarative way:
     from dataclasses import dataclass
     from typing import Any, Generic, List, Mapping, TypeVar
 
-    from apiwrappers import AsyncDriver, Driver, Fetch, Method, Request
+    from apiwrappers import AsyncDriver, Driver, Method, Request
+    from apiwrappers.xfeatures import Fetch
 
     T = TypeVar("T", Driver, AsyncDriver)
 
