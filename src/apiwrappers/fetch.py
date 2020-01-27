@@ -1,30 +1,17 @@
-import asyncio
-from typing import (
-    Awaitable,
-    Callable,
-    Generic,
-    Optional,
-    Type,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import Awaitable, Callable, Generic, Optional, Type, TypeVar, overload
 
 from apiwrappers.entities import Request
+from apiwrappers.factories import make_response
 from apiwrappers.protocols import AsyncDriver, Driver, WrapperLike
-from apiwrappers.structures import NoValue
-from apiwrappers.typedefs import Timeout
-from apiwrappers.utils import getitem
 
 T = TypeVar("T")
-DT = TypeVar("DT", Driver, AsyncDriver)
 RequestFactory = Callable[..., Request]
 RF = TypeVar("RF", bound=RequestFactory)
 
 
 class Fetch(Generic[T]):
-    def __init__(self, factory: Callable[..., T], source: Optional[str] = None):
-        self.factory: Callable[..., T] = factory
+    def __init__(self, model: Callable[..., T], source: Optional[str] = None):
+        self.model: Callable[..., T] = model
         self.source = source
         self.request_factory: Optional[RequestFactory] = None
 
@@ -43,47 +30,12 @@ class Fetch(Generic[T]):
     def __get__(self, obj, objtype):
         def wrapper(*args, **kwargs):
             request = self.request_factory(obj, *args, **kwargs)
-            return self.response(obj.driver, request)
+            return make_response(
+                obj.driver, request, model=self.model, source=self.source
+            )
 
         return wrapper
 
     def request(self, request_factory: RF) -> RF:
         self.request_factory = request_factory
         return request_factory
-
-    @overload
-    def response(
-        self,
-        driver: Driver,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
-    ) -> T:
-        # pylint: disable=no-self-use
-        ...
-
-    @overload
-    def response(
-        self,
-        driver: AsyncDriver,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
-    ) -> Awaitable[T]:
-        # pylint: disable=no-self-use
-        ...
-
-    def response(self, driver, request, timeout=NoValue(), verify_ssl=NoValue()):
-        if not asyncio.iscoroutinefunction(driver.fetch):
-
-            def wrapper():
-                resp = driver.fetch(request, timeout, verify_ssl)
-                return self.factory(getitem(resp.json(), key=self.source))
-
-        else:
-
-            async def wrapper():
-                resp = await driver.fetch(request, timeout, verify_ssl)
-                return self.factory(getitem(resp.json(), key=self.source))
-
-        return wrapper()

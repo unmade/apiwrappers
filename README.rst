@@ -105,53 +105,10 @@ let's build our first API wrapper:
 
 .. code-block:: python
 
-    from typing import Awaitable, Generic, List, Mapping, TypeVar, overload
-
-    from apiwrappers import AsyncDriver, Driver, Method, Request, Response, make_driver
-
-    T = TypeVar("T", Driver, AsyncDriver)
-
-
-    class Github(Generic[T]):
-        def __init__(self, host: str, driver: T):
-            self.host = host
-            self.driver: T = driver
-
-        @overload
-        def get_repos(self: "Github[Driver]", username: str) -> Response:
-            ...
-
-        @overload
-        def get_repos(self: "Github[AsyncDriver]", username: str) -> Awaitable[Response]:
-            ...
-
-        def get_repos(self, username: str):
-            request = Request(Method.GET, self.host, f"/users/{username}/repos")
-            return self.driver.fetch(request)
-
-Here we defined one method of the `api.github.com <https://api.github.com>`_
-to get all user repos by username.
-
-However wrapper has some flaws:
-
-- ``get_repos`` method returns ``Response`` object, but it would be nice
-  to know what data we expect from response, and not deal with a json
-- we had to use overload twice to set correct response type
-  based on driver type
-- it's hard to test, because ``get_repos`` method has side-effect and we need
-  either mock ``self.driver.fetch`` call or use third party libraries
-  such as responses, aioresponses, etc...
-
-Let's improve our wrapper:
-
-.. code-block:: python
-
-    from __future__ import annotations
-
     from dataclasses import dataclass
-    from typing import Any, Generic, List, Mapping, TypeVar
+    from typing import Awaitable, Generic, List, TypeVar, overload
 
-    from apiwrappers import AsyncDriver, Driver, Fetch, Method, Request, make_driver
+    from apiwrappers import AsyncDriver, Driver, Method, Request, make_response
 
     T = TypeVar("T", Driver, AsyncDriver)
 
@@ -161,17 +118,82 @@ Let's improve our wrapper:
         id: int
         name: str
 
-        @classmethod
-        def from_dict(cls, item: Mapping[str, Any]) -> Repo:
-            return cls(id=item["id"], name=item["name"])
-
-        @classmethod
-        def from_list(cls, items: List[Mapping[str, Any]]) -> List[Repo]:
-            return [cls.from_dict(item) for item in items]
-
 
     class Github(Generic[T]):
-        get_repos = Fetch(Repo.from_list)
+        def __init__(self, host: str, driver: str):
+            self.host = host
+            self.driver: T = driver
+
+        @overload
+        def get_repos(self: "Github[Driver]", username: str) -> List[Repo]:
+            ...
+
+        @overload
+        def get_repos(self: "Github[AsyncDriver]", username: str) -> Awaitable[List[Repo]]:
+            ...
+
+        def get_repos(self, username: str):
+            request = Request(Method.GET, self.host, f"/users/{username}/repos")
+            return make_response(self.driver, request, model=List[Repo])
+
+Here we defined ``Repo`` dataclass that describes what we want
+to get from response and pass it to the ``make_response`` function.
+
+Now, our API wrapper is ready for use:
+
+.. code-block:: python
+
+    >>> from apiwrappers import make_driver
+    >>> driver = make_driver("requests")
+    >>> github = Github("https://api.github.com", driver=driver)
+    >>> github.get_repos("unmade")
+    [Repo(id=47463599, name='am-date-picker'),
+     Repo(id=231653904, name='apiwrappers'),
+     Repo(id=144204778, name='conway'),
+     ...
+    ]
+
+To use it with asyncio all we need to do is provide a proper driver
+and don't forget to ``await`` method call:
+
+.. code-block:: python
+
+    >>> from apiwrappers import make_driver
+    >>> driver = make_driver("aiohttp")
+    >>> github = Github("https://api.github.com", driver=driver)
+    >>> await github.get_repos("unmade")
+    [Repo(id=47463599, name='am-date-picker'),
+     Repo(id=231653904, name='apiwrappers'),
+     Repo(id=144204778, name='conway'),
+     ...
+    ]
+
+Expiremental Features
+---------------------
+
+As expirement, there is also a ``Fetch`` descriptor.
+``Fetch`` helps reduce boilerplate and lets you write wrappers
+in almost declarative way:
+
+.. code-block:: python
+
+    from __future__ import annotations
+
+    from dataclasses import dataclass
+    from typing import Any, Generic, List, Mapping, TypeVar
+
+    from apiwrappers import AsyncDriver, Driver, Fetch, Method, Request
+
+    T = TypeVar("T", Driver, AsyncDriver)
+
+
+    @dataclass
+    class Repo:
+        id: int
+        name: str
+
+    class Github(Generic[T]):
+        get_repos = Fetch(List[Repo])
 
         def __init__(self, host: str, driver: T):
             self.host = host
@@ -190,36 +212,6 @@ Here we did the following:
    We provide one by using ``get_repos.request`` decorator
    on the ``get_repos_request``
 #. ``get_repos_request`` is a pure function and easy to test
-
-Now, our API wrapper is ready for use:
-
-.. code-block:: python
-
-    >>> driver = make_driver("requests")
-    >>> github = Github("https://api.github.com", driver=driver)
-    >>> github.get_repos("unmade")
-    [Repo(id=47463599, name='am-date-picker'),
-     Repo(id=231653904, name='apiwrappers'),
-     Repo(id=144204778, name='conway'),
-     ...
-    ]
-
-To use it with asyncio all we need to do is provide a proper driver
-and don't forget to ``await`` method call:
-
-.. code-block:: python
-
-    >>> driver = make_driver("aiohttp")
-    >>> github = Github("https://api.github.com", driver=driver)
-    >>> await github.get_repos("unmade")
-    [Repo(id=47463599, name='am-date-picker'),
-     Repo(id=231653904, name='apiwrappers'),
-     Repo(id=144204778, name='conway'),
-     ...
-    ]
-
-
-*In the example above only return type will be annotated and checked by mypy.
-Method arguments will not be checked by mypy, since it has some limitations
-on defining generic callable args. If you want to have fully type annotated
-wrapper, then you still have to use overload decorator.*
+#. No need to use overload - mypy will understand the return type
+   of the ``.get_repos`` call, but not the signature (due to limited
+   support of the callable argument)

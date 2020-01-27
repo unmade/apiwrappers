@@ -344,7 +344,9 @@ function-naming-style=snake_case
 
 # Good variable names which should always be accepted, separated by a comma.
 good-names=i,
+           id,
            T,
+           tp,
            pytestmark,
 
 # Include a hint for the correct naming format with invalid-name.
