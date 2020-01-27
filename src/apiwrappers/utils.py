@@ -1,7 +1,17 @@
 import dataclasses
 import os
 import urllib.parse
-from typing import Any, Mapping, Optional, Type, TypeVar, Union, cast, get_type_hints
+from typing import (
+    Any,
+    Callable,
+    Mapping,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+    get_type_hints,
+)
 
 from apiwrappers.typedefs import JSON
 
@@ -28,65 +38,68 @@ def getitem(data: JSON, key: Optional[str]) -> JSON:
     return data
 
 
-def fromjson(obj: Type[T], data: JSON) -> T:
-    if obj is Any:
-        return cast(T, data)
-    if dataclasses.is_dataclass(obj):
-        return cast(T, handle_dataclass(obj, data))
-    if is_namedtuple(obj):
-        return cast(T, handle_namedtuple(obj, data))
-    if is_generic_type(obj):
-        return cast(T, handle_generic_type(obj, data))
-    return obj(data)  # type: ignore
+def fromjson(objtype: Union[Callable[..., T], Type[T]], data: JSON) -> T:
+    if objtype is Any:
+        obj = data
+    elif dataclasses.is_dataclass(objtype):
+        obj = _handle_dataclass(objtype, data)
+    elif _is_namedtuple(objtype):
+        obj = _handle_namedtuple(objtype, data)
+    elif _is_generic_type(objtype):
+        obj = _handle_generic_type(objtype, data)
+    else:
+        obj = objtype(data)  # type: ignore
+    return cast(T, obj)
 
 
-def is_namedtuple(obj: Any) -> bool:
+def _is_namedtuple(obj: Any) -> bool:
     return hasattr(obj, "_fields") and issubclass(obj, tuple)
 
 
-def is_generic_type(obj: Any) -> bool:
+def _is_generic_type(obj: Any) -> bool:
     return hasattr(obj, "__origin__") and hasattr(obj, "__args__")
 
 
-def handle_dataclass(obj, data):
+def _handle_dataclass(objtype: Any, data: JSON) -> Any:
+    if not isinstance(data, Mapping):
+        raise ValueError(f"Expected `Mapping`, got: {type(data)}")
     kwargs = {}
-    hints = get_type_hints(obj)
-    for field in dataclasses.fields(obj):
+    hints = get_type_hints(objtype)
+    for field in dataclasses.fields(objtype):
         try:
             kwargs[field.name] = fromjson(hints[field.name], data[field.name])
         except KeyError:
             if field.default is not dataclasses.MISSING:
                 kwargs[field.name] = field.default
-            elif field.default_factory is not dataclasses.MISSING:
-                kwargs[field.name] = field.default_factory()
+            # see: https://github.com/python/mypy/issues/6910
+            elif field.default_factory is not dataclasses.MISSING:  # type: ignore
+                kwargs[field.name] = field.default_factory()  # type: ignore
             else:
                 raise
-    return obj(**kwargs)
+    return objtype(**kwargs)
 
 
-def handle_namedtuple(obj, data):
-    field_types = obj._field_types  # pylint: disable=protected-access
-    field_defaults = obj._field_defaults  # pylint: disable=protected-access
+def _handle_namedtuple(objtype: Any, data: JSON) -> Any:
+    hints = get_type_hints(objtype)
+    field_defaults = objtype._field_defaults  # pylint: disable=protected-access
     if isinstance(data, list):
-        return obj(
-            *[fromjson(tp, item) for tp, item in zip(field_types.values(), data)]
-        )
+        return objtype(*[fromjson(tp, item) for tp, item in zip(hints.values(), data)])
     if isinstance(data, Mapping):
         kwargs = {}
-        for field_name, tp in field_types.items():
+        for field_name, tp in hints.items():
             try:
                 kwargs[field_name] = fromjson(tp, data[field_name])
             except KeyError:
                 if field_name not in field_defaults:
                     raise
                 kwargs[field_name] = field_defaults[field_name]
-        return obj(**kwargs)
+        return objtype(**kwargs)
     raise ValueError(f"Expected `List` or `Mapping`, got: {type(data)}")
 
 
-def handle_generic_type(obj, data):
-    origin = obj.__origin__
-    args = obj.__args__
+def _handle_generic_type(objtype: Any, data: JSON) -> Any:
+    origin = objtype.__origin__
+    args = objtype.__args__
     if origin in (list, set, tuple):
         if not isinstance(data, list):
             raise ValueError(f"Expected `List`, got: {type(data)}")

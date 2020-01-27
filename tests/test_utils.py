@@ -232,6 +232,18 @@ def test_abstract_types_fromjson() -> None:
     assert str(excinfo.value) == "Abstract types is not supported"
 
 
+def test_dataclass_fromjson_invalid_type() -> None:
+    @dataclass
+    class Album:
+        songs: List[int]
+
+    data = [1]
+    with pytest.raises(ValueError) as excinfo:
+        utils.fromjson(Album, data)
+
+    assert str(excinfo.value) == "Expected `Mapping`, got: <class 'list'>"
+
+
 def test_enum_fromjson() -> None:
     class Genre(enum.Enum):
         indie = 1
