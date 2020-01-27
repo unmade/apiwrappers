@@ -77,6 +77,8 @@ Let's learn how to make a simple request:
     >>> request = Request(Method.GET, "https://example.org", "/")
     >>> driver = make_driver("requests")
     >>> response = driver.fetch(request)
+    >>> response
+    <Response [200]>
     >>> response.status_code
     200
     >>> response.headers["content-type"]
@@ -95,8 +97,8 @@ to try this code interactively*
     >>> request = Request(Method.GET, "https://example.org", "/")
     >>> driver = make_driver("aiohttp")
     >>> response = await driver.fetch(request)
-    >>> response.status_code
-    200
+    >>> response
+    <Response [200]>
 
 Writing a simple API wrapper
 ----------------------------
