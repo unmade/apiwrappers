@@ -1,40 +1,11 @@
-========
-Overview
-========
+.. apiwrappers documentation master file, created by
+   sphinx-quickstart on Mon Jan 27 19:10:08 2020.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-.. start-badges
-
-.. image:: https://github.com/unmade/apiwrappers/workflows/lint%20and%20test/badge.svg?branch=master
-    :alt: Build Status
-    :target: https://github.com/unmade/apiwrappers/blob/master/.github/workflows/lint-and-test.yml
-
-.. image:: https://readthedocs.org/projects/apiwrappers/badge/?version=latest
-    :alt: Documentation Status
-    :target: https://apiwrappers.readthedocs.io/en/latest/?badge=latest
-
-.. image:: https://codecov.io/gh/unmade/apiwrappers/branch/master/graph/badge.svg
-    :alt: Coverage Status
-    :target: https://codecov.io/gh/unmade/apiwrappers
-
-.. image:: http://www.mypy-lang.org/static/mypy_badge.svg
-    :alt: Checked with mypy
-    :target: http://mypy-lang.org/
-
-.. image:: https://img.shields.io/pypi/v/apiwrappers.svg
-    :alt: PyPI Package latest release
-    :target: https://pypi.org/project/apiwrappers
-
-.. image:: https://img.shields.io/pypi/pyversions/apiwrappers.svg
-    :alt: Supported versions
-    :target: https://pypi.org/project/apiwrappers
-
-.. image:: https://img.shields.io/badge/License-MIT-purple.svg
-    :alt: MIT License
-    :target: https://github.com/unmade/apiwrappers/blob/master/LICENSE
-
-.. end-badges
-
-----------
+======================
+Welcome to apiwrappers
+======================
 
 *apiwrappers* is a library for building API clients
 that work both with regular and async code.
@@ -67,9 +38,6 @@ Getting Started
 
 With *apiwrappers* you can bootstrap clients for different API
 pretty fast and easily.
-
-Writing a Simple API Client
----------------------------
 
 Here is how a typical API client would look like:
 
@@ -119,10 +87,7 @@ Here we defined ``Repo`` dataclass that describes what we want
 to get from response and pass it to the ``fetch`` function.
 ``fetch`` will then make a request and will cast response to that type.
 
-Using the API Client
---------------------
-
-Here how we can use it:
+And here how we can use it:
 
 .. code-block:: python
 
@@ -154,20 +119,14 @@ to try this code interactively*
      ...
     ]
 
-Documentation
-=============
+Table of Contents
+-----------------
 
-Documentation for *apiwrappers* can be found at
-`Read The Docs <https://apiwrappers.readthedocs.io/>`_.
+.. toctree::
+   :name: mastertoc
+   :maxdepth: 2
 
-Contributing
-============
-
-Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given.
-
-See `contributing guide <CONTRIBUTING.rst>`_ to learn more.
-
-Currently the code and the issues are hosted on Github.
-
-The project is licensed under MIT.
+   building-an-api-client
+   drivers
+   middleware
+   experimental-features
