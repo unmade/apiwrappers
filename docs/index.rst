@@ -121,5 +121,6 @@ Table of Contents
    :name: mastertoc
    :maxdepth: 2
 
+   drivers
    building-an-api-client
    middleware
