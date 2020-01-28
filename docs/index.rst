@@ -122,3 +122,4 @@ Table of Contents
    :maxdepth: 2
 
    building-an-api-client
+   middleware
