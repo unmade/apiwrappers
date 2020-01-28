@@ -32,16 +32,13 @@ Overview
 
 ----------
 
-*apiwrappers* is a library for building API wrappers
+*apiwrappers* is a library for building API clients
 that work both with regular and async code.
 
 Features
 ========
 
-- **Fast to code** - bootstrap API wrappers with minimal efforts
-  and declarative style
-- **No code duplication** - support both sync and async implementations
-  with one wrapper
+- **DRY** - support both sync and async implementations with one wrapper
 - **Unified interface** - work with different python HTTP client libraries
   in the same way. Currently it supports:
 
@@ -65,7 +62,7 @@ user of your future API wrapper*
 Quickstart
 ==========
 
-Each wrapper needs a HTTP client to make request to the API.
+Each wrapper needs a HTTP client to make requests to the API.
 
 *apiwrappers* provides common interface (drivers) for
 the most popular HTTP clients.
@@ -100,11 +97,11 @@ to try this code interactively*
     >>> response
     <Response [200]>
 
-Writing a simple API wrapper
+Writing a simple API client
 ----------------------------
 
 Now, that we learned how to make HTTP requests,
-let's build our first API wrapper:
+let's build our first API client:
 
 .. code-block:: python
 
@@ -123,7 +120,7 @@ let's build our first API wrapper:
 
 
     class Github(Generic[T]):
-        def __init__(self, host: str, driver: str):
+        def __init__(self, host: str, driver: T):
             self.host = host
             self.driver: T = driver
 
@@ -142,7 +139,7 @@ let's build our first API wrapper:
 Here we defined ``Repo`` dataclass that describes what we want
 to get from response and pass it to the ``fetch`` function.
 
-Now, our API wrapper is ready for use:
+The API client is ready for use:
 
 .. code-block:: python
 
