@@ -8,6 +8,10 @@ Overview
     :alt: Build Status
     :target: https://github.com/unmade/apiwrappers/blob/master/.github/workflows/lint-and-test.yml
 
+.. image:: https://readthedocs.org/projects/apiwrappers/badge/?version=latest
+    :alt: Documentation Status
+    :target: https://apiwrappers.readthedocs.io/en/latest/?badge=latest
+
 .. image:: https://codecov.io/gh/unmade/apiwrappers/branch/master/graph/badge.svg
     :alt: Coverage Status
     :target: https://codecov.io/gh/unmade/apiwrappers
@@ -38,16 +42,15 @@ that work both with regular and async code.
 Features
 ========
 
-- **DRY** - support both sync and async implementations with one wrapper
+- **DRY** - support both regular and async code with one implementation
+- **Customizable** - middleware mechanism to customize request/response
+- **Typed** - library is fully typed and it's relatively easy
+  to get fully typed wrapper
 - **Unified interface** - work with different python HTTP client libraries
-  in the same way. Currently it supports:
+  in the same way. Currently supported:
 
     - `requests <https://requests.readthedocs.io/en/master/>`_
     - `aiohttp <https://docs.aiohttp.org/en/stable/client.html>`_
-
-- **Customizable** - middleware mechanism to customize request/response
-- **Typed** - library is fully typed and it is relatively easy
-  to get fully type annotated wrapper
 
 Installation
 ============
@@ -59,49 +62,16 @@ Installation
 *Note: extras are optional and mainly needed for the final
 user of your future API wrapper*
 
-Quickstart
-==========
+Getting Started
+===============
 
-Each wrapper needs a HTTP client to make requests to the API.
+With *apiwrappers* you can bootstrap clients for different API
+pretty fast and easily.
 
-*apiwrappers* provides common interface (drivers) for
-the most popular HTTP clients.
-Let's learn how to make a simple request:
+Writing a Simple API Client
+---------------------------
 
-.. code-block:: python
-
-    >>> from apiwrappers import Method, Request, make_driver
-    >>> request = Request(Method.GET, "https://example.org", "/")
-    >>> driver = make_driver("requests")
-    >>> response = driver.fetch(request)
-    >>> response
-    <Response [200]>
-    >>> response.status_code
-    200
-    >>> response.headers["content-type"]
-    'text/html; charset=UTF-8'
-    >>> response.text()
-    '<!doctype html>\n<html>\n<head>\n<title>Example Domain</title>...'
-
-Or using asynchronous driver:
-
-*Use IPython or Python 3.8+ with python -m asyncio
-to try this code interactively*
-
-.. code-block:: python
-
-    >>> from apiwrappers import Method, Request, make_driver
-    >>> request = Request(Method.GET, "https://example.org", "/")
-    >>> driver = make_driver("aiohttp")
-    >>> response = await driver.fetch(request)
-    >>> response
-    <Response [200]>
-
-Writing a simple API client
-----------------------------
-
-Now, that we learned how to make HTTP requests,
-let's build our first API client:
+Here is how a typical API client would look like:
 
 .. code-block:: python
 
@@ -125,21 +95,34 @@ let's build our first API client:
             self.driver: T = driver
 
         @overload
-        def get_repos(self: "Github[Driver]", username: str) -> List[Repo]:
+        def get_repos(
+            self: "Github[Driver]", username: str
+        ) -> List[Repo]:
             ...
 
         @overload
-        def get_repos(self: "Github[AsyncDriver]", username: str) -> Awaitable[List[Repo]]:
+        def get_repos(
+            self: "Github[AsyncDriver]", username: str
+        ) -> Awaitable[List[Repo]]:
             ...
 
         def get_repos(self, username: str):
-            request = Request(Method.GET, self.host, f"/users/{username}/repos")
+            path = f"/users/{username}/repos"
+            request = Request(Method.GET, self.host, path)
             return fetch(self.driver, request, model=List[Repo])
+
+This is small, but fully typed, API client for one of the
+`api.github.com <https://api.github.com>`_ endpoints to get all user repos
+by username:
 
 Here we defined ``Repo`` dataclass that describes what we want
 to get from response and pass it to the ``fetch`` function.
+``fetch`` will then make a request and will cast response to that type.
 
-The API client is ready for use:
+Using the API Client
+--------------------
+
+Here how we can use it:
 
 .. code-block:: python
 
@@ -156,6 +139,9 @@ The API client is ready for use:
 To use it with asyncio all we need to do is provide a proper driver
 and don't forget to ``await`` method call:
 
+*Use IPython or Python 3.8+ with python -m asyncio
+to try this code interactively*
+
 .. code-block:: python
 
     >>> from apiwrappers import make_driver
@@ -168,51 +154,8 @@ and don't forget to ``await`` method call:
      ...
     ]
 
-Experimental Features
----------------------
+Documentation
+=============
 
-As experiment, there is also a ``Fetch`` descriptor.
-``Fetch`` helps reduce boilerplate and lets you write wrappers
-in almost declarative way:
-
-.. code-block:: python
-
-    from __future__ import annotations
-
-    from dataclasses import dataclass
-    from typing import Any, Generic, List, Mapping, TypeVar
-
-    from apiwrappers import AsyncDriver, Driver, Method, Request
-    from apiwrappers.xfeatures import Fetch
-
-    T = TypeVar("T", Driver, AsyncDriver)
-
-
-    @dataclass
-    class Repo:
-        id: int
-        name: str
-
-    class Github(Generic[T]):
-        get_repos = Fetch(List[Repo])
-
-        def __init__(self, host: str, driver: T):
-            self.host = host
-            self.driver: T = driver
-
-        @get_repos.request
-        def get_repos_request(self, username: str) -> Request:
-            return Request(Method.GET, self.host, f"/users/{username}/repos")
-
-Here we did the following:
-
-#. First, we defined ``Repo`` dataclass that describes what
-   we want to get from response
-#. Next, we used ``Fetch`` descriptor to declare API method
-#. Each ``Fetch`` object also needs a so-called request factory.
-   We provide one by using ``get_repos.request`` decorator
-   on the ``get_repos_request``
-#. ``get_repos_request`` is a pure function and easy to test
-#. No need to use overload - mypy will understand the return type
-   of the ``.get_repos`` call, but not the signature (due to limited
-   support of the callable argument)
+Documentation for *apiwrappers* can be found at
+`Read The Docs <https://apiwrappers.readthedocs.io/>`_.

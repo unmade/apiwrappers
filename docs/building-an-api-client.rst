@@ -2,24 +2,24 @@
 Building an API Client
 =======================
 
-This page will walk you through steps on how to build wrapper for API
+This page will walk you through steps on how to build wrapper for API.
 
 Making a Request
 ================
 
 Each wrapper needs a HTTP client to make requests to the API.
 
-You can easily use drivers to make requests, but
-they return a ``Response`` object, which is not
+You can easily use one of the :doc:`drivers <drivers>` to make requests, but
+``driver.fetch`` call returns a ``Response`` object, which is not
 always suitable for building good API clients.
 
 For API client it can be better to return typed data,
-such as dataclass, than let the final user deal with json.
+such as dataclasses, than let the final user deal with json.
 
 *apiwrappers* provides a ``fetch`` function,
 which takes driver as a first argument, and all other
 arguments are the same as with ``driver.fetch``.
-Giving that, it behaves exactly like in the examples above:
+Giving that, it behaves exactly like if you are working with driver:
 
 .. code-block:: python
 
@@ -32,8 +32,8 @@ Giving that, it behaves exactly like in the examples above:
 You can also provide two additional arguments:
 
 - ``model`` - a type or factory function that describes response structure.
-- ``source`` - optional, a key name in the json, which value will be passed
-  to the ``model``. You may use dotted notation to traverse keys (`key1.key2`)
+- ``source`` - optional key name in the json, which value will be passed
+  to the ``model``. You may use dotted notation to traverse keys - ``key1.key2``
 
 With these arguments, ``fetch`` function acts like a factory,
 returning new instance of the type provided to the ``model`` argument:
@@ -92,26 +92,35 @@ lets write API client class:
             request = Request(Method.GET, self.host, path)
             return fetch(self.driver, request, model=List[Repo])
 
-*Note: you never want to await the fetch call here,
+Here we defined ``.get_repos`` method to get all user's repos.
+Based on the driver this method returns either a ``List[Repo]``
+or a coroutine - ``Awaitable[List[Repo]]``
+
+*You never want to await the fetch call here,
 just return it immediately and let the final user await it if needed*
 
 The wrapper above is good enough to satisfy most cases,
 however it lacks one of the important features nowadays - type annotations.
 
 Adding Type Annotations
-=======================
+-----------------------
 
 In the example above, we didn't add any type annotations for
 ``.get_repos`` method.
 
-We can simply specify return type as ``Union[List[Repo], Awaitable[List[Repo]]``,
+We can simply specify return type as:
+
+.. code-block:: python
+
+    Union[List[Repo], Awaitable[List[Repo]]
+
 and that will be enough to have a good autocompletion,
 but what we want here to do is a little bit trickier.
 
 We want to tell mypy,
-that ``.get_repos`` has return type ``List[Repo]`` for all
-drivers corresponding to ``Driver`` protocol,
-and ``Awaitable[List[Repo]]`` for ``AsyncDriver`` protocol.
+that when driver corresponds to ``Driver`` protocol
+``.get_repos`` has return type ``List[Repo]``
+and for ``AsyncDriver`` protocol - ``Awaitable[List[Repo]]``.
 
 It can be done like that:
 
@@ -156,7 +165,7 @@ It can be done like that:
 Here, we defined a ``T`` type variable, constrained to
 ``Driver`` and ``AsyncDriver`` protocols.
 Our wrapper is now a generic class of that variable.
-We also used ``@overload`` with self-type to define return type based on
+We also used :py:func:`overload <typing.overload>` with self-type to define return type based on
 the driver provided to our wrapper.
 
 Using the API Client

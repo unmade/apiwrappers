@@ -33,12 +33,13 @@ Installation
 *Note: extras are optional and mainly needed for the final
 user of your future API wrapper*
 
-Example
-=======
+Getting Started
+===============
 
-This is small, but fully typed, API client for one of the
-`api.github.com <https://api.github.com>`_ endpoints to get all user repos
-by username:
+With *apiwrappers* you can bootstrap clients for different API
+pretty fast and easily.
+
+Here is how a typical API client would look like:
 
 .. code-block:: python
 
@@ -77,6 +78,10 @@ by username:
             path = f"/users/{username}/repos"
             request = Request(Method.GET, self.host, path)
             return fetch(self.driver, request, model=List[Repo])
+
+This is small, but fully typed, API client for one of the
+`api.github.com <https://api.github.com>`_ endpoints to get all user repos
+by username:
 
 Here we defined ``Repo`` dataclass that describes what we want
 to get from response and pass it to the ``fetch`` function.
@@ -121,6 +126,6 @@ Table of Contents
    :name: mastertoc
    :maxdepth: 2
 
-   drivers
    building-an-api-client
+   drivers
    middleware
