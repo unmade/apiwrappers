@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "apiwrappers"
-version = "0.1.0-alpha"
+version = "0.1.0-beta"
 description = "apiwrappers is a library for building API clients that work both with regular and async code"
 keywords = ["api", "wrapper", "http", "client"]
 readme = "README.rst"
 authors = ["Aleksei Maslakov <lesha.maslakov@gmail.com>"]
+documentation = "https://apiwrappers.readthedocs.io/"
 license = "MIT"
 packages = [
     { include = "apiwrappers", from = "src" },

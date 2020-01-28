@@ -159,3 +159,15 @@ Documentation
 
 Documentation for *apiwrappers* can be found at
 `Read The Docs <https://apiwrappers.readthedocs.io/>`_.
+
+Contributing
+============
+
+Contributions are welcome, and they are greatly appreciated! Every
+little bit helps, and credit will always be given.
+
+See `contributing guide <CONTRIBUTING.rst>`_ to learn more.
+
+Currently the code and the issues are hosted on Github.
+
+The project is licensed under MIT.
