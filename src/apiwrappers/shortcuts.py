@@ -3,7 +3,9 @@
 import asyncio
 from typing import Awaitable, Optional, TypeVar, Union, overload
 
-from apiwrappers import AsyncDriver, Driver, Request, Response, utils
+from apiwrappers import utils
+from apiwrappers.entities import Request, Response
+from apiwrappers.protocols import AsyncDriver, Driver
 from apiwrappers.structures import NoValue
 from apiwrappers.typedefs import Timeout
 
