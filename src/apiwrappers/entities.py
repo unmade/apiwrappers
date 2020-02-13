@@ -55,19 +55,18 @@ class Request:
     A container holding a request information
 
     Args:
-        method (Method): HTTP Method to use.
-        host (str): Host name of the resource with scheme.
-        path (str): Path to a resource.
-        query_params (apiwrappers.typedefs.QueryParams): Dictionary or list of tuples
-            to send in the query string. Param with None values will not be added
-            to the query string. Default value is empty dict.
-        headers (typing.Mapping[str, str]): Headers to send.
-        cookies (typing.Mapping[str, str]): Cookies to send.
-        data (apiwrappers.typedefs.Data): The body to attach to the request.
-            If a dictionary or list of tuples ``[(key, value)]`` is provided,
-            form-encoding will take place.
-        json (apiwrappers.typedefs.Json): json for the body to attach to the request
-            (mutually exclusive with ``data`` arg)
+        method: HTTP Method to use.
+        host: host name of the resource with scheme.
+        path: path to a resource.
+        query_params: dictionary or list of tuples to send in the query string. Param
+            with None values will not be added to the query string. Default value is
+            empty dict.
+        headers: headers to send.
+        cookies: cookies to send.
+        data: the body to attach to the request. If a dictionary or list of tuples
+            ``[(key, value)]`` is provided, form-encoding will take place.
+        json: json for the body to attach to the request (mutually exclusive with
+            ``data`` arg)
 
     Raises:
         ValueError: If both ``data`` and ``json`` args provided
@@ -99,20 +98,18 @@ class Request:
 @dataclass
 class Response:
     """
-    A container holding a response information
+    A container holding a response from server.
 
     Args:
-        request (Request): Request object to which this
-            is a response.
-        status_code (int): Integer Code of responded HTTP Status, e.g. 404 or 200.
-        url (str): Final URL location of Response
-        headers (apiwrappers.structures.CaseInsensitiveDict): Case-insensitive
-            dict of response headers. For example, ``headers['content-encoding']``
-            will return the value of a ``'Content-Encoding'`` response header.
-        cookies (http.cookies.SimpleCookie): Cookies the server sent back.
-        content (bytes): Content of the response, in bytes.
-        encoding (str): Encoding or the response.
-
+        request: request object to which this is a response.
+        status_code: integer Code of responded HTTP Status, e.g. 404 or 200.
+        url: final URL location of Response
+        headers: case-insensitive dict of response headers. For example,
+            ``headers['content-encoding']`` will return the value of a
+            ``'Content-Encoding'`` response header.
+        cookies: cookies the server sent back.
+        content: content of the response, in bytes.
+        encoding: encoding or the response.
     """
 
     request: Request
@@ -139,6 +136,6 @@ class Response:
         Returns the json-encoded content of the response.
 
         Raises:
-             ValueError: If the response body does not contain valid json.
+             ValueError: if the response body does not contain valid json.
         """
         return cast(JSON, json.loads(self.content.decode(self.encoding)))

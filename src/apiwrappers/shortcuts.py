@@ -13,6 +13,8 @@ T = TypeVar("T")
 
 _Timeout = Union[Timeout, NoValue]
 
+NO_VALUE = NoValue()
+
 
 @overload
 def fetch(
@@ -65,7 +67,7 @@ def fetch(
 def fetch(
     driver: Union[Driver, AsyncDriver],
     request: Request,
-    timeout: _Timeout = NoValue(),
+    timeout: _Timeout = NO_VALUE,
     verify_ssl: Union[bool, NoValue] = NoValue(),
     model: Optional[Union[Callable[..., T], Type[T]]] = None,
     source: Optional[str] = None,
@@ -79,34 +81,30 @@ def fetch(
     It also has extended behaviour and can parse JSON if ``model`` arg provided.
 
     Args:
-        driver (Driver, AsyncDriver): Driver that actually
-            makes a request.
-        request (Request): Request object.
-        timeout (int, float, None, apiwrappers.structures.NoValue): How many seconds to
-            wait for the server to send data before giving up. If set to ``None`` waits
-            infinitely. If provided, will take precedence over the ``driver.timeout``.
-        verify_ssl (bool, apiwrappers.structures.NoValue): Whether to verify the
-            server's TLS certificate or not. If provided will take precedence over the
-            ``driver.verify_ssl``.
-        model (Callable[..., T], Type[T], None): Parser for a json response.
-            This can be either type, e.g. List[int], or a callable that accepts json.
-        source (str, None): Name of the key in the json, which value will be passed to
-            the model. You may use dotted notation to traverse keys, e.g. ``key1.key2``.
+        driver: driver that actually makes a request.
+        request: request object.
+        timeout: how many seconds to wait for the server to send data before giving up.
+            If set to ``None`` waits infinitely. If provided, will take precedence over
+            the ``driver.timeout``.
+        verify_ssl: whether to verify the server's TLS certificate or not. If provided
+            will take precedence over the ``driver.verify_ssl``.
+        model: parser for a json response. This can be either type, e.g. List[int], or
+            a callable that accepts json.
+        source: name of the key in the json, which value will be passed to the model.
+            You may use dotted notation to traverse keys, e.g. ``key1.key2``.
 
     Returns:
-        (Response, Awaitable[Response], T, Awaitable[T]):
-
-        * **Response**: if regular driver is provided and ``model`` is not.
-        * **Awaitable[Response]**: if asynchronous driver is provided, ``model`` is not.
-        * **T**: if regular driver and model is provided. The ``T`` corresponds to
+        * **Response** if regular driver is provided and ``model`` is not.
+        * **Awaitable[Response]** if asynchronous driver is provided, ``model`` is not.
+        * **T** if regular driver and model is provided. The ``T`` corresponds to
           ``model`` type.
-        * **Awaitable[T]**: if asynchronous driver and model is provided. The ``T``
+        * **Awaitable[T]** if asynchronous driver and model is provided. The ``T``
           corresponds to ``model`` type.
 
     Raises:
-        Timeout: The request timed out.
-        ConnectionFailed: A Connection error occurred.
-        DriverError: In case of any other error in driver underlying library.
+        Timeout: the request timed out.
+        ConnectionFailed: a connection error occurred.
+        DriverError: in case of any other error in driver underlying library.
 
     Simple Usage::
 

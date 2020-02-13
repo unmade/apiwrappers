@@ -6,6 +6,9 @@ VT = TypeVar("VT")
 class NoValue:
     __slots__: Tuple[str, ...] = tuple()
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+
 
 class CaseInsensitiveDict(MutableMapping[str, VT]):
     __slots__ = ("_data",)

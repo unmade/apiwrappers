@@ -27,6 +27,7 @@ Request and Response
 .. autoclass:: Method
 .. autoclass:: Request
 .. autoclass:: Response
+    :members: text, json
 
 
 Exceptions

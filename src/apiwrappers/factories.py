@@ -58,25 +58,21 @@ def make_driver(
     is called.
 
     Args:
-        driver_type (str): Specifies what kind of driver to create. Valid choices
-            are ``request`` and ``aiohttp``.
+        driver_type: specifies what kind of driver to create. Valid choices are
+            ``request`` and ``aiohttp``.
         *middleware: :ref:`middleware <middleware>` to apply to driver. Dependant on
             ``driver_type`` it should be of one kind - either ``Type[Middleware]``
             for regular drivers and ``Type[AsyncMiddleware]`` for asynchronous ones.
-        timeout (int, float, None): How many seconds to wait for the server to send
-            data before giving up. If set to ``None`` waits infinitely.
-            Default to 5 minutes.
-        verify_ssl (bool): Whether to verify the server's TLS certificate or not.
-            Default to ``True``.
+        timeout: how many seconds to wait for the server to send data before giving up.
+            If set to ``None`` waits infinitely.
+        verify_ssl: whether to verify the server's TLS certificate or not.
 
     Returns:
-        (Driver, AsyncDriver):
-
-        * **Driver**: if ``driver_type`` is ``requests``.
-        * **AsyncDriver**: if ``driver_type`` is ``aiohttp``.
+        * **Driver** if ``driver_type`` is ``requests``.
+        * **AsyncDriver** if ``driver_type`` is ``aiohttp``.
 
     Raises:
-        ValueError: If unknown driver type specified
+        ValueError: if unknown driver type specified
 
     Usage::
 
