@@ -2,15 +2,13 @@ from typing import (
     Awaitable,
     Dict,
     Generic,
-    Iterable,
     Mapping,
-    Tuple,
     TypeVar,
     Union,
     overload,
 )
 
-from apiwrappers import AsyncDriver, Driver, Method, Request, Response
+from apiwrappers import AsyncDriver, Driver, Response
 from apiwrappers.structures import NoValue
 from apiwrappers.typedefs import JSON, Data, QueryParams, Timeout
 

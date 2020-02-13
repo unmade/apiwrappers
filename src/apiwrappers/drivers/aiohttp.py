@@ -19,11 +19,26 @@ class AioHttpDriver:
         self,
         *middleware: Type[AsyncMiddleware],
         timeout: Timeout = DEFAULT_TIMEOUT,
-        verify_ssl: bool = True
+        verify_ssl: bool = True,
     ):
         self.timeout = timeout
         self.verify_ssl = verify_ssl
         self.middleware: List[Type[AsyncMiddleware]] = list(middleware)
+
+    def __repr__(self) -> str:
+        middleware = [m.__name__ for m in self.middleware]
+        if middleware:
+            middleware.append("")
+        return (
+            f"{self.__class__.__name__}("
+            f"{', '.join(middleware)}"
+            f"timeout={self.timeout}, "
+            f"verify_ssl={self.verify_ssl}"
+            ")"
+        )
+
+    def __str__(self) -> str:
+        return "<AsyncDriver 'aiohttp'>"
 
     @apply_middleware
     async def fetch(
