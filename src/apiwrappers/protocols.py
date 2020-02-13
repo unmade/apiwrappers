@@ -19,11 +19,10 @@ class Driver(Protocol):
     Protocol describing regular synchronous driver.
 
     Attributes:
-        timeout (int, float, None): How many seconds to wait for the server to send
-            data before giving up. If set to ``None`` should wait infinitely.
-        verify_ssl (bool): Whether to verify the server's TLS certificate or not.
-        middleware (List[Type[Middleware]]): List of :ref:`middleware <middleware>`
-            to be run on every request
+        timeout: how many seconds to wait for the server to send data before giving up.
+            If set to ``None`` should wait infinitely.
+        verify_ssl: whether to verify the server's TLS certificate or not.
+        middleware: list of :ref:`middleware <middleware>` to be run on every request.
     """
 
     timeout: Timeout
@@ -40,17 +39,14 @@ class Driver(Protocol):
         Makes actual request and returns response from the server.
 
         Args:
-            request (Request): A request object.
-            timeout (int, float, None, apiwrappers.structures.NoValue): How many
-                seconds to wait for the server to send data before giving up.
-                If set to ``None`` waits infinitely. If provided, will take precedence
-                over the ``Driver.timeout``.
-            verify_ssl (bool, apiwrappers.structures.NoValue): Whether to verify the
-                server's TLS certificate or not. If provided will take precedence over
-                the ``Driver.verify_ssl``.
+            request: a request object with data to send to server.
+            timeout: how many seconds to wait for the server to send data before
+                giving up. If set to ``None`` waits infinitely. If provided, will take
+                precedence over the :py:attr:`Driver.timeout`.
+            verify_ssl: whether to verify the server's TLS certificate or not.
+                If provided will take precedence over the :py:attr:`Driver.verify_ssl`.
 
-        Returns:
-            (Response): Response from the server.
+        Returns: response from the server.
 
         Raises:
             Timeout: The request timed out.
@@ -65,11 +61,10 @@ class AsyncDriver(Protocol):
     Protocol describing asynchronous driver.
 
     Attributes:
-        timeout (int, float, None): How many seconds to wait for the server to send
-            data before giving up. If set to ``None`` should wait infinitely.
-        verify_ssl (bool): Whether to verify the server's TLS certificate or not.
-        middleware (List[Type[AsyncMiddleware]]): List of :ref:`middleware <middleware>`
-            to be run on every request.
+        timeout: how many seconds to wait for the server to send data before giving up.
+            If set to ``None`` should wait infinitely.
+        verify_ssl: whether to verify the server's TLS certificate or not.
+        middleware: list of :ref:`middleware <middleware>` to be run on every request.
     """
 
     timeout: Timeout
@@ -86,22 +81,20 @@ class AsyncDriver(Protocol):
         Makes actual request and returns response from the server.
 
         Args:
-            request (Request): A request object.
-            timeout (int, float, None, apiwrappers.structures.NoValue): How many
-                seconds to wait for the server to send data before giving up.
-                If set to ``None`` waits infinitely. If provided, will take precedence
-                over the ``Driver.timeout``.
-            verify_ssl (bool, apiwrappers.structures.NoValue): Whether to verify the
-                server's TLS certificate or not. If provided will take precedence over
-                the ``Driver.verify_ssl``.
+            request: a request object with data to send to server.
+            timeout: how many seconds to wait for the server to send data before
+                giving up. If set to ``None`` waits infinitely. If provided, will take
+                precedence over the :py:attr:`AsyncDriver.timeout`.
+            verify_ssl: whether to verify the server's TLS certificate or not.
+                If provided will take precedence over the
+                :py:attr:`AsyncDriver.verify_ssl`.
 
-        Returns:
-            (Response): Response from the server.
+        Returns: response from the server.
 
         Raises:
-            Timeout: The request timed out.
-            ConnectionFailed: A Connection error occurred.
-            DriverError: In case of any other error in driver underlying library.
+            Timeout: the request timed out.
+            ConnectionFailed: a connection error occurred.
+            DriverError: in case of any other error in driver underlying library.
         """
         ...
 

@@ -1,4 +1,8 @@
-from apiwrappers.structures import CaseInsensitiveDict
+from apiwrappers.structures import CaseInsensitiveDict, NoValue
+
+
+def test_representation_no_value():
+    assert repr(NoValue()) == "NoValue()"
 
 
 def test_init_from_another_mapping():
