@@ -1,3 +1,6 @@
+.. toctree::
+   :name: middleware
+
 ==========
 Middleware
 ==========
@@ -97,7 +100,3 @@ Although, middleware we defined earlier literally does nothing, it still can be 
 
 
     make_driver("requests", SimpleMiddleware)
-
-
-.. toctree::
-   :name: middleware

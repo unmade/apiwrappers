@@ -37,18 +37,58 @@ def make_driver(
 @overload
 def make_driver(
     driver_type: str,
-    *middleware: Type[AsyncMiddleware],
+    *middleware: Union[Type[Middleware], Type[AsyncMiddleware]],
     timeout: Timeout = DEFAULT_TIMEOUT,
     verify_ssl: bool = True,
 ) -> Union[Driver, AsyncDriver]:
     ...
 
 
-def make_driver(driver_type, *middleware, timeout=DEFAULT_TIMEOUT, verify_ssl=True):
+def make_driver(
+    driver_type: str,
+    *middleware: Union[Type[Middleware], Type[AsyncMiddleware]],
+    timeout: Timeout = DEFAULT_TIMEOUT,
+    verify_ssl: bool = True,
+) -> Union[Driver, AsyncDriver]:
+    """
+    Creates driver instance and returns it
+
+    This is a factory function to ease driver instantiation. That way you can abstract
+    from specific driver class - no need to import it, no need to know how the class
+    is called.
+
+    Args:
+        driver_type (str): Specifies what kind of driver to create. Valid choices
+            are ``request`` and ``aiohttp``.
+        *middleware: :ref:`middleware <middleware>` to apply to driver. Dependant on
+            ``driver_type`` it should be of one kind - either ``Type[Middleware]``
+            for regular drivers and ``Type[AsyncMiddleware]`` for asynchronous ones.
+        timeout (int, float, None): How many seconds to wait for the server to send
+            data before giving up. If set to ``None`` waits infinitely.
+            Default to 5 minutes.
+        verify_ssl (bool): Whether to verify the server's TLS certificate or not.
+            Default to ``True``.
+
+    Returns:
+        (Driver, AsyncDriver):
+
+        * **Driver**: if ``driver_type`` is ``requests``.
+        * **AsyncDriver**: if ``driver_type`` is ``aiohttp``.
+
+    Raises:
+        ValueError: If unknown driver type specified
+
+    Usage::
+
+        >>> from apiwrappers import make_driver
+        >>> make_driver("requests")
+        <apiwrappers.drivers.requests.RequestsDriver object at ...>
+    """
     module_name, driver_name = _get_import_params(driver_type)
     module = importlib.import_module(module_name)
-    driver = getattr(module, driver_name)
-    return driver(*middleware, timeout=timeout, verify_ssl=verify_ssl)
+    driver_class = getattr(module, driver_name)
+    driver = driver_class(*middleware, timeout=timeout, verify_ssl=verify_ssl)
+    return driver  # type: ignore
 
 
 def _get_import_params(driver_type: str) -> Tuple[str, str]:

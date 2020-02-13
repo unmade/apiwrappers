@@ -1,10 +1,10 @@
 class DriverError(Exception):
-    pass
+    """Base class for driver-specific errors."""
 
 
 class ConnectionFailed(DriverError):
-    pass
+    """A Connection error occurred."""
 
 
 class Timeout(DriverError):
-    pass
+    """The request timed out."""
