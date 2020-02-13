@@ -24,6 +24,21 @@ class RequestsDriver:
         self.verify_ssl = verify_ssl
         self.middleware: List[Type[Middleware]] = list(middleware)
 
+    def __repr__(self) -> str:
+        middleware = [m.__name__ for m in self.middleware]
+        if middleware:
+            middleware.append("")
+        return (
+            f"{self.__class__.__name__}("
+            f"{', '.join(middleware)}"
+            f"timeout={self.timeout}, "
+            f"verify_ssl={self.verify_ssl}"
+            ")"
+        )
+
+    def __str__(self) -> str:
+        return "<Driver 'requests'>"
+
     @apply_middleware
     def fetch(
         self,

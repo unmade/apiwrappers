@@ -1,4 +1,4 @@
-# pylint: disable=import-outside-toplevel,redefined-outer-name
+# pylint: disable=import-outside-toplevel,redefined-outer-name,too-many-lines
 
 import asyncio
 import json
@@ -28,6 +28,25 @@ async def driver():
     from apiwrappers.drivers.aiohttp import AioHttpDriver
 
     return AioHttpDriver()
+
+
+async def test_representation(driver: "AioHttpDriver"):
+    assert repr(driver) == "AioHttpDriver(timeout=300, verify_ssl=True)"
+
+
+async def test_representation_with_middleware():
+    from apiwrappers.drivers.aiohttp import AioHttpDriver
+
+    driver = AioHttpDriver(RequestMiddleware, ResponseMiddleware)
+    assert repr(driver) == (
+        "AioHttpDriver("
+        "RequestMiddleware, ResponseMiddleware, timeout=300, verify_ssl=True"
+        ")"
+    )
+
+
+async def test_string_representation(driver: "AioHttpDriver"):
+    assert str(driver) == "<AsyncDriver 'aiohttp'>"
 
 
 async def test_get_content(aresponses, driver: "AioHttpDriver"):

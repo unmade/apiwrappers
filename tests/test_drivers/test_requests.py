@@ -36,6 +36,25 @@ def driver():
     return RequestsDriver()
 
 
+def test_representation(driver: "RequestsDriver"):
+    assert repr(driver) == "RequestsDriver(timeout=300, verify_ssl=True)"
+
+
+def test_representation_with_middleware():
+    from apiwrappers.drivers.requests import RequestsDriver
+
+    driver = RequestsDriver(RequestMiddleware, ResponseMiddleware)
+    assert repr(driver) == (
+        "RequestsDriver("
+        "RequestMiddleware, ResponseMiddleware, timeout=300, verify_ssl=True"
+        ")"
+    )
+
+
+def test_string_representation(driver: "RequestsDriver"):
+    assert str(driver) == "<Driver 'requests'>"
+
+
 def test_get_content(responses, driver: "RequestsDriver"):
     responses.add(
         "GET", "https://example.com/", body="Hello, World!",

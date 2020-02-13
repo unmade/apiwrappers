@@ -82,7 +82,7 @@ def make_driver(
 
         >>> from apiwrappers import make_driver
         >>> make_driver("requests")
-        <apiwrappers.drivers.requests.RequestsDriver object at ...>
+        RequestsDriver(timeout=300, verify_ssl=True)
     """
     module_name, driver_name = _get_import_params(driver_type)
     module = importlib.import_module(module_name)
