@@ -101,3 +101,11 @@ class APIWrapper(Generic[DT]):
     @overload
     def middleware(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
         ...
+
+    @overload
+    def basic_auth(self: APIWrapper[Driver]) -> Response:
+        ...
+
+    @overload
+    def basic_auth(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
+        ...

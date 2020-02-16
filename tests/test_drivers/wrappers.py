@@ -45,3 +45,7 @@ class APIWrapper:
     def middleware(self):
         request = Request(Method.GET, self.host, "/")
         return self.driver.fetch(request)
+
+    def basic_auth(self):
+        request = Request(Method.GET, self.host, "/", auth=("user", "passwd"))
+        return self.driver.fetch(request)

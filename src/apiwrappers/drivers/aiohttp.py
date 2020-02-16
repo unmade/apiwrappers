@@ -1,8 +1,9 @@
 import asyncio
 from http.cookies import SimpleCookie
-from typing import Iterable, List, Tuple, Type, Union
+from typing import Iterable, List, Optional, Tuple, Type, Union
 
 import aiohttp
+from aiohttp import BasicAuth
 
 from apiwrappers import exceptions, utils
 from apiwrappers.entities import Request, Response
@@ -55,6 +56,7 @@ class AioHttpDriver:
                     headers=request.headers,
                     cookies=request.cookies,
                     params=self._prepare_query_params(request.query_params),
+                    auth=self._prepare_auth(request.auth),
                     data=request.data,
                     json=request.json,
                     timeout=self._prepare_timeout(timeout),
@@ -98,3 +100,9 @@ class AioHttpDriver:
         if isinstance(verify_ssl, NoValue):
             return self.verify_ssl
         return verify_ssl
+
+    @staticmethod
+    def _prepare_auth(auth: Optional[Tuple[str, str]]) -> Optional[BasicAuth]:
+        if auth is None:
+            return None
+        return BasicAuth(*auth)
