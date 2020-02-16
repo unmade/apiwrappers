@@ -283,3 +283,16 @@ def test_middleware(responses) -> None:
     response = wrapper.middleware()
     assert response.headers["x-request-id"] == "request_middleware"
     assert response.headers["x-response-id"] == "response_middleware"
+
+
+def test_basic_auth(responses, driver: "RequestsDriver") -> None:
+    def echo_headers(request):
+        headers = request.headers
+        return (200, headers, '{"code": 200, "message": "ok"}')
+
+    responses.add_callback(
+        responses.GET, "https://example.com", callback=echo_headers,
+    )
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = wrapper.basic_auth()
+    assert "Basic " in response.headers["Authorization"]

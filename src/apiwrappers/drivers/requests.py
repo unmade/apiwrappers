@@ -53,6 +53,7 @@ class RequestsDriver:
                 params=request.query_params,
                 headers=request.headers,
                 cookies=request.cookies,
+                auth=request.auth,
                 data=request.data,
                 json=request.json,
                 timeout=self._prepare_timeout(timeout),

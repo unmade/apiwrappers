@@ -296,7 +296,7 @@ async def test_invalid_json_response(aresponses, driver: "AioHttpDriver", respon
         json_response.json()
 
 
-async def test_middleware(aresponses, driver: "AioHttpDriver"):
+async def test_middleware(aresponses):
     from apiwrappers.drivers.aiohttp import AioHttpDriver
 
     def echo_headers(request):
@@ -310,3 +310,15 @@ async def test_middleware(aresponses, driver: "AioHttpDriver"):
     response = await wrapper.middleware()
     assert response.headers["x-request-id"] == "request_middleware"
     assert response.headers["x-response-id"] == "response_middleware"
+
+
+async def test_basic_auth(aresponses, driver: "AioHttpDriver"):
+    def echo_headers(request):
+        return aresponses.Response(
+            status=200, headers=request.headers, body=b'{"code": 200, "message": "ok"}',
+        )
+
+    aresponses.add("example.com", "/", "GET", echo_headers)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.basic_auth()
+    assert "Basic " in response.headers["Authorization"]
