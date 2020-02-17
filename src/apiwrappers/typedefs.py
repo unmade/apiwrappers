@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Iterable, List, Mapping, Optional, Tuple, Union
 
 Data = Union[str, None, Mapping[str, Any], Iterable[Tuple[str, Any]]]

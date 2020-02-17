@@ -1,4 +1,5 @@
 from apiwrappers import Method, Request
+from apiwrappers.auth import TokenAuth
 
 
 class APIWrapper:
@@ -48,4 +49,16 @@ class APIWrapper:
 
     def basic_auth(self):
         request = Request(Method.GET, self.host, "/", auth=("user", "passwd"))
+        return self.driver.fetch(request)
+
+    def token_auth(self):
+        request = Request(Method.GET, self.host, "/", auth=TokenAuth("authtoken"))
+        return self.driver.fetch(request)
+
+    def complex_auth_flow(self):
+        def auth_flow():
+            response = yield Request(Method.POST, self.host, "/auth")
+            return TokenAuth(response.json()["token"])()
+
+        request = Request(Method.GET, self.host, "/", auth=auth_flow)
         return self.driver.fetch(request)

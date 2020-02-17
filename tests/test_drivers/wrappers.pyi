@@ -109,3 +109,19 @@ class APIWrapper(Generic[DT]):
     @overload
     def basic_auth(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
         ...
+
+    @overload
+    def token_auth(self: APIWrapper[Driver]) -> Response:
+        ...
+
+    @overload
+    def token_auth(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def complex_auth_flow(self: APIWrapper[Driver]) -> Response:
+        ...
+
+    @overload
+    def complex_auth_flow(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
+        ...

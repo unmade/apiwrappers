@@ -1,13 +1,18 @@
 # pylint: disable=too-many-instance-attributes
+from __future__ import annotations
 
 import enum
 import json
 from dataclasses import dataclass, field
 from http.cookies import SimpleCookie
-from typing import Any, Mapping, Optional, Tuple, cast
+from typing import Any, Callable, Dict, Generator, Mapping, Optional, Tuple, Union, cast
 
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import JSON, Data, QueryParams
+
+_SimpleAuth = Callable[[], Dict[str, str]]
+_AuthFlow = Callable[[], Generator["Request", "Response", Dict[str, str]]]
+_Auth = Optional[Union[Tuple[str, str], _SimpleAuth, _AuthFlow]]
 
 
 class Method(enum.Enum):
@@ -63,7 +68,8 @@ class Request:
             empty dict.
         headers: headers to send.
         cookies: cookies to send.
-        auth: Auth tuple to enable Basic Auth.
+        auth: Auth tuple to enable Basic Auth or callable returning dict with
+            authorization headers, e.g. '{"Authorization": "Bearer ..."}'
         data: the body to attach to the request. If a dictionary or list of tuples
             ``[(key, value)]`` is provided, form-encoding will take place.
         json: json for the body to attach to the request (mutually exclusive with
@@ -85,7 +91,7 @@ class Request:
     query_params: QueryParams = field(default_factory=dict)
     headers: Mapping[str, str] = field(default_factory=dict)
     cookies: Mapping[str, str] = field(default_factory=dict)
-    auth: Optional[Tuple[str, str]] = None
+    auth: _Auth = None
     data: Data = None
     json: JSON = None
 
