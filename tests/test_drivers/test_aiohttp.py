@@ -334,3 +334,23 @@ async def test_token_auth(aresponses, driver: "AioHttpDriver"):
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.token_auth()
     assert "Bearer " in response.headers["Authorization"]
+
+
+async def test_complex_auth_flow(aresponses, driver: "AioHttpDriver"):
+    def echo_headers(request):
+        return aresponses.Response(
+            status=200, headers=request.headers, body=b'{"code": 200, "message": "ok"}',
+        )
+
+    aresponses.add(
+        "example.com",
+        "/auth",
+        "POST",
+        aresponses.Response(
+            body=b'{"token": "authtoken"}', content_type="application/json"
+        ),
+    )
+    aresponses.add("example.com", "/", "GET", echo_headers)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.complex_auth_flow()
+    assert response.headers["Authorization"] == "Bearer authtoken"
