@@ -12,6 +12,7 @@ from typing import (
     overload,
 )
 
+from apiwrappers.auth import BasicAuth
 from apiwrappers.entities import Request, Response
 from apiwrappers.protocols import AsyncHandler, Handler
 from apiwrappers.structures import NoValue
@@ -23,13 +24,8 @@ T = TypeVar("T", Handler, AsyncHandler)
 
 
 def iscoroutinehandler(handler: Union[Handler, AsyncHandler]) -> bool:
-    return (
-        asyncio.iscoroutinefunction(getattr(handler, "handler", None))  # middleware
-        or asyncio.iscoroutinefunction(getattr(handler, "func", None))  # partial
-        or asyncio.iscoroutinefunction(
-            getattr(getattr(handler, "handler", None), "func", None)
-        )
-        or asyncio.iscoroutinefunction(handler)
+    return getattr(handler, "_is_async", False) or asyncio.iscoroutinefunction(
+        getattr(handler, "func", None)
     )
 
 
@@ -38,7 +34,7 @@ def apply_middleware(func: FT) -> FT:
 
         async def wrapper(instance, *args, **kwargs):
             handler = functools.partial(func, instance)
-            for wrap in instance.middleware:
+            for wrap in [Authorization] + instance.middleware:
                 handler = wrap(handler)
             return await handler(*args, **kwargs)
 
@@ -46,7 +42,7 @@ def apply_middleware(func: FT) -> FT:
 
         def wrapper(instance, *args, **kwargs):
             handler = functools.partial(func, instance)
-            for wrap in instance.middleware:
+            for wrap in [Authorization] + instance.middleware:
                 handler = wrap(handler)
             return handler(*args, **kwargs)
 
@@ -58,6 +54,7 @@ class BaseMiddleware(Generic[T]):
 
     def __init__(self, handler: T):
         self.handler: T = handler
+        self._is_async: bool = iscoroutinehandler(handler)
 
     # NOTE: overloading __call__ with self-type doesn't work correctly
     # see https://github.com/python/mypy/issues/8283
@@ -116,3 +113,15 @@ class BaseMiddleware(Generic[T]):
             self.process_exception(request, exc)
         else:
             return self.process_response(response)
+
+
+class Authorization(BaseMiddleware):
+    def process_request(self, request: Request) -> Request:
+        if request.auth is not None:
+            auth = BasicAuth(*request.auth)
+            # Since header is Mapping it is possible it doesn't have
+            # any method to set an item
+            headers = dict(request.headers)
+            headers.update(auth())
+            request.headers = headers
+        return request
