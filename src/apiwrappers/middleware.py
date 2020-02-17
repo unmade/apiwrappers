@@ -118,10 +118,11 @@ class BaseMiddleware(Generic[T]):
 class Authorization(BaseMiddleware):
     def process_request(self, request: Request) -> Request:
         if request.auth is not None:
-            auth = BasicAuth(*request.auth)
+            if isinstance(request.auth, tuple):
+                request.auth = BasicAuth(*request.auth)
             # Since header is Mapping it is possible it doesn't have
             # any method to set an item
             headers = dict(request.headers)
-            headers.update(auth())
+            headers.update(request.auth())
             request.headers = headers
         return request

@@ -4,10 +4,10 @@ import enum
 import json
 from dataclasses import dataclass, field
 from http.cookies import SimpleCookie
-from typing import Any, Mapping, Optional, Tuple, cast
+from typing import Any, Mapping, cast
 
 from apiwrappers.structures import CaseInsensitiveDict
-from apiwrappers.typedefs import JSON, Data, QueryParams
+from apiwrappers.typedefs import JSON, Auth, Data, QueryParams
 
 
 class Method(enum.Enum):
@@ -63,7 +63,8 @@ class Request:
             empty dict.
         headers: headers to send.
         cookies: cookies to send.
-        auth: Auth tuple to enable Basic Auth.
+        auth: Auth tuple to enable Basic Auth or callable returning dict with
+            authorization headers, e.g. '{"Authorization": "Bearer ..."}'
         data: the body to attach to the request. If a dictionary or list of tuples
             ``[(key, value)]`` is provided, form-encoding will take place.
         json: json for the body to attach to the request (mutually exclusive with
@@ -85,7 +86,7 @@ class Request:
     query_params: QueryParams = field(default_factory=dict)
     headers: Mapping[str, str] = field(default_factory=dict)
     cookies: Mapping[str, str] = field(default_factory=dict)
-    auth: Optional[Tuple[str, str]] = None
+    auth: Auth = None
     data: Data = None
     json: JSON = None
 

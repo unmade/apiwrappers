@@ -1,4 +1,4 @@
-# pylint: disable=import-outside-toplevel,redefined-outer-name
+# pylint: disable=import-outside-toplevel,redefined-outer-name,too-many-lines
 
 import json
 import uuid
@@ -296,3 +296,16 @@ def test_basic_auth(responses, driver: "RequestsDriver") -> None:
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = wrapper.basic_auth()
     assert "Basic " in response.headers["Authorization"]
+
+
+def test_token_auth(responses, driver: "RequestsDriver") -> None:
+    def echo_headers(request):
+        headers = request.headers
+        return (200, headers, '{"code": 200, "message": "ok"}')
+
+    responses.add_callback(
+        responses.GET, "https://example.com", callback=echo_headers,
+    )
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = wrapper.token_auth()
+    assert "Bearer " in response.headers["Authorization"]

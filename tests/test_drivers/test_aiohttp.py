@@ -322,3 +322,15 @@ async def test_basic_auth(aresponses, driver: "AioHttpDriver"):
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.basic_auth()
     assert "Basic " in response.headers["Authorization"]
+
+
+async def test_token_auth(aresponses, driver: "AioHttpDriver"):
+    def echo_headers(request):
+        return aresponses.Response(
+            status=200, headers=request.headers, body=b'{"code": 200, "message": "ok"}',
+        )
+
+    aresponses.add("example.com", "/", "GET", echo_headers)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    response = await wrapper.token_auth()
+    assert "Bearer " in response.headers["Authorization"]
