@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from typing import Awaitable, Generic, NoReturn, TypeVar, Union, overload
 
@@ -10,9 +12,7 @@ T = TypeVar("T", Handler, AsyncHandler)
 
 
 def iscoroutinehandler(handler: Union[Handler, AsyncHandler]) -> bool:
-    return getattr(handler, "_is_async", False) or asyncio.iscoroutinefunction(
-        getattr(handler, "func", None)
-    )
+    return getattr(handler, "_is_async", False) or asyncio.iscoroutinefunction(handler)
 
 
 class BaseMiddleware(Generic[T]):
@@ -26,7 +26,7 @@ class BaseMiddleware(Generic[T]):
     # see https://github.com/python/mypy/issues/8283
     @overload
     def __call__(
-        self: "BaseMiddleware[Handler]",
+        self: BaseMiddleware[Handler],
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
         verify_ssl: Union[bool, NoValue] = NoValue(),
@@ -35,7 +35,7 @@ class BaseMiddleware(Generic[T]):
 
     @overload
     def __call__(
-        self: "BaseMiddleware[AsyncHandler]",
+        self: BaseMiddleware[AsyncHandler],
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
         verify_ssl: Union[bool, NoValue] = NoValue(),

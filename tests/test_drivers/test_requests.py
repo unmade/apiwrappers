@@ -37,6 +37,7 @@ def driver():
 
 
 def test_representation(driver: "RequestsDriver"):
+    setattr(driver, "_middleware", [])
     assert repr(driver) == "RequestsDriver(timeout=300, verify_ssl=True)"
 
 
@@ -46,7 +47,8 @@ def test_representation_with_middleware():
     driver = RequestsDriver(RequestMiddleware, ResponseMiddleware)
     assert repr(driver) == (
         "RequestsDriver("
-        "RequestMiddleware, ResponseMiddleware, timeout=300, verify_ssl=True"
+        "Authorization, RequestMiddleware, ResponseMiddleware, "
+        "timeout=300, verify_ssl=True"
         ")"
     )
 

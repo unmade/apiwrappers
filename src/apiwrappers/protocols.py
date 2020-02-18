@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from typing import Awaitable, List, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Awaitable, TypeVar, Union
 
 from apiwrappers.compat import Protocol
 from apiwrappers.entities import Request, Response
 from apiwrappers.structures import NoValue
 from apiwrappers.typedefs import Timeout
+
+if TYPE_CHECKING:
+    # pylint: disable=cyclic-import
+    from apiwrappers.middleware.chain import MiddlewareChain
 
 T = TypeVar("T", "Driver", "AsyncDriver")
 
@@ -19,15 +23,15 @@ class Driver(Protocol):
     Protocol describing regular synchronous driver.
 
     Attributes:
+        middleware: list of :ref:`middleware <middleware>` to be run on every request.
         timeout: how many seconds to wait for the server to send data before giving up.
             If set to ``None`` should wait infinitely.
         verify_ssl: whether to verify the server's TLS certificate or not.
-        middleware: list of :ref:`middleware <middleware>` to be run on every request.
     """
 
+    middleware: MiddlewareChain
     timeout: Timeout
     verify_ssl: bool
-    middleware: List[Type[Middleware]]
 
     def fetch(
         self,
@@ -61,15 +65,15 @@ class AsyncDriver(Protocol):
     Protocol describing asynchronous driver.
 
     Attributes:
+        middleware: list of :ref:`middleware <middleware>` to be run on every request.
         timeout: how many seconds to wait for the server to send data before giving up.
             If set to ``None`` should wait infinitely.
         verify_ssl: whether to verify the server's TLS certificate or not.
-        middleware: list of :ref:`middleware <middleware>` to be run on every request.
     """
 
+    middleware: "MiddlewareChain"
     timeout: Timeout
     verify_ssl: bool
-    middleware: List[Type[AsyncMiddleware]]
 
     async def fetch(
         self,
