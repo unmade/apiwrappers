@@ -25,8 +25,24 @@ class MiddlewareChain:
     ) -> List[Type[AsyncMiddleware]]:
         ...
 
+    @overload
+    def __get__(self, obj: None, objtype: Type[Driver]) -> List[Type[Middleware]]:
+        ...
+
+    @overload
+    def __get__(
+        self, obj: None, objtype: Type[AsyncDriver]
+    ) -> List[Type[AsyncMiddleware]]:
+        ...
+
     def __get__(self, obj, objtype):
-        return getattr(obj, "_middleware", self.items[:])
+        if obj is None:
+            return self.items
+        try:
+            return getattr(obj, "_middleware")
+        except AttributeError:
+            self.__set__(obj, self.items[:])
+            return getattr(obj, "_middleware")
 
     @overload
     def __set__(self, obj: Driver, middleware: Iterable[Type[Middleware]]) -> None:
@@ -38,27 +54,30 @@ class MiddlewareChain:
     ) -> None:
         ...
 
-    def __set__(self, obj: Union[Driver, AsyncDriver], middleware,) -> None:
-        new_middleware = self.items + list(middleware)
+    def __set__(self, obj: Union[Driver, AsyncDriver], middleware) -> None:
+        new_middleware = list(middleware)
+        defaults = [item for item in self.items if item not in new_middleware]
+        new_middleware = defaults + new_middleware
         setattr(obj, "_middleware", new_middleware)
-        setattr(obj, "fetch", self.apply_middleware(obj.fetch, obj))
 
     @staticmethod
-    def apply_middleware(func: FT, instance: Union[Driver, AsyncDriver]) -> FT:
+    def wrap(func: FT) -> FT:
         if asyncio.iscoroutinefunction(func):
 
             async def wrapper(*args, **kwargs):
-                handler = func
-                for middleware in instance.middleware:
+                instance = args[0]
+                handler = functools.partial(func, instance)
+                for middleware in reversed(instance.middleware):
                     handler = middleware(handler)
-                return await handler(*args, **kwargs)
+                return await handler(*args[1:], **kwargs)
 
         else:
 
             def wrapper(*args, **kwargs):
-                handler = func
-                for middleware in instance.middleware:
+                instance = args[0]
+                handler = functools.partial(func, instance)
+                for middleware in reversed(instance.middleware):
                     handler = middleware(handler)
-                return handler(*args, **kwargs)
+                return handler(*args[1:], **kwargs)
 
         return cast(FT, functools.wraps(func)(wrapper))

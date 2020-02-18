@@ -42,6 +42,7 @@ class AioHttpDriver:
     def __str__(self) -> str:
         return "<AsyncDriver 'aiohttp'>"
 
+    @middleware.wrap
     async def fetch(
         self,
         request: Request,

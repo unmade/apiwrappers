@@ -12,7 +12,9 @@ T = TypeVar("T", Handler, AsyncHandler)
 
 
 def iscoroutinehandler(handler: Union[Handler, AsyncHandler]) -> bool:
-    return getattr(handler, "_is_async", False) or asyncio.iscoroutinefunction(handler)
+    return getattr(handler, "_is_async", False) or asyncio.iscoroutinefunction(
+        getattr(handler, "func", None)
+    )
 
 
 class BaseMiddleware(Generic[T]):

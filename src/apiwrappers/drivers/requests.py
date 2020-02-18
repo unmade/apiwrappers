@@ -41,6 +41,7 @@ class RequestsDriver:
     def __str__(self) -> str:
         return "<Driver 'requests'>"
 
+    @middleware.wrap
     def fetch(
         self,
         request: Request,
