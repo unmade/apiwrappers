@@ -1,10 +1,50 @@
 import dataclasses
 from http.cookies import SimpleCookie
-from typing import Any, Dict, Union
+from typing import Any, Dict, Type, Union
 
 from apiwrappers import AsyncDriver, Driver, Method, Request, Response
+from apiwrappers.middleware import MiddlewareChain
+from apiwrappers.protocols import AsyncMiddleware, Middleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
 from apiwrappers.typedefs import Timeout
+
+
+class DriverMock:
+    middleware = MiddlewareChain()
+    timeout: Timeout = 1
+    verify_ssl: bool = True
+
+    def __init__(self, response: Response):
+        self.response = response
+
+    @middleware.wrap
+    def fetch(
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
+        verify_ssl: Union[bool, NoValue] = NoValue(),
+    ) -> Response:
+        # pylint: disable=unused-argument
+        return dataclasses.replace(self.response, request=request)
+
+
+class AsyncDriverMock:
+    middleware = MiddlewareChain()
+    timeout: Timeout = 1
+    verify_ssl: bool = True
+
+    def __init__(self, response: Response):
+        self.response = response
+
+    @middleware.wrap
+    async def fetch(
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
+        verify_ssl: Union[bool, NoValue] = NoValue(),
+    ) -> Response:
+        # pylint: disable=unused-argument
+        return dataclasses.replace(self.response, request=request)
 
 
 def make_response(content: bytes, **kwargs) -> Response:
@@ -21,41 +61,15 @@ def make_response(content: bytes, **kwargs) -> Response:
     return Response(**defaults)
 
 
-def make_driver(response: Response, *middleware) -> Driver:
-    class DriverMock:
-        # pylint: disable=unused-argument,no-self-use
-        timeout: Timeout = 1
-        verify_ssl: bool = True
-
-        def __init__(self, middleware):
-            self.middleware = middleware
-
-        def fetch(
-            self,
-            request: Request,
-            timeout: Union[Timeout, NoValue] = NoValue(),
-            verify_ssl: Union[bool, NoValue] = NoValue(),
-        ) -> Response:
-            return dataclasses.replace(response, request=request)
-
-    return DriverMock(middleware)
+def make_driver(response: Response, *middleware: Type[Middleware]) -> Driver:
+    driver = DriverMock(response)
+    driver.middleware = middleware
+    return driver
 
 
-def make_async_driver(response: Response, *middleware) -> AsyncDriver:
-    class AsyncDriverMock:
-        # pylint: disable=unused-argument,no-self-use
-        timeout: Timeout = 1
-        verify_ssl: bool = True
-
-        def __init__(self, middleware):
-            self.middleware = middleware
-
-        async def fetch(
-            self,
-            request: Request,
-            timeout: Union[Timeout, NoValue] = NoValue(),
-            verify_ssl: Union[bool, NoValue] = NoValue(),
-        ) -> Response:
-            return dataclasses.replace(response, request=request)
-
-    return AsyncDriverMock(middleware)
+def make_async_driver(
+    response: Response, *middleware: Type[AsyncMiddleware]
+) -> AsyncDriver:
+    driver = AsyncDriverMock(response)
+    driver.middleware = middleware
+    return driver

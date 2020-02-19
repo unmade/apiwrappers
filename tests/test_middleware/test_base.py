@@ -1,4 +1,5 @@
 # pylint: disable=unused-argument
+
 from typing import Awaitable, cast
 
 import pytest
@@ -6,7 +7,7 @@ import pytest
 from apiwrappers import Method, Request, Response
 from apiwrappers.middleware import BaseMiddleware
 
-from . import factories
+from .. import factories
 
 
 def test_base_middleware() -> None:
