@@ -8,7 +8,7 @@ from .. import factories
 
 class First(BaseMiddleware):
     def process_request(self, request: Request) -> Request:
-        request.headers = {"x-request-id": "1"}
+        request.headers["x-request-id"] = "1"
         return super().process_request(request)
 
     def process_response(self, response: Response) -> Response:
@@ -18,7 +18,7 @@ class First(BaseMiddleware):
 
 class Second(BaseMiddleware):
     def process_request(self, request: Request) -> Request:
-        request.headers["x-request-id"] += "2"  # type: ignore
+        request.headers["x-request-id"] += "2"
         return super().process_request(request)
 
     def process_response(self, response: Response) -> Response:

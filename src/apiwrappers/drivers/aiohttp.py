@@ -7,7 +7,7 @@ import aiohttp
 from apiwrappers import exceptions, utils
 from apiwrappers.entities import Request, Response
 from apiwrappers.middleware import MiddlewareChain
-from apiwrappers.middleware.auth import Authorization
+from apiwrappers.middleware.auth import Authentication
 from apiwrappers.protocols import AsyncMiddleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
 from apiwrappers.typedefs import QueryParams, Timeout
@@ -16,7 +16,7 @@ DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
 
 class AioHttpDriver:
-    middleware = MiddlewareChain(Authorization)
+    middleware = MiddlewareChain(Authentication)
 
     def __init__(
         self,

@@ -41,7 +41,7 @@ async def test_representation_with_middleware():
     driver = AioHttpDriver(RequestMiddleware, ResponseMiddleware)
     assert repr(driver) == (
         "AioHttpDriver("
-        "Authorization, RequestMiddleware, ResponseMiddleware, "
+        "Authentication, RequestMiddleware, ResponseMiddleware, "
         "timeout=300, verify_ssl=True"
         ")"
     )
