@@ -128,6 +128,7 @@ Table of Contents
 
    building-an-api-client
    drivers
+   auth
    middleware
    experimental-features
    api
