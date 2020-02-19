@@ -65,6 +65,7 @@ disable=missing-docstring,
         no-member,  # rely on mypy, pylint can't recognize methods
                     # when subclassing from typing.MutableMapping, etc...
         bad-continuation,  # handled by black
+        ungrouped-imports,  # handled by isort, don't work with TYPE_CHECKING
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
