@@ -38,7 +38,7 @@ The most simple way is to write a middleware as function:
         return middleware
 
 Since middleware is used by drivers, and the one we've written can be used
-only by regular driver, we also need to supply an async implementation:
+only by regular driver, we also need to provide an async implementation:
 
 .. code-block:: python
 
@@ -57,10 +57,10 @@ only by regular driver, we also need to supply an async implementation:
 
         return middleware
 
-As you can see, the only difference is that in async middleware we have to await
-the handler call
+As you can see, the only difference is that in async middleware we have to
+await the handler call.
 
-To help us reduce this code duplication *apiwrappers* supplies a
+To help us reduce this code duplication *apiwrappers* provides a
 ``BaseMiddleware`` class. Subclassing one you can then
 override it hook methods like that:
 
@@ -92,11 +92,43 @@ Using middleware
 
 Middleware are used by drivers and each driver accepts a list of middleware.
 
-Although, middleware we defined earlier literally does nothing, it still can be used like that:
+Although, middleware we defined earlier literally does nothing,
+it still can be used like that:
 
 .. code-block:: python
 
     from apiwrappers import make_driver
 
 
-    make_driver("requests", SimpleMiddleware)
+    driver = make_driver("requests", SimpleMiddleware)
+    # RequestsDriver(Authorization, SimpleMiddleware, ...)
+
+*Note, that even we provide only ``SimpleMiddleware`` the driver also has
+``Authorization`` middleware. That's because some drivers have middleware
+that should always be present.*
+
+You can also change driver middleware after creation by simply reassigning
+``driver.middleware`` attribute:
+
+.. code-block:: python
+
+    driver.middleware = []
+    # RequestsDriver(Authorization, ...)
+
+The order of the default middleware can be overridden by explicitly
+specifying it:
+
+.. code-block:: python
+
+    driver.middleware = [SimpleMiddleware, Authorization]
+    # RequestsDriver(SimpleMiddleware, Authorization, ...)
+
+Middleware order
+================
+
+The order of middleware matters because a middleware can depend on other
+middleware.
+
+Before making actual request, middleware are executed in the order
+they are defined.
+After getting the response middleware are executed in the reverse order.
