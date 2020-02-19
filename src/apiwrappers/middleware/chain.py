@@ -4,16 +4,18 @@ import asyncio
 import functools
 from typing import Any, Callable, Iterable, List, Type, TypeVar, Union, cast, overload
 
-from apiwrappers.middleware.auth import Authorization
 from apiwrappers.protocols import AsyncDriver, AsyncMiddleware, Driver, Middleware
 
 FuncType = Callable[..., Any]
 FT = TypeVar("FT", bound=FuncType)
 
+AnyMiddleware = TypeVar("AnyMiddleware", Type[Middleware], Type[AsyncMiddleware])
+AnyMiddlewareList = Union[List[Type[Middleware]], List[Type[AsyncMiddleware]]]
+
 
 class MiddlewareChain:
-    def __init__(self):
-        self.items = [Authorization]
+    def __init__(self, *middleware: AnyMiddleware):
+        self.middleware: AnyMiddlewareList = list(middleware)
 
     @overload
     def __get__(self, obj: Driver, objtype: Type[Driver]) -> List[Type[Middleware]]:
@@ -37,11 +39,11 @@ class MiddlewareChain:
 
     def __get__(self, obj, objtype):
         if obj is None:
-            return self.items
+            return self.middleware
         try:
             return getattr(obj, "_middleware")
         except AttributeError:
-            self.__set__(obj, self.items[:])
+            self.__set__(obj, self.middleware[:])
             return getattr(obj, "_middleware")
 
     @overload
@@ -56,7 +58,7 @@ class MiddlewareChain:
 
     def __set__(self, obj: Union[Driver, AsyncDriver], middleware) -> None:
         new_middleware = list(middleware)
-        defaults = [item for item in self.items if item not in new_middleware]
+        defaults = [item for item in self.middleware if item not in new_middleware]
         new_middleware = defaults + new_middleware
         setattr(obj, "_middleware", new_middleware)
 

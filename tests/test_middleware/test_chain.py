@@ -1,8 +1,7 @@
 import pytest
 
 from apiwrappers.entities import Method, Request, Response
-from apiwrappers.middleware import BaseMiddleware
-from apiwrappers.middleware.auth import Authorization
+from apiwrappers.middleware import BaseMiddleware, MiddlewareChain
 
 from .. import factories
 
@@ -27,25 +26,34 @@ class Second(BaseMiddleware):
         return response
 
 
-def test_chain_on_instance_access() -> None:
+def test_chain_on_instance_access_without_default_middleware() -> None:
     response = factories.make_response(b"")
-    driver = factories.make_driver(response)
-    assert driver.middleware == [Authorization]
+    driver1 = factories.DriverMock(response)
+    driver2 = factories.DriverMock(response)
+    assert driver1.middleware == []
+    assert driver2.middleware == []
+    assert driver1.middleware is not driver2.middleware
+
+
+def test_chain_on_instance_access_with_default_middleware() -> None:
+    # replace middleware with chain with default middleware
+    factories.DriverMock.middleware = MiddlewareChain(First)
+
+    response = factories.make_response(b"")
+    driver1 = factories.DriverMock(response)
+    driver2 = factories.DriverMock(response)
+    assert driver1.middleware == [First]
+    assert driver2.middleware == [First]
+    assert driver1.middleware is not driver2.middleware
+
+    # back to original chain
+    factories.DriverMock.middleware = MiddlewareChain()
 
 
 def test_chain_on_class_access() -> None:
     driver_cls = factories.DriverMock
-    assert driver_cls.middleware == [Authorization]
+    assert driver_cls.middleware == []
     assert driver_cls.middleware is driver_cls.middleware
-
-
-def test_chain_on_instance_access_before_set() -> None:
-    response = factories.make_response(b"")
-    driver = factories.DriverMock(response)
-    assert driver.middleware == [Authorization]
-
-    driver.middleware.append(BaseMiddleware)
-    assert driver.middleware == [Authorization, BaseMiddleware]
 
 
 def test_chain_returns_different_objects_on_instance_and_class_access() -> None:
@@ -54,14 +62,37 @@ def test_chain_returns_different_objects_on_instance_and_class_access() -> None:
     assert driver.middleware is not factories.DriverMock.middleware
 
 
-def test_chain_on_instance_set() -> None:
+def test_chain_on_instance_set_new_middleware() -> None:
+    response = factories.make_response(b"")
+    driver1 = factories.DriverMock(response)
+    driver2 = factories.DriverMock(response)
+    driver2.middleware = [First]
+    assert factories.DriverMock.middleware == []
+    assert driver1.middleware == []
+    assert driver2.middleware == [First]
+
+
+def test_chain_on_instance_set_new_middleware_with_defaults() -> None:
+    # replace middleware with chain with default middleware
+    factories.DriverMock.middleware = MiddlewareChain(First)
+
     response = factories.make_response(b"")
     driver = factories.make_driver(response)
-    driver.middleware = [BaseMiddleware]
-    assert driver.middleware == [Authorization, BaseMiddleware]
+    driver.middleware = [Second]
+    assert driver.middleware == [First, Second]
+    assert factories.DriverMock.middleware == [First]
+
+    driver.middleware = [Second, First]
+    assert driver.middleware == [Second, First]
+
+    driver.middleware = []
+    assert driver.middleware == [First]
+
+    # back to original chain
+    factories.DriverMock.middleware = MiddlewareChain()
 
 
-def test_chain_order_of_execution() -> None:
+def test_chain_order_of_execution_in_driver() -> None:
     response_mock = factories.make_response(b"")
     driver = factories.make_driver(response_mock, First, Second)
     response = driver.fetch(Request(Method.GET, "", ""))
@@ -70,7 +101,7 @@ def test_chain_order_of_execution() -> None:
 
 
 @pytest.mark.asyncio
-async def test_chain_order_of_execution_async_driver() -> None:
+async def test_chain_order_of_execution_in_async_driver() -> None:
     response_mock = factories.make_response(b"")
     driver = factories.make_async_driver(response_mock, First, Second)
     response = await driver.fetch(Request(Method.GET, "", ""))

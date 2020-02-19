@@ -6,6 +6,7 @@ import requests
 from apiwrappers import exceptions, utils
 from apiwrappers.entities import Request, Response
 from apiwrappers.middleware import MiddlewareChain
+from apiwrappers.middleware.auth import Authorization
 from apiwrappers.protocols import Middleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
 from apiwrappers.typedefs import Timeout
@@ -14,7 +15,7 @@ DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
 
 class RequestsDriver:
-    middleware = MiddlewareChain()
+    middleware = MiddlewareChain(Authorization)
 
     def __init__(
         self,
