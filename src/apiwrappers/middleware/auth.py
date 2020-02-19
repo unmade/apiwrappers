@@ -50,8 +50,4 @@ class Authentication(BaseMiddleware):
                         value.send(auth_response)
                 except StopIteration as exc:
                     value = exc.value
-            # Since header is Mapping it is possible it doesn't have
-            # any method to set an item
-            headers = dict(request.headers)
-            headers.update(value)
-            request.headers = headers
+            request.headers.update(value)

@@ -5,7 +5,17 @@ import enum
 import json
 from dataclasses import dataclass, field
 from http.cookies import SimpleCookie
-from typing import Any, Callable, Dict, Generator, Mapping, Optional, Tuple, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    MutableMapping,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import JSON, Data, QueryParams
@@ -89,8 +99,8 @@ class Request:
     host: str
     path: str
     query_params: QueryParams = field(default_factory=dict)
-    headers: Mapping[str, str] = field(default_factory=dict)
-    cookies: Mapping[str, str] = field(default_factory=dict)
+    headers: MutableMapping[str, str] = field(default_factory=dict)
+    cookies: MutableMapping[str, str] = field(default_factory=dict)
     auth: _Auth = None
     data: Data = None
     json: JSON = None
