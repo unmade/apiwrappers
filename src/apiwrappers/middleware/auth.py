@@ -6,7 +6,7 @@ from apiwrappers.middleware.base import BaseMiddleware
 from apiwrappers.protocols import AsyncHandler, Handler
 
 
-class Authorization(BaseMiddleware):
+class Authentication(BaseMiddleware):
     def call_next(
         self, handler: Handler, request: Request, *args, **kwargs,
     ) -> Response:
