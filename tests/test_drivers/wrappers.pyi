@@ -2,7 +2,7 @@ from typing import (
     Awaitable,
     Dict,
     Generic,
-    Mapping,
+    MutableMapping,
     TypeVar,
     Union,
     overload,
@@ -47,11 +47,11 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def echo_cookies(self: APIWrapper[Driver], cookies: Mapping[str, str]) -> Response:
+    def echo_cookies(self: APIWrapper[Driver], cookies: MutableMapping[str, str]) -> Response:
         ...
 
     @overload
-    def echo_cookies(self: APIWrapper[AsyncDriver], cookies: Mapping[str, str]) -> Awaitable[Response]:
+    def echo_cookies(self: APIWrapper[AsyncDriver], cookies: MutableMapping[str, str]) -> Awaitable[Response]:
         ...
 
     @overload

@@ -1,22 +1,25 @@
-# pylint: disable=import-outside-toplevel,redefined-outer-name,too-many-lines
+# pylint: disable=import-outside-toplevel,redefined-outer-name
 
-import asyncio
+from __future__ import annotations
+
 import json
+import re
 import uuid
 from http.cookies import SimpleCookie
-from typing import TYPE_CHECKING
-from unittest import mock
+from typing import TYPE_CHECKING, Type
 
 import pytest
 
 from apiwrappers import exceptions
 from apiwrappers.entities import QueryParams
+from apiwrappers.protocols import AsyncMiddleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
 
 from .middleware import RequestMiddleware, ResponseMiddleware
 from .wrappers import APIWrapper
 
 if TYPE_CHECKING:
+    from aioresponses import aioresponses
     from apiwrappers.drivers.aiohttp import AioHttpDriver
 
 
@@ -24,21 +27,62 @@ pytestmark = [pytest.mark.aiohttp, pytest.mark.asyncio]
 
 
 @pytest.fixture
-async def driver():
+def responses():
+    from aioresponses import aioresponses
+
+    with aioresponses() as mocked_responses:
+        yield mocked_responses
+
+
+def aiohttp_driver(*middleware: Type[AsyncMiddleware], **kwargs) -> AioHttpDriver:
     from apiwrappers.drivers.aiohttp import AioHttpDriver
 
-    return AioHttpDriver()
+    return AioHttpDriver(*middleware, **kwargs)
 
 
-async def test_representation(driver: "AioHttpDriver"):
+async def echo(url, **kwargs):
+    from aioresponses import CallbackResult
+    from aiohttp import ClientResponse, hdrs
+
+    # see: https://github.com/pnuckowski/aioresponses/issues/155
+    class Response(ClientResponse):
+        def headers_getter(self):
+            return self.__headers
+
+        def headers_setter(self, value):
+            self.__headers = value
+            for hdr in value.getall(hdrs.SET_COOKIE, ()):
+                self.cookies.load(hdr)
+
+        __headers = {}
+        _headers = property(headers_getter, headers_setter)
+
+    headers = kwargs["headers"]
+    for name, value in kwargs["cookies"].items():
+        headers["Set-Cookie"] = f"{name}={value}"
+
+    return CallbackResult(
+        response_class=Response,
+        status=200,
+        headers=headers,
+        body=json.dumps(
+            {
+                "path_url": f"{url.path}?{url.query_string}",
+                "timeout": kwargs["timeout"],
+                "verify_ssl": kwargs["ssl"],
+            },
+        ),
+    )
+
+
+async def test_representation() -> None:
+    driver = aiohttp_driver()
     setattr(driver, "_middleware", [])
     assert repr(driver) == "AioHttpDriver(timeout=300, verify_ssl=True)"
 
 
-async def test_representation_with_middleware():
-    from apiwrappers.drivers.aiohttp import AioHttpDriver
-
-    driver = AioHttpDriver(RequestMiddleware, ResponseMiddleware)
+async def test_representation_with_middleware() -> None:
+    driver = aiohttp_driver(RequestMiddleware, ResponseMiddleware)
     assert repr(driver) == (
         "AioHttpDriver("
         "Authentication, RequestMiddleware, ResponseMiddleware, "
@@ -47,141 +91,90 @@ async def test_representation_with_middleware():
     )
 
 
-async def test_string_representation(driver: "AioHttpDriver"):
+async def test_string_representation() -> None:
+    driver = aiohttp_driver()
     assert str(driver) == "<AsyncDriver 'aiohttp'>"
 
 
-async def test_get_content(aresponses, driver: "AioHttpDriver"):
-    aresponses.add(
-        "example.com", "/", "GET", "Hello, World!",
-    )
-    wrapper = APIWrapper("https://example.com", driver=driver)
+async def test_get_content(responses: aioresponses):
+    responses.get("https://example.com", body="Hello, World!")
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.get_hello_world()
     assert response.status_code == 200
     assert response.content == b"Hello, World!"
 
 
-async def test_get_text(aresponses, driver: "AioHttpDriver"):
-    aresponses.add(
-        "example.com", "/", "GET", "Hello, World!",
-    )
-    wrapper = APIWrapper("https://example.com", driver=driver)
+async def test_get_text(responses: aioresponses):
+    responses.get("https://example.com", body="Hello, World!")
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.get_hello_world()
     assert response.status_code == 200
     assert response.text() == "Hello, World!"
 
 
-async def test_get_json(aresponses, driver: "AioHttpDriver"):
-    aresponses.add(
-        "example.com",
-        "/",
-        "GET",
-        aresponses.Response(
-            body=b'{"message": "Hello, World!"}', content_type="application/json"
-        ),
-    )
-    wrapper = APIWrapper("https://example.com", driver=driver)
+async def test_get_json(responses: aioresponses):
+    data = {"message": "Hello, World!"}
+    responses.get("https://example.com", payload=data)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.get_hello_world()
     assert response.status_code == 200
     assert response.json() == {"message": "Hello, World!"}
 
 
-async def test_headers(aresponses, driver: "AioHttpDriver"):
-    def echo_headers(request):
-        return aresponses.Response(
-            status=200,
-            headers={"X-Response-ID": request.headers["X-Request-ID"]},
-            body=b'{"code": 200, "message": "ok"}',
-        )
-
-    aresponses.add("example.com", "/", "POST", echo_headers)
-
+async def test_headers(responses: aioresponses):
+    responses.post("https://example.com", callback=echo)
     headers = {"X-Request-ID": str(uuid.uuid4())}
-    wrapper = APIWrapper("https://example.com", driver=driver)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.echo_headers(headers)
     assert isinstance(response.headers, CaseInsensitiveDict)
-    assert response.headers["X-Response-ID"] == headers["X-Request-ID"]
+    assert response.headers["X-Request-ID"] == headers["X-Request-ID"]
 
 
-async def test_query_params(aresponses, driver: "AioHttpDriver"):
-    def echo_url_path(request):
-        return aresponses.Response(
-            status=200, body=f"{request.url.path}?{request.url.query_string}",
-        )
-
+async def test_query_params(responses: aioresponses):
     query_params: QueryParams = {"type": "user", "id": ["1", "2"], "name": None}
-    path = "/?type=user&id=1&id=2"
-    aresponses.add("example.com", path, "GET", echo_url_path, match_querystring=True)
-
-    wrapper = APIWrapper("https://example.com", driver=driver)
+    path = "/?id=1&id=2&type=user"
+    responses.get(re.compile(rf"^https://example\.com/\?{path}$"), callback=echo)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.echo_query_params(query_params)
-    assert response.text() == path
+    assert response.json()["path_url"] == path  # type: ignore
 
 
-async def test_cookies(aresponses, driver: "AioHttpDriver"):
-    def echo_cookies(request):
-        return aresponses.Response(
-            status=200, headers={"Set-Cookie": request.headers["Cookie"]}
-        )
-
-    aresponses.add("example.com", "/", "GET", echo_cookies)
-
+async def test_cookies(responses: aioresponses):
+    responses.get("https://example.com", callback=echo)
     cookies = {"csrftoken": "YWxhZGRpbjpvcGVuc2VzYW1l"}
-    wrapper = APIWrapper("https://example.com", driver=driver)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.echo_cookies(cookies)
     assert isinstance(response.cookies, SimpleCookie)
     assert response.cookies["csrftoken"].value == cookies["csrftoken"]
 
 
-async def test_send_data_as_dict(aresponses, driver: "AioHttpDriver"):
-    async def echo_data(request):
-        return aresponses.Response(status=200, body=await request.text())
-
-    aresponses.add("example.com", "/", "POST", echo_data)
-
-    payload = {
-        "name": "apiwrappers",
-        "tags": ["api", "wrapper"],
-        "pre-release": True,
-        "version": 1,
-    }
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "name": "apiwrappers",
+            "tags": ["api", "wrapper"],
+            "pre-release": True,
+            "version": 1,
+        },
+        [
+            ("name", "apiwrappers"),
+            ("tags", "api"),
+            ("tags", "wrapper"),
+            ("pre-release", True),
+            ("version", 1),
+        ],
+    ],
+)
+async def test_send_data(responses: aioresponses, payload):
     form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
-    wrapper = APIWrapper("https://example.com", driver=driver)
-
+    responses.post("https://example.com", body=form_data)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.send_data(payload)
     assert response.text() == form_data
 
 
-async def test_send_data_as_tuples(aresponses, driver: "AioHttpDriver"):
-    async def echo_data(request):
-        return aresponses.Response(status=200, body=await request.text())
-
-    aresponses.add("example.com", "/", "POST", echo_data)
-
-    payload = [
-        ("name", "apiwrappers"),
-        ("tags", "api"),
-        ("tags", "wrapper"),
-        ("pre-release", True),
-        ("version", 1),
-    ]
-    form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
-    wrapper = APIWrapper("https://example.com", driver=driver)
-
-    response = await wrapper.send_data(payload)
-    assert response.text() == form_data
-
-
-async def test_send_json(aresponses, driver: "AioHttpDriver"):
-    async def echo_data(request):
-        return aresponses.Response(
-            status=200,
-            headers={"Content-Type": "application/json"},
-            body=await request.text(),
-        )
-
-    aresponses.add("example.com", "/", "POST", echo_data)
-
+async def test_send_json(responses: aioresponses):
     payload = {
         "name": "apiwrappers",
         "tags": ["api", "wrapper"],
@@ -189,41 +182,29 @@ async def test_send_json(aresponses, driver: "AioHttpDriver"):
         "version": 1,
     }
 
-    wrapper = APIWrapper("https://example.com", driver=driver)
+    responses.post("https://example.com", payload=payload)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.send_json(payload)
     assert response.json() == payload
 
 
 @pytest.mark.parametrize(
-    ["driver_timeout", "fetch_timeout", "expected"],
+    ["driver_timeout", "fetch_timeout", "timeout"],
     [
         (None, None, None),
+        (None, NoValue(), None),
         (None, 0.5, 0.5),
         (300, None, None),
         (300, 1, 1),
         (300, NoValue(), 300),
     ],
 )
-async def test_timeout(
-    aresponses, driver: "AioHttpDriver", driver_timeout, fetch_timeout, expected
-):
-    # pylint: disable=protected-access
-    # aiohttp calls are hard to mock, instead just fire a call and test private method
-    aresponses.add("example.com", "/", "GET")
-    driver.timeout = driver_timeout
+async def test_timeout(responses: aioresponses, driver_timeout, fetch_timeout, timeout):
+    responses.get("https://example.com", callback=echo)
+    driver = aiohttp_driver(timeout=driver_timeout)
     wrapper = APIWrapper("https://example.com", driver=driver)
-    await wrapper.timeout(fetch_timeout)
-    assert driver._prepare_timeout(fetch_timeout) == expected
-
-
-async def test_no_timeout(aresponses, driver: "AioHttpDriver"):
-    # pylint: disable=protected-access
-    # aiohttp calls are hard to mock, instead just fire a call and test private method
-    aresponses.add("example.com", "/", "GET")
-    driver.timeout = None
-    wrapper = APIWrapper("https://example.com", driver=driver)
-    await wrapper.timeout(None)
-    assert driver._prepare_timeout(None) is None
+    response = await wrapper.timeout(fetch_timeout)
+    assert response.json()["timeout"] == timeout  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -237,122 +218,69 @@ async def test_no_timeout(aresponses, driver: "AioHttpDriver"):
         (True, NoValue(), True),
     ],
 )
-async def test_verify_ssl(
-    aresponses, driver: "AioHttpDriver", driver_ssl, fetch_ssl, expected
-):
-    # pylint: disable=protected-access
-    # aiohttp calls are hard to mock, instead just fire a call and test private method
-    aresponses.add("example.com", "/", "GET")
-    driver.verify_ssl = driver_ssl
+async def test_verify_ssl(responses: aioresponses, driver_ssl, fetch_ssl, expected):
+    responses.get("https://example.com", callback=echo)
+    driver = aiohttp_driver(verify_ssl=driver_ssl)
     wrapper = APIWrapper("https://example.com", driver=driver)
-    await wrapper.verify_ssl(fetch_ssl)
-    assert driver._prepare_ssl(fetch_ssl) == expected
-
-
-async def test_reraise_client_error(aresponses, driver: "AioHttpDriver"):
-    import aiohttp
-
-    async def client_error(*args, **kwargs):
-        raise aiohttp.ClientError
-
-    with mock.patch.object(aiohttp.ClientSession, "request", client_error):
-        wrapper = APIWrapper("https://example.com", driver=driver)
-        with pytest.raises(exceptions.DriverError) as exc:
-            await wrapper.exception()
-        assert not isinstance(exc.value, exceptions.ConnectionFailed)
-
-
-async def test_reraise_client_connection_error(aresponses, driver: "AioHttpDriver"):
-    import aiohttp
-
-    aresponses.add("example.com", "/", "GET", response=aiohttp.ClientConnectionError())
-    wrapper = APIWrapper("https://example.com", driver=driver)
-    with pytest.raises(exceptions.ConnectionFailed):
-        await wrapper.exception()
-
-
-async def test_reraise_timeout_error(aresponses, driver: "AioHttpDriver"):
-    import aiohttp
-
-    async def timeout_error(*args, **kwargs):
-        raise asyncio.TimeoutError
-
-    with mock.patch.object(aiohttp.ClientSession, "request", timeout_error):
-        wrapper = APIWrapper("https://example.com", driver=driver)
-        with pytest.raises(exceptions.Timeout):
-            await wrapper.exception()
+    response = await wrapper.verify_ssl(fetch_ssl)
+    assert response.json()["verify_ssl"] == expected  # type: ignore
 
 
 @pytest.mark.parametrize(
-    "response",
+    ["exc_name", "raised"],
     [
-        {"body": b"Plaint Text"},
-        {"body": b"Plaint Text", "content_type": "application/json"},
+        ("ClientError", exceptions.DriverError),
+        ("ClientConnectionError", exceptions.ConnectionFailed),
+        ("ServerTimeoutError", exceptions.Timeout),
     ],
 )
-async def test_invalid_json_response(aresponses, driver: "AioHttpDriver", response):
-    aresponses.add("example.com", "/", "GET", aresponses.Response(**response))
-    wrapper = APIWrapper("https://example.com", driver=driver)
+async def test_reraise_aiohttp_errors(responses: aioresponses, exc_name, raised):
+    import aiohttp
+
+    exc_class = getattr(aiohttp, exc_name)
+    responses.get("https://example.com", exception=exc_class())
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
+    with pytest.raises(raised):
+        await wrapper.exception()
+
+
+@pytest.mark.parametrize(
+    "response", [{"body": b"Plaint Text"}, {"payload": None}],
+)
+async def test_invalid_json_response(responses: aioresponses, response):
+    responses.get("https://example.com", **response)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     json_response = await wrapper.get_hello_world()
     with pytest.raises(json.JSONDecodeError):
         json_response.json()
 
 
-async def test_middleware(aresponses):
-    from apiwrappers.drivers.aiohttp import AioHttpDriver
-
-    def echo_headers(request):
-        return aresponses.Response(
-            status=200, headers=request.headers, body=b'{"code": 200, "message": "ok"}',
-        )
-
-    aresponses.add("example.com", "/", "GET", echo_headers)
-    driver = AioHttpDriver(RequestMiddleware, ResponseMiddleware)
+async def test_middleware(responses: aioresponses):
+    responses.get("https://example.com", callback=echo)
+    driver = aiohttp_driver(RequestMiddleware, ResponseMiddleware)
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.middleware()
     assert response.headers["x-request-id"] == "request_middleware"
     assert response.headers["x-response-id"] == "response_middleware"
 
 
-async def test_basic_auth(aresponses, driver: "AioHttpDriver"):
-    def echo_headers(request):
-        return aresponses.Response(
-            status=200, headers=request.headers, body=b'{"code": 200, "message": "ok"}',
-        )
-
-    aresponses.add("example.com", "/", "GET", echo_headers)
-    wrapper = APIWrapper("https://example.com", driver=driver)
+async def test_basic_auth(responses: aioresponses):
+    responses.get("https://example.com", callback=echo)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.basic_auth()
     assert "Basic " in response.headers["Authorization"]
 
 
-async def test_token_auth(aresponses, driver: "AioHttpDriver"):
-    def echo_headers(request):
-        return aresponses.Response(
-            status=200, headers=request.headers, body=b'{"code": 200, "message": "ok"}',
-        )
-
-    aresponses.add("example.com", "/", "GET", echo_headers)
-    wrapper = APIWrapper("https://example.com", driver=driver)
+async def test_token_auth(responses: aioresponses):
+    responses.get("https://example.com", callback=echo)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.token_auth()
     assert "Bearer " in response.headers["Authorization"]
 
 
-async def test_complex_auth_flow(aresponses, driver: "AioHttpDriver"):
-    def echo_headers(request):
-        return aresponses.Response(
-            status=200, headers=request.headers, body=b'{"code": 200, "message": "ok"}',
-        )
-
-    aresponses.add(
-        "example.com",
-        "/auth",
-        "POST",
-        aresponses.Response(
-            body=b'{"token": "authtoken"}', content_type="application/json"
-        ),
-    )
-    aresponses.add("example.com", "/", "GET", echo_headers)
-    wrapper = APIWrapper("https://example.com", driver=driver)
+async def test_complex_auth_flow(responses: aioresponses):
+    responses.post("https://example.com/auth", payload={"token": "authtoken"})
+    responses.get("https://example.com", callback=echo)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.complex_auth_flow()
     assert response.headers["Authorization"] == "Bearer authtoken"
