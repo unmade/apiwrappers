@@ -150,7 +150,7 @@ def test_cookies(responses: RequestsMock):
         ],
     ],
 )
-def test_send_data_as_dict(responses: RequestsMock, payload):
+def test_send_data(responses: RequestsMock, payload):
     responses.add_callback("POST", "https://example.com", callback=echo)
     form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
     wrapper = APIWrapper("https://example.com", driver=requests_driver())
