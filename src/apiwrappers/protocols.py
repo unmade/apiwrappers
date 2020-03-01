@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Awaitable, TypeVar, Union
 from apiwrappers.compat import Protocol
 from apiwrappers.entities import Request, Response
 from apiwrappers.structures import NoValue
-from apiwrappers.typedefs import Timeout, Verify
+from apiwrappers.typedefs import ClientCert, Timeout, Verify
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
@@ -29,11 +29,13 @@ class Driver(Protocol):
         verify: Either a boolean, in which case it controls whether to verify the
             server's TLS certificate, or a string, in which case it must be a path
             to a CA bundle to use.
+        cert: Either a path to SSL client cert file (.pem) or a ('cert', 'key') tuple.
     """
 
     middleware: MiddlewareChain
     timeout: Timeout
     verify: Verify
+    cert: ClientCert
 
     def fetch(
         self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
@@ -69,11 +71,13 @@ class AsyncDriver(Protocol):
         verify: Either a boolean, in which case it controls whether to verify the
             server's TLS certificate, or a string, in which case it must be a path
             to a CA bundle to use.
+        cert: Either a path to SSL client cert file (.pem) or a ('cert', 'key') tuple.
     """
 
     middleware: MiddlewareChain
     timeout: Timeout
     verify: Verify
+    cert: ClientCert
 
     async def fetch(
         self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),

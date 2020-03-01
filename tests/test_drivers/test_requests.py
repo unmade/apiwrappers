@@ -28,9 +28,15 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.requests]
 
 BASE_DIR = Path(__file__).absolute().parent
-CA_CERTS = str(BASE_DIR.joinpath("certs/ca-bundle.crt"))
-INVALID_CERTS = str(BASE_DIR.joinpath("certs/invalid-ca-bundle.crt"))
-INVALID_PATH_CERTS = str(BASE_DIR.joinpath("certs/no-ca-bundle.crt"))
+CA_BUNDLE = str(BASE_DIR.joinpath("certs/ca-bundle.crt"))
+INVALID_CA_BUNDLE = str(BASE_DIR.joinpath("certs/invalid-ca-bundle.crt"))
+INVALID_CA_BUNDLE_PATH = str(BASE_DIR.joinpath("certs/no-ca-bundle.crt"))
+
+CLIENT_CERT = str(BASE_DIR.joinpath("certs/client.pem"))
+CLIENT_CERT_PAIR = (
+    str(BASE_DIR.joinpath("certs/client.crt")),
+    str(BASE_DIR.joinpath("certs/client.key")),
+)
 
 
 @pytest.fixture
@@ -200,38 +206,64 @@ def test_timeout(driver_timeout, fetch_timeout, expected):
 
 
 @pytest.mark.parametrize(
-    ["driver_ssl", "expected"],
-    [
-        (True, True),
-        (False, False),
-        ("/path/to/ca-bundle.crt", "/path/to/ca-bundle.crt"),
-    ],
+    "verify", [True, False, CA_BUNDLE],
 )
-def test_verify_ssl(driver_ssl, expected) -> None:
-    driver = requests_driver(verify=driver_ssl)
+def test_verify(verify) -> None:
+    driver = requests_driver(verify=verify)
     wrapper = APIWrapper("https://example.com", driver=driver)
     with mock.patch("requests.request") as request_mock:
         wrapper.verify()
     _, call_kwargs = request_mock.call_args
-    assert call_kwargs["verify"] == expected
+    assert call_kwargs["verify"] == verify
 
 
 def test_verify_with_invalid_ca_bundle() -> None:
-    driver = requests_driver(verify=INVALID_CERTS)
+    driver = requests_driver(verify=INVALID_CA_BUNDLE)
     wrapper = APIWrapper("https://example.com", driver=driver)
     with pytest.raises(ssl.SSLError) as excinfo:
         wrapper.verify()
-    assert "no certificate or crl found" in str(excinfo.value)
+    assert "[X509] no certificate or crl found" in str(excinfo.value)
 
 
 def test_verify_with_invalid_path_to_ca_bundle() -> None:
-    driver = requests_driver(verify=INVALID_PATH_CERTS)
+    driver = requests_driver(verify=INVALID_CA_BUNDLE_PATH)
     wrapper = APIWrapper("https://example.com", driver=driver)
     with pytest.raises(OSError) as excinfo:
         wrapper.verify()
     assert str(excinfo.value) == (
         f"Could not find a suitable TLS CA certificate bundle, "
-        f"invalid path: {INVALID_PATH_CERTS}"
+        f"invalid path: {INVALID_CA_BUNDLE_PATH}"
+    )
+
+
+@pytest.mark.parametrize(
+    "cert", [CLIENT_CERT, CLIENT_CERT_PAIR],
+)
+def test_cert(cert) -> None:
+    driver = requests_driver(cert=cert)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with mock.patch("requests.request") as request_mock:
+        wrapper.cert()
+    _, call_kwargs = request_mock.call_args
+    assert call_kwargs["cert"] == cert
+
+
+def test_invalid_cert() -> None:
+    driver = requests_driver(cert=INVALID_CA_BUNDLE)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with pytest.raises(ssl.SSLError) as excinfo:
+        wrapper.cert()
+    assert "[SSL] PEM lib" in str(excinfo.value)
+
+
+def test_invalid_path_to_cert() -> None:
+    driver = requests_driver(cert=INVALID_CA_BUNDLE_PATH)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with pytest.raises(OSError) as excinfo:
+        wrapper.cert()
+    assert str(excinfo.value) == (
+        f"Could not find the TLS certificate file, "
+        f"invalid path: {INVALID_CA_BUNDLE_PATH}"
     )
 
 

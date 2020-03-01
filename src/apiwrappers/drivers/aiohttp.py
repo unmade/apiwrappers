@@ -2,7 +2,7 @@ import asyncio
 import ssl
 from http.cookies import SimpleCookie
 from ssl import SSLContext
-from typing import Iterable, List, Tuple, Type, Union
+from typing import Iterable, List, Optional, Tuple, Type, Union, cast
 
 import aiohttp
 
@@ -12,7 +12,7 @@ from apiwrappers.middleware import MiddlewareChain
 from apiwrappers.middleware.auth import Authentication
 from apiwrappers.protocols import AsyncMiddleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
-from apiwrappers.typedefs import QueryParams, Timeout, Verify
+from apiwrappers.typedefs import ClientCert, QueryParams, Timeout, Verify
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
@@ -25,10 +25,12 @@ class AioHttpDriver:
         *middleware: Type[AsyncMiddleware],
         timeout: Timeout = DEFAULT_TIMEOUT,
         verify: Verify = True,
+        cert: ClientCert = None,
     ):
         self.middleware = middleware
         self.timeout = timeout
         self.verify = verify
+        self.cert = cert
 
     def __repr__(self) -> str:
         middleware = [m.__name__ for m in self.middleware]
@@ -96,14 +98,36 @@ class AioHttpDriver:
             return self.timeout
         return timeout
 
-    def _prepare_ssl(self) -> Union[bool, SSLContext]:
-        if isinstance(self.verify, str):
+    def _prepare_ssl(self) -> SSLContext:
+        if self.verify is True:
+            context = ssl.create_default_context()
+        elif self.verify is False:
+            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        else:
             try:
-                return ssl.create_default_context(cafile=self.verify)
+                context = ssl.create_default_context(cafile=cast(str, self.verify))
             except FileNotFoundError as exc:
                 msg = (
                     f"Could not find a suitable TLS CA certificate bundle, "
                     f"invalid path: {self.verify}"
                 )
                 raise FileNotFoundError(msg) from exc
-        return self.verify
+
+        cert: Optional[str]
+        key: Optional[str]
+        if isinstance(self.cert, tuple):
+            cert, key = self.cert
+        else:
+            cert, key = self.cert, None
+
+        if cert is not None:
+            try:
+                context.load_cert_chain(cert, key)
+            except FileNotFoundError as exc:
+                msg = (
+                    f"Could not find the TLS certificate file, "
+                    f"invalid path: {self.cert}"
+                )
+                raise FileNotFoundError(msg) from exc
+
+        return context

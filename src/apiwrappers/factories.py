@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import importlib
 from typing import Tuple, Type, Union, overload
 
 from apiwrappers.compat import Literal
 from apiwrappers.protocols import AsyncDriver, AsyncMiddleware, Driver, Middleware
-from apiwrappers.typedefs import Timeout, Verify
+from apiwrappers.typedefs import ClientCert, Timeout, Verify
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 DRIVER_MAP = {
@@ -18,6 +20,7 @@ def make_driver(
     *middleware: Type[Middleware],
     timeout: Timeout = DEFAULT_TIMEOUT,
     verify: Verify = True,
+    cert: ClientCert = None,
 ) -> Driver:
     ...
 
@@ -28,6 +31,7 @@ def make_driver(
     *middleware: Type[AsyncMiddleware],
     timeout: Timeout = DEFAULT_TIMEOUT,
     verify: Verify = True,
+    cert: ClientCert = None,
 ) -> AsyncDriver:
     ...
 
@@ -39,6 +43,7 @@ def make_driver(
     *middleware: Union[Type[Middleware], Type[AsyncMiddleware]],
     timeout: Timeout = DEFAULT_TIMEOUT,
     verify: Verify = True,
+    cert: ClientCert = None,
 ) -> Union[Driver, AsyncDriver]:
     ...
 
@@ -48,6 +53,7 @@ def make_driver(
     *middleware: Union[Type[Middleware], Type[AsyncMiddleware]],
     timeout: Timeout = DEFAULT_TIMEOUT,
     verify: Verify = True,
+    cert: ClientCert = None,
 ) -> Union[Driver, AsyncDriver]:
     """
     Creates driver instance and returns it
@@ -67,6 +73,7 @@ def make_driver(
         verify: Either a boolean, in which case it controls whether to verify the
             server's TLS certificate, or a string, in which case it must be a path
             to a CA bundle to use.
+        cert: Either a path to SSL client cert file (.pem) or a ('cert', 'key') tuple.
 
     Returns:
         * **Driver** if ``driver_type`` is ``requests``.
@@ -84,7 +91,7 @@ def make_driver(
     module_name, driver_name = _get_import_params(driver_type)
     module = importlib.import_module(module_name)
     driver_class = getattr(module, driver_name)
-    driver = driver_class(*middleware, timeout=timeout, verify=verify)
+    driver = driver_class(*middleware, timeout=timeout, verify=verify, cert=cert)
     return driver  # type: ignore
 
 

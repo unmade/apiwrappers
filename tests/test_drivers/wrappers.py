@@ -39,6 +39,10 @@ class APIWrapper:
         request = Request(Method.GET, self.host, "/")
         return self.driver.fetch(request)
 
+    def cert(self):
+        request = Request(Method.GET, self.host, "/")
+        return self.driver.fetch(request)
+
     def exception(self):
         request = Request(Method.GET, self.host, "/")
         return self.driver.fetch(request)

@@ -11,7 +11,7 @@ from apiwrappers.middleware import MiddlewareChain
 from apiwrappers.middleware.auth import Authentication
 from apiwrappers.protocols import Middleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
-from apiwrappers.typedefs import Timeout, Verify
+from apiwrappers.typedefs import ClientCert, Timeout, Verify
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
@@ -24,10 +24,12 @@ class RequestsDriver:
         *middleware: Type[Middleware],
         timeout: Timeout = DEFAULT_TIMEOUT,
         verify: Verify = True,
+        cert: ClientCert = None,
     ):
         self.middleware = middleware
         self.timeout = timeout
         self.verify = verify
+        self.cert = cert
 
     def __repr__(self) -> str:
         middleware = [m.__name__ for m in self.middleware]
@@ -59,6 +61,7 @@ class RequestsDriver:
                 json=request.json,
                 timeout=self._prepare_timeout(timeout),
                 verify=self.verify,
+                cert=self.cert,
             )
         except requests.Timeout as exc:
             raise exceptions.Timeout from exc

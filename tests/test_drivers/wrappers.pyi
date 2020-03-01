@@ -87,6 +87,14 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
+    def cert(self: APIWrapper[Driver]) -> Response:
+        ...
+
+    @overload
+    def cert(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
+        ...
+
+    @overload
     def exception(self: APIWrapper[Driver]) -> Response:
         ...
 

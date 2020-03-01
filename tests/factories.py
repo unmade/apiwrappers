@@ -6,13 +6,14 @@ from apiwrappers import AsyncDriver, Driver, Method, Request, Response
 from apiwrappers.middleware import MiddlewareChain
 from apiwrappers.protocols import AsyncMiddleware, Middleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
-from apiwrappers.typedefs import Timeout, Verify
+from apiwrappers.typedefs import ClientCert, Timeout, Verify
 
 
 class DriverMock:
     middleware = MiddlewareChain()
     timeout: Timeout = 1
     verify: Verify = True
+    cert: ClientCert = None
 
     def __init__(self, response: Response):
         self.response = response
@@ -29,6 +30,7 @@ class AsyncDriverMock:
     middleware = MiddlewareChain()
     timeout: Timeout = 1
     verify: Verify = True
+    cert: ClientCert = None
 
     def __init__(self, response: Response):
         self.response = response
