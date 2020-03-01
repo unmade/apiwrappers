@@ -35,9 +35,9 @@ class APIWrapper:
         request = Request(Method.GET, self.host, "/")
         return self.driver.fetch(request, timeout=timeout)
 
-    def verify_ssl(self, verify):
+    def verify(self):
         request = Request(Method.GET, self.host, "/")
-        return self.driver.fetch(request, verify=verify)
+        return self.driver.fetch(request)
 
     def exception(self):
         request = Request(Method.GET, self.host, "/")

@@ -6,23 +6,20 @@ from apiwrappers import AsyncDriver, Driver, Method, Request, Response
 from apiwrappers.middleware import MiddlewareChain
 from apiwrappers.protocols import AsyncMiddleware, Middleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
-from apiwrappers.typedefs import Timeout
+from apiwrappers.typedefs import Timeout, Verify
 
 
 class DriverMock:
     middleware = MiddlewareChain()
     timeout: Timeout = 1
-    verify: bool = True
+    verify: Verify = True
 
     def __init__(self, response: Response):
         self.response = response
 
     @middleware.wrap
     def fetch(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         # pylint: disable=unused-argument
         return dataclasses.replace(self.response, request=request)
@@ -31,17 +28,14 @@ class DriverMock:
 class AsyncDriverMock:
     middleware = MiddlewareChain()
     timeout: Timeout = 1
-    verify: bool = True
+    verify: Verify = True
 
     def __init__(self, response: Response):
         self.response = response
 
     @middleware.wrap
     async def fetch(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         # pylint: disable=unused-argument
         return dataclasses.replace(self.response, request=request)

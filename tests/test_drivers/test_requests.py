@@ -200,22 +200,18 @@ def test_timeout(driver_timeout, fetch_timeout, expected):
 
 
 @pytest.mark.parametrize(
-    ["driver_ssl", "fetch_ssl", "expected"],
+    ["driver_ssl", "expected"],
     [
-        (True, True, True),
-        (True, False, False),
-        (False, False, False),
-        (False, True, True),
-        (False, NoValue(), False),
-        (True, NoValue(), True),
-        ("/path/to/ca-bundle.crt", NoValue(), "/path/to/ca-bundle.crt"),
+        (True, True),
+        (False, False),
+        ("/path/to/ca-bundle.crt", "/path/to/ca-bundle.crt"),
     ],
 )
-def test_verify_ssl(driver_ssl, fetch_ssl, expected) -> None:
+def test_verify_ssl(driver_ssl, expected) -> None:
     driver = requests_driver(verify=driver_ssl)
     wrapper = APIWrapper("https://example.com", driver=driver)
     with mock.patch("requests.request") as request_mock:
-        wrapper.verify_ssl(fetch_ssl)
+        wrapper.verify()
     _, call_kwargs = request_mock.call_args
     assert call_kwargs["verify"] == expected
 
@@ -224,7 +220,7 @@ def test_verify_with_invalid_ca_bundle() -> None:
     driver = requests_driver(verify=INVALID_CERTS)
     wrapper = APIWrapper("https://example.com", driver=driver)
     with pytest.raises(ssl.SSLError) as excinfo:
-        wrapper.verify_ssl(NoValue())
+        wrapper.verify()
     assert "no certificate or crl found" in str(excinfo.value)
 
 
@@ -232,7 +228,7 @@ def test_verify_with_invalid_path_to_ca_bundle() -> None:
     driver = requests_driver(verify=INVALID_PATH_CERTS)
     wrapper = APIWrapper("https://example.com", driver=driver)
     with pytest.raises(OSError) as excinfo:
-        wrapper.verify_ssl(NoValue())
+        wrapper.verify()
     assert str(excinfo.value) == (
         f"Could not find a suitable TLS CA certificate bundle, "
         f"invalid path: {INVALID_PATH_CERTS}"

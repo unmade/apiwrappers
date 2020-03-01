@@ -219,22 +219,14 @@ async def test_timeout(responses: aioresponses, driver_timeout, fetch_timeout, t
 
 
 @pytest.mark.parametrize(
-    ["driver_ssl", "fetch_ssl", "expected"],
-    [
-        (True, True, True),
-        (True, False, False),
-        (False, False, False),
-        (False, True, True),
-        (False, NoValue(), False),
-        (True, NoValue(), True),
-        (CA_CERTS, NoValue(), "SSLContext"),
-    ],
+    ["driver_ssl", "expected"],
+    [(True, True), (False, False), (CA_CERTS, "SSLContext")],
 )
-async def test_verify_ssl(responses: aioresponses, driver_ssl, fetch_ssl, expected):
+async def test_verify(responses: aioresponses, driver_ssl, expected):
     responses.get("https://example.com", callback=echo)
     driver = aiohttp_driver(verify=driver_ssl)
     wrapper = APIWrapper("https://example.com", driver=driver)
-    response = await wrapper.verify_ssl(fetch_ssl)
+    response = await wrapper.verify()
     assert response.json()["verify"] == expected  # type: ignore
 
 
@@ -242,7 +234,7 @@ async def test_verify_with_invalid_ca_bundle() -> None:
     driver = aiohttp_driver(verify=INVALID_CERTS)
     wrapper = APIWrapper("https://example.com", driver=driver)
     with pytest.raises(ssl.SSLError) as excinfo:
-        await wrapper.verify_ssl(NoValue())
+        await wrapper.verify()
     assert "no certificate or crl found" in str(excinfo.value)
 
 
@@ -250,7 +242,7 @@ async def test_verify_with_invalid_path_to_ca_bundle() -> None:
     driver = aiohttp_driver(verify=INVALID_PATH_CERTS)
     wrapper = APIWrapper("https://example.com", driver=driver)
     with pytest.raises(OSError) as excinfo:
-        await wrapper.verify_ssl(NoValue())
+        await wrapper.verify()
     assert str(excinfo.value) == (
         f"Could not find a suitable TLS CA certificate bundle, "
         f"invalid path: {INVALID_PATH_CERTS}"

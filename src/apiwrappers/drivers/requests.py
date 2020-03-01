@@ -46,10 +46,7 @@ class RequestsDriver:
 
     @middleware.wrap
     def fetch(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[Verify, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         try:
             response = requests.request(
@@ -61,7 +58,7 @@ class RequestsDriver:
                 data=request.data,
                 json=request.json,
                 timeout=self._prepare_timeout(timeout),
-                verify=self._prepare_ssl(verify),
+                verify=self.verify,
             )
         except requests.Timeout as exc:
             raise exceptions.Timeout from exc
@@ -86,8 +83,3 @@ class RequestsDriver:
         if isinstance(timeout, NoValue):
             return self.timeout
         return timeout
-
-    def _prepare_ssl(self, verify: Union[Verify, NoValue]) -> Verify:
-        if isinstance(verify, NoValue):
-            return self.verify
-        return verify

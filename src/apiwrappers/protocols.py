@@ -36,10 +36,7 @@ class Driver(Protocol):
     verify: Verify
 
     def fetch(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[Verify, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         """
         Makes actual request and returns response from the server.
@@ -49,10 +46,6 @@ class Driver(Protocol):
             timeout: how many seconds to wait for the server to send data before
                 giving up. If set to ``None`` waits infinitely. If provided, will take
                 precedence over the :py:attr:`Driver.timeout`.
-            verify: Either a boolean, in which case it controls whether to verify the
-                server's TLS certificate, or a string, in which case it must be a path
-                to a CA bundle to use. If provided will take precedence over the
-                :py:attr:`Driver.verify`.
 
         Returns: response from the server.
 
@@ -83,10 +76,7 @@ class AsyncDriver(Protocol):
     verify: Verify
 
     async def fetch(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[Verify, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         """
         Makes actual request and returns response from the server.
@@ -96,10 +86,6 @@ class AsyncDriver(Protocol):
             timeout: how many seconds to wait for the server to send data before
                 giving up. If set to ``None`` waits infinitely. If provided, will take
                 precedence over the :py:attr:`AsyncDriver.timeout`.
-            verify: Either a boolean, in which case it controls whether to verify the
-                server's TLS certificate, or a string, in which case it must be a path
-                to a CA bundle to use. If provided will take precedence over the
-                :py:attr:`AsyncDriver.verify`.
 
         Returns: response from the server.
 
@@ -116,10 +102,7 @@ class Middleware(Protocol):
     handler: Handler
 
     def __call__(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[Verify, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         ...
 
@@ -128,29 +111,20 @@ class AsyncMiddleware(Protocol):
     handler: Handler
 
     def __call__(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[Verify, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...
 
 
 class Handler(Protocol):
     def __call__(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[Verify, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         ...
 
 
 class AsyncHandler(Protocol):
     def __call__(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[Verify, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...

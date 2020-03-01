@@ -79,11 +79,11 @@ class APIWrapper(Generic[DT]):
         ...
 
     @overload
-    def verify_ssl(self: APIWrapper[Driver], verify_ssl: Union[bool, NoValue]) -> Response:
+    def verify(self: APIWrapper[Driver]) -> Response:
         ...
 
     @overload
-    def verify_ssl(self: APIWrapper[AsyncDriver], verify_ssl: Union[bool, NoValue]) -> Awaitable[Response]:
+    def verify(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
         ...
 
     @overload

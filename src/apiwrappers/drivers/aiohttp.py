@@ -47,10 +47,7 @@ class AioHttpDriver:
 
     @middleware.wrap
     async def fetch(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[Verify, NoValue] = NoValue(),
+        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         async with aiohttp.ClientSession() as session:
             try:
@@ -63,7 +60,7 @@ class AioHttpDriver:
                     data=request.data,
                     json=request.json,
                     timeout=self._prepare_timeout(timeout),
-                    ssl=self._prepare_ssl(verify),
+                    ssl=self._prepare_ssl(),
                 )
             except asyncio.TimeoutError as exc:
                 raise exceptions.Timeout from exc
@@ -99,16 +96,14 @@ class AioHttpDriver:
             return self.timeout
         return timeout
 
-    def _prepare_ssl(self, verify: Union[Verify, NoValue]) -> Union[bool, SSLContext]:
-        if isinstance(verify, NoValue):
-            return self._prepare_ssl(self.verify)
-        if isinstance(verify, str):
+    def _prepare_ssl(self) -> Union[bool, SSLContext]:
+        if isinstance(self.verify, str):
             try:
-                return ssl.create_default_context(cafile=verify)
+                return ssl.create_default_context(cafile=self.verify)
             except FileNotFoundError as exc:
                 msg = (
                     f"Could not find a suitable TLS CA certificate bundle, "
-                    f"invalid path: {verify}"
+                    f"invalid path: {self.verify}"
                 )
                 raise FileNotFoundError(msg) from exc
-        return verify
+        return self.verify
