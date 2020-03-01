@@ -58,6 +58,7 @@ class Driver(Protocol):
 
         Raises:
             Timeout: The request timed out.
+            ssl.SSLError: An SSL error occurred.
             ConnectionFailed: A Connection error occurred.
             DriverError: In case of any other error in driver underlying library.
         """
@@ -104,6 +105,7 @@ class AsyncDriver(Protocol):
 
         Raises:
             Timeout: the request timed out.
+            ssl.SSLError: An SSL error occurred.
             ConnectionFailed: a connection error occurred.
             DriverError: in case of any other error in driver underlying library.
         """

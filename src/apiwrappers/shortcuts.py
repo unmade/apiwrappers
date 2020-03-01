@@ -105,6 +105,7 @@ def fetch(
 
     Raises:
         Timeout: the request timed out.
+        ssl.SSLError: An SSL error occurred.
         ConnectionFailed: a connection error occurred.
         DriverError: in case of any other error in driver underlying library.
 

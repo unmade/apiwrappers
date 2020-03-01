@@ -1,5 +1,7 @@
 import asyncio
+import ssl
 from http.cookies import SimpleCookie
+from ssl import SSLContext
 from typing import Iterable, List, Tuple, Type, Union
 
 import aiohttp
@@ -97,7 +99,16 @@ class AioHttpDriver:
             return self.timeout
         return timeout
 
-    def _prepare_ssl(self, verify: Union[Verify, NoValue]) -> Verify:
+    def _prepare_ssl(self, verify: Union[Verify, NoValue]) -> Union[bool, SSLContext]:
         if isinstance(verify, NoValue):
-            return self.verify
+            return self._prepare_ssl(self.verify)
+        if isinstance(verify, str):
+            try:
+                return ssl.create_default_context(cafile=verify)
+            except FileNotFoundError as exc:
+                msg = (
+                    f"Could not find a suitable TLS CA certificate bundle, "
+                    f"invalid path: {verify}"
+                )
+                raise FileNotFoundError(msg) from exc
         return verify

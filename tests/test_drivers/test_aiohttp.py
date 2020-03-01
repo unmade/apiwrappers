@@ -1,11 +1,13 @@
-# pylint: disable=import-outside-toplevel,redefined-outer-name
+# pylint: disable=import-outside-toplevel,redefined-outer-name,too-many-lines
 
 from __future__ import annotations
 
 import json
 import re
+import ssl
 import uuid
 from http.cookies import SimpleCookie
+from pathlib import Path
 from typing import TYPE_CHECKING, Type
 
 import pytest
@@ -24,6 +26,11 @@ if TYPE_CHECKING:
 
 
 pytestmark = [pytest.mark.aiohttp, pytest.mark.asyncio]
+
+BASE_DIR = Path(__file__).absolute().parent
+CA_CERTS = str(BASE_DIR.joinpath("certs/ca-bundle.crt"))
+INVALID_CERTS = str(BASE_DIR.joinpath("certs/invalid-ca-bundle.crt"))
+INVALID_PATH_CERTS = str(BASE_DIR.joinpath("certs/no-ca-bundle.crt"))
 
 
 @pytest.fixture
@@ -61,6 +68,10 @@ async def echo(url, **kwargs):
     for name, value in kwargs["cookies"].items():
         headers["Set-Cookie"] = f"{name}={value}"
 
+    verify = kwargs["ssl"]
+    if isinstance(verify, ssl.SSLContext):
+        verify = "SSLContext"
+
     return CallbackResult(
         response_class=Response,
         status=200,
@@ -69,7 +80,7 @@ async def echo(url, **kwargs):
             {
                 "path_url": f"{url.path}?{url.query_string}",
                 "timeout": kwargs["timeout"],
-                "verify": kwargs["ssl"],
+                "verify": verify,
             },
         ),
     )
@@ -216,6 +227,7 @@ async def test_timeout(responses: aioresponses, driver_timeout, fetch_timeout, t
         (False, True, True),
         (False, NoValue(), False),
         (True, NoValue(), True),
+        (CA_CERTS, NoValue(), "SSLContext"),
     ],
 )
 async def test_verify_ssl(responses: aioresponses, driver_ssl, fetch_ssl, expected):
@@ -224,6 +236,25 @@ async def test_verify_ssl(responses: aioresponses, driver_ssl, fetch_ssl, expect
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.verify_ssl(fetch_ssl)
     assert response.json()["verify"] == expected  # type: ignore
+
+
+async def test_verify_with_invalid_ca_bundle() -> None:
+    driver = aiohttp_driver(verify=INVALID_CERTS)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with pytest.raises(ssl.SSLError) as excinfo:
+        await wrapper.verify_ssl(NoValue())
+    assert "no certificate or crl found" in str(excinfo.value)
+
+
+async def test_verify_with_invalid_path_to_ca_bundle() -> None:
+    driver = aiohttp_driver(verify=INVALID_PATH_CERTS)
+    wrapper = APIWrapper("https://example.com", driver=driver)
+    with pytest.raises(OSError) as excinfo:
+        await wrapper.verify_ssl(NoValue())
+    assert str(excinfo.value) == (
+        f"Could not find a suitable TLS CA certificate bundle, "
+        f"invalid path: {INVALID_PATH_CERTS}"
+    )
 
 
 @pytest.mark.parametrize(

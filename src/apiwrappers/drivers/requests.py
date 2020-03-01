@@ -1,7 +1,9 @@
+import ssl
 from http.cookies import SimpleCookie
 from typing import Type, Union
 
 import requests
+import requests.exceptions
 
 from apiwrappers import exceptions, utils
 from apiwrappers.entities import Request, Response
@@ -63,6 +65,8 @@ class RequestsDriver:
             )
         except requests.Timeout as exc:
             raise exceptions.Timeout from exc
+        except requests.exceptions.SSLError as exc:
+            raise ssl.SSLError(str(exc)) from exc
         except requests.ConnectionError as exc:
             raise exceptions.ConnectionFailed from exc
         except requests.RequestException as exc:
