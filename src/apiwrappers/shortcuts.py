@@ -21,7 +21,6 @@ def fetch(
     driver: Driver,
     request: Request,
     timeout: _Timeout = NoValue(),
-    verify_ssl: Union[bool, NoValue] = NoValue(),
     model: None = None,
     source: Optional[str] = None,
 ) -> Response:
@@ -33,7 +32,6 @@ def fetch(
     driver: AsyncDriver,
     request: Request,
     timeout: _Timeout = NoValue(),
-    verify_ssl: Union[bool, NoValue] = NoValue(),
     model: None = None,
     source: Optional[str] = None,
 ) -> Awaitable[Response]:
@@ -45,7 +43,6 @@ def fetch(
     driver: Driver,
     request: Request,
     timeout: _Timeout = NoValue(),
-    verify_ssl: Union[bool, NoValue] = NoValue(),
     model: Union[Callable[..., T], Type[T]] = None,
     source: Optional[str] = None,
 ) -> T:
@@ -57,7 +54,6 @@ def fetch(
     driver: AsyncDriver,
     request: Request,
     timeout: _Timeout = NoValue(),
-    verify_ssl: Union[bool, NoValue] = NoValue(),
     model: Union[Callable[..., T], Type[T]] = None,
     source: Optional[str] = None,
 ) -> Awaitable[T]:
@@ -68,7 +64,6 @@ def fetch(
     driver: Union[Driver, AsyncDriver],
     request: Request,
     timeout: _Timeout = NO_VALUE,
-    verify_ssl: Union[bool, NoValue] = NoValue(),
     model: Optional[Union[Callable[..., T], Type[T]]] = None,
     source: Optional[str] = None,
 ) -> Union[Response, Awaitable[Response], T, Awaitable[T]]:
@@ -86,8 +81,6 @@ def fetch(
         timeout: how many seconds to wait for the server to send data before giving up.
             If set to ``None`` waits infinitely. If provided, will take precedence over
             the ``driver.timeout``.
-        verify_ssl: whether to verify the server's TLS certificate or not. If provided
-            will take precedence over the ``driver.verify_ssl``.
         model: parser for a json response. This can be either type, e.g. List[int], or
             a callable that accepts json.
         source: name of the key in the json, which value will be passed to the model.
@@ -103,6 +96,7 @@ def fetch(
 
     Raises:
         Timeout: the request timed out.
+        ssl.SSLError: An SSL error occurred.
         ConnectionFailed: a connection error occurred.
         DriverError: in case of any other error in driver underlying library.
 
@@ -142,7 +136,7 @@ def fetch(
     if asyncio.iscoroutinefunction(driver.fetch):
 
         async def wrapper():
-            resp = await driver.fetch(request, timeout=timeout, verify_ssl=verify_ssl)
+            resp = await driver.fetch(request, timeout=timeout)
             if model is None:
                 return resp
             return utils.fromjson(model, utils.getitem(resp.json(), source))
@@ -150,7 +144,7 @@ def fetch(
     else:
 
         def wrapper():
-            resp = driver.fetch(request, timeout=timeout, verify_ssl=verify_ssl)
+            resp = driver.fetch(request, timeout=timeout)
             if model is None:
                 return resp
             return utils.fromjson(model, utils.getitem(resp.json(), source))

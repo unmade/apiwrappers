@@ -20,7 +20,7 @@ repos:
     hooks:
     -   id: flake8
         additional_dependencies: [
-            '-e', 'git+https://github.com/pycqa/pyflakes@master#egg=pyflakes',
+            '-e', 'git+https://github.com/pycqa/pyflakes@4ed1ba41d1406dbb6c9ffbd369c2f523c2dc48f3#egg=pyflakes',
             '-e', 'git+https://github.com/pycqa/pycodestyle@master#egg=pycodestyle',
         ]
 -   repo: local

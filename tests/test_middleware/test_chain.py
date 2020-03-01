@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 
 from apiwrappers.entities import Method, Request, Response
@@ -36,18 +38,14 @@ def test_chain_on_instance_access_without_default_middleware() -> None:
 
 
 def test_chain_on_instance_access_with_default_middleware() -> None:
-    # replace middleware with chain with default middleware
-    factories.DriverMock.middleware = MiddlewareChain(First)
-
-    response = factories.make_response(b"")
-    driver1 = factories.DriverMock(response)
-    driver2 = factories.DriverMock(response)
-    assert driver1.middleware == [First]
-    assert driver2.middleware == [First]
-    assert driver1.middleware is not driver2.middleware
-
-    # back to original chain
-    factories.DriverMock.middleware = MiddlewareChain()
+    chain = MiddlewareChain(First)
+    with mock.patch.object(factories.DriverMock, "middleware", chain):
+        response = factories.make_response(b"")
+        driver1 = factories.DriverMock(response)
+        driver2 = factories.DriverMock(response)
+        assert driver1.middleware == [First]
+        assert driver2.middleware == [First]
+        assert driver1.middleware is not driver2.middleware
 
 
 def test_chain_on_class_access() -> None:
@@ -73,23 +71,19 @@ def test_chain_on_instance_set_new_middleware() -> None:
 
 
 def test_chain_on_instance_set_new_middleware_with_defaults() -> None:
-    # replace middleware with chain with default middleware
-    factories.DriverMock.middleware = MiddlewareChain(First)
+    chain = MiddlewareChain(First)
+    with mock.patch.object(factories.DriverMock, "middleware", chain):
+        response = factories.make_response(b"")
+        driver = factories.make_driver(response)
+        driver.middleware = [Second]
+        assert driver.middleware == [First, Second]
+        assert factories.DriverMock.middleware == [First]
 
-    response = factories.make_response(b"")
-    driver = factories.make_driver(response)
-    driver.middleware = [Second]
-    assert driver.middleware == [First, Second]
-    assert factories.DriverMock.middleware == [First]
+        driver.middleware = [Second, First]
+        assert driver.middleware == [Second, First]
 
-    driver.middleware = [Second, First]
-    assert driver.middleware == [Second, First]
-
-    driver.middleware = []
-    assert driver.middleware == [First]
-
-    # back to original chain
-    factories.DriverMock.middleware = MiddlewareChain()
+        driver.middleware = []
+        assert driver.middleware == [First]
 
 
 def test_chain_order_of_execution_in_driver() -> None:

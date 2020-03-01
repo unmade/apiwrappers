@@ -31,7 +31,6 @@ class BaseMiddleware(Generic[T]):
         self: BaseMiddleware[Handler],
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         ...
 
@@ -40,16 +39,15 @@ class BaseMiddleware(Generic[T]):
         self: BaseMiddleware[AsyncHandler],
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...
 
-    def __call__(self, request, timeout=NoValue(), verify_ssl=NoValue()):
+    def __call__(self, request, timeout=NoValue()):
         if iscoroutinehandler(self.handler):
             call_next = self.call_next_async
         else:
             call_next = self.call_next
-        return call_next(self.handler, request, timeout=timeout, verify_ssl=verify_ssl)
+        return call_next(self.handler, request, timeout=timeout)
 
     def process_request(self, request: Request) -> Request:
         return request
