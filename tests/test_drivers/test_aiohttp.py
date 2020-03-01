@@ -69,7 +69,7 @@ async def echo(url, **kwargs):
             {
                 "path_url": f"{url.path}?{url.query_string}",
                 "timeout": kwargs["timeout"],
-                "verify_ssl": kwargs["ssl"],
+                "verify": kwargs["ssl"],
             },
         ),
     )
@@ -78,7 +78,7 @@ async def echo(url, **kwargs):
 async def test_representation() -> None:
     driver = aiohttp_driver()
     setattr(driver, "_middleware", [])
-    assert repr(driver) == "AioHttpDriver(timeout=300, verify_ssl=True)"
+    assert repr(driver) == "AioHttpDriver(timeout=300, verify=True)"
 
 
 async def test_representation_with_middleware() -> None:
@@ -86,7 +86,7 @@ async def test_representation_with_middleware() -> None:
     assert repr(driver) == (
         "AioHttpDriver("
         "Authentication, RequestMiddleware, ResponseMiddleware, "
-        "timeout=300, verify_ssl=True"
+        "timeout=300, verify=True"
         ")"
     )
 
@@ -220,10 +220,10 @@ async def test_timeout(responses: aioresponses, driver_timeout, fetch_timeout, t
 )
 async def test_verify_ssl(responses: aioresponses, driver_ssl, fetch_ssl, expected):
     responses.get("https://example.com", callback=echo)
-    driver = aiohttp_driver(verify_ssl=driver_ssl)
+    driver = aiohttp_driver(verify=driver_ssl)
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.verify_ssl(fetch_ssl)
-    assert response.json()["verify_ssl"] == expected  # type: ignore
+    assert response.json()["verify"] == expected  # type: ignore
 
 
 @pytest.mark.parametrize(

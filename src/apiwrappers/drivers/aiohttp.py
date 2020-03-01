@@ -22,11 +22,11 @@ class AioHttpDriver:
         self,
         *middleware: Type[AsyncMiddleware],
         timeout: Timeout = DEFAULT_TIMEOUT,
-        verify_ssl: bool = True,
+        verify: bool = True,
     ):
         self.middleware = middleware
         self.timeout = timeout
-        self.verify_ssl = verify_ssl
+        self.verify = verify
 
     def __repr__(self) -> str:
         middleware = [m.__name__ for m in self.middleware]
@@ -36,7 +36,7 @@ class AioHttpDriver:
             f"{self.__class__.__name__}("
             f"{', '.join(middleware)}"
             f"timeout={self.timeout}, "
-            f"verify_ssl={self.verify_ssl}"
+            f"verify={self.verify}"
             ")"
         )
 
@@ -48,7 +48,7 @@ class AioHttpDriver:
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         async with aiohttp.ClientSession() as session:
             try:
@@ -61,7 +61,7 @@ class AioHttpDriver:
                     data=request.data,
                     json=request.json,
                     timeout=self._prepare_timeout(timeout),
-                    ssl=self._prepare_ssl(verify_ssl),
+                    ssl=self._prepare_ssl(verify),
                 )
             except asyncio.TimeoutError as exc:
                 raise exceptions.Timeout from exc
@@ -97,7 +97,7 @@ class AioHttpDriver:
             return self.timeout
         return timeout
 
-    def _prepare_ssl(self, verify_ssl: Union[bool, NoValue]) -> bool:
-        if isinstance(verify_ssl, NoValue):
-            return self.verify_ssl
-        return verify_ssl
+    def _prepare_ssl(self, verify: Union[bool, NoValue]) -> bool:
+        if isinstance(verify, NoValue):
+            return self.verify
+        return verify

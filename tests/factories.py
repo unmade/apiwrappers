@@ -12,7 +12,7 @@ from apiwrappers.typedefs import Timeout
 class DriverMock:
     middleware = MiddlewareChain()
     timeout: Timeout = 1
-    verify_ssl: bool = True
+    verify: bool = True
 
     def __init__(self, response: Response):
         self.response = response
@@ -22,7 +22,7 @@ class DriverMock:
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         # pylint: disable=unused-argument
         return dataclasses.replace(self.response, request=request)
@@ -31,7 +31,7 @@ class DriverMock:
 class AsyncDriverMock:
     middleware = MiddlewareChain()
     timeout: Timeout = 1
-    verify_ssl: bool = True
+    verify: bool = True
 
     def __init__(self, response: Response):
         self.response = response
@@ -41,7 +41,7 @@ class AsyncDriverMock:
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         # pylint: disable=unused-argument
         return dataclasses.replace(self.response, request=request)

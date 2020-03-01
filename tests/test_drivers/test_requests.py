@@ -60,7 +60,7 @@ def echo(request: PreparedRequest):
 def test_representation() -> None:
     driver = requests_driver()
     setattr(driver, "_middleware", [])
-    assert repr(driver) == "RequestsDriver(timeout=300, verify_ssl=True)"
+    assert repr(driver) == "RequestsDriver(timeout=300, verify=True)"
 
 
 def test_representation_with_middleware() -> None:
@@ -68,7 +68,7 @@ def test_representation_with_middleware() -> None:
     assert repr(driver) == (
         "RequestsDriver("
         "Authentication, RequestMiddleware, ResponseMiddleware, "
-        "timeout=300, verify_ssl=True"
+        "timeout=300, verify=True"
         ")"
     )
 
@@ -213,7 +213,7 @@ def test_no_timeout() -> None:
     ],
 )
 def test_verify_ssl(driver_ssl, fetch_ssl, expected):
-    driver = requests_driver(verify_ssl=driver_ssl)
+    driver = requests_driver(verify=driver_ssl)
     wrapper = APIWrapper("https://example.com", driver=driver)
     with mock.patch("requests.request") as request_mock:
         wrapper.verify_ssl(fetch_ssl)

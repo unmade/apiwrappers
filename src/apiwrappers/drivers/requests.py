@@ -21,11 +21,11 @@ class RequestsDriver:
         self,
         *middleware: Type[Middleware],
         timeout: Timeout = DEFAULT_TIMEOUT,
-        verify_ssl: bool = True,
+        verify: bool = True,
     ):
         self.middleware = middleware
         self.timeout = timeout
-        self.verify_ssl = verify_ssl
+        self.verify = verify
 
     def __repr__(self) -> str:
         middleware = [m.__name__ for m in self.middleware]
@@ -35,7 +35,7 @@ class RequestsDriver:
             f"{self.__class__.__name__}("
             f"{', '.join(middleware)}"
             f"timeout={self.timeout}, "
-            f"verify_ssl={self.verify_ssl}"
+            f"verify={self.verify}"
             ")"
         )
 
@@ -47,7 +47,7 @@ class RequestsDriver:
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         try:
             response = requests.request(
@@ -59,7 +59,7 @@ class RequestsDriver:
                 data=request.data,
                 json=request.json,
                 timeout=self._prepare_timeout(timeout),
-                verify=self._prepare_ssl(verify_ssl),
+                verify=self._prepare_ssl(verify),
             )
         except requests.Timeout as exc:
             raise exceptions.Timeout from exc
@@ -83,7 +83,7 @@ class RequestsDriver:
             return self.timeout
         return timeout
 
-    def _prepare_ssl(self, verify_ssl: Union[bool, NoValue]) -> bool:
-        if isinstance(verify_ssl, NoValue):
-            return self.verify_ssl
-        return verify_ssl
+    def _prepare_ssl(self, verify: Union[bool, NoValue]) -> bool:
+        if isinstance(verify, NoValue):
+            return self.verify
+        return verify

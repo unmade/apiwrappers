@@ -26,18 +26,18 @@ class Driver(Protocol):
         middleware: list of :ref:`middleware <middleware>` to be run on every request.
         timeout: how many seconds to wait for the server to send data before giving up.
             If set to ``None`` should wait infinitely.
-        verify_ssl: whether to verify the server's TLS certificate or not.
+        verify: whether to verify the server's TLS certificate or not.
     """
 
     middleware: MiddlewareChain
     timeout: Timeout
-    verify_ssl: bool
+    verify: bool
 
     def fetch(
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         """
         Makes actual request and returns response from the server.
@@ -47,8 +47,8 @@ class Driver(Protocol):
             timeout: how many seconds to wait for the server to send data before
                 giving up. If set to ``None`` waits infinitely. If provided, will take
                 precedence over the :py:attr:`Driver.timeout`.
-            verify_ssl: whether to verify the server's TLS certificate or not.
-                If provided will take precedence over the :py:attr:`Driver.verify_ssl`.
+            verify: whether to verify the server's TLS certificate or not.
+                If provided will take precedence over the :py:attr:`Driver.verify`.
 
         Returns: response from the server.
 
@@ -68,18 +68,18 @@ class AsyncDriver(Protocol):
         middleware: list of :ref:`middleware <middleware>` to be run on every request.
         timeout: how many seconds to wait for the server to send data before giving up.
             If set to ``None`` should wait infinitely.
-        verify_ssl: whether to verify the server's TLS certificate or not.
+        verify: whether to verify the server's TLS certificate or not.
     """
 
-    middleware: "MiddlewareChain"
+    middleware: MiddlewareChain
     timeout: Timeout
-    verify_ssl: bool
+    verify: bool
 
     async def fetch(
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         """
         Makes actual request and returns response from the server.
@@ -89,9 +89,9 @@ class AsyncDriver(Protocol):
             timeout: how many seconds to wait for the server to send data before
                 giving up. If set to ``None`` waits infinitely. If provided, will take
                 precedence over the :py:attr:`AsyncDriver.timeout`.
-            verify_ssl: whether to verify the server's TLS certificate or not.
+            verify: whether to verify the server's TLS certificate or not.
                 If provided will take precedence over the
-                :py:attr:`AsyncDriver.verify_ssl`.
+                :py:attr:`AsyncDriver.verify`.
 
         Returns: response from the server.
 
@@ -110,7 +110,7 @@ class Middleware(Protocol):
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         ...
 
@@ -122,7 +122,7 @@ class AsyncMiddleware(Protocol):
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...
 
@@ -132,7 +132,7 @@ class Handler(Protocol):
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         ...
 
@@ -142,6 +142,6 @@ class AsyncHandler(Protocol):
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
+        verify: Union[bool, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...
