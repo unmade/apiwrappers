@@ -9,7 +9,7 @@ from apiwrappers.middleware import MiddlewareChain
 from apiwrappers.middleware.auth import Authentication
 from apiwrappers.protocols import Middleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
-from apiwrappers.typedefs import Timeout
+from apiwrappers.typedefs import Timeout, Verify
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
@@ -21,7 +21,7 @@ class RequestsDriver:
         self,
         *middleware: Type[Middleware],
         timeout: Timeout = DEFAULT_TIMEOUT,
-        verify: bool = True,
+        verify: Verify = True,
     ):
         self.middleware = middleware
         self.timeout = timeout
@@ -47,7 +47,7 @@ class RequestsDriver:
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Response:
         try:
             response = requests.request(
@@ -83,7 +83,7 @@ class RequestsDriver:
             return self.timeout
         return timeout
 
-    def _prepare_ssl(self, verify: Union[bool, NoValue]) -> bool:
+    def _prepare_ssl(self, verify: Union[Verify, NoValue]) -> Verify:
         if isinstance(verify, NoValue):
             return self.verify
         return verify

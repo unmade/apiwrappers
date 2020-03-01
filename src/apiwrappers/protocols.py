@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Awaitable, TypeVar, Union
 from apiwrappers.compat import Protocol
 from apiwrappers.entities import Request, Response
 from apiwrappers.structures import NoValue
-from apiwrappers.typedefs import Timeout
+from apiwrappers.typedefs import Timeout, Verify
 
 if TYPE_CHECKING:
     # pylint: disable=cyclic-import
@@ -26,18 +26,20 @@ class Driver(Protocol):
         middleware: list of :ref:`middleware <middleware>` to be run on every request.
         timeout: how many seconds to wait for the server to send data before giving up.
             If set to ``None`` should wait infinitely.
-        verify: whether to verify the server's TLS certificate or not.
+        verify: Either a boolean, in which case it controls whether to verify the
+            server's TLS certificate, or a string, in which case it must be a path
+            to a CA bundle to use.
     """
 
     middleware: MiddlewareChain
     timeout: Timeout
-    verify: bool
+    verify: Verify
 
     def fetch(
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Response:
         """
         Makes actual request and returns response from the server.
@@ -47,8 +49,10 @@ class Driver(Protocol):
             timeout: how many seconds to wait for the server to send data before
                 giving up. If set to ``None`` waits infinitely. If provided, will take
                 precedence over the :py:attr:`Driver.timeout`.
-            verify: whether to verify the server's TLS certificate or not.
-                If provided will take precedence over the :py:attr:`Driver.verify`.
+            verify: Either a boolean, in which case it controls whether to verify the
+                server's TLS certificate, or a string, in which case it must be a path
+                to a CA bundle to use. If provided will take precedence over the
+                :py:attr:`Driver.verify`.
 
         Returns: response from the server.
 
@@ -68,18 +72,20 @@ class AsyncDriver(Protocol):
         middleware: list of :ref:`middleware <middleware>` to be run on every request.
         timeout: how many seconds to wait for the server to send data before giving up.
             If set to ``None`` should wait infinitely.
-        verify: whether to verify the server's TLS certificate or not.
+        verify: Either a boolean, in which case it controls whether to verify the
+            server's TLS certificate, or a string, in which case it must be a path
+            to a CA bundle to use.
     """
 
     middleware: MiddlewareChain
     timeout: Timeout
-    verify: bool
+    verify: Verify
 
     async def fetch(
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Response:
         """
         Makes actual request and returns response from the server.
@@ -89,8 +95,9 @@ class AsyncDriver(Protocol):
             timeout: how many seconds to wait for the server to send data before
                 giving up. If set to ``None`` waits infinitely. If provided, will take
                 precedence over the :py:attr:`AsyncDriver.timeout`.
-            verify: whether to verify the server's TLS certificate or not.
-                If provided will take precedence over the
+            verify: Either a boolean, in which case it controls whether to verify the
+                server's TLS certificate, or a string, in which case it must be a path
+                to a CA bundle to use. If provided will take precedence over the
                 :py:attr:`AsyncDriver.verify`.
 
         Returns: response from the server.
@@ -110,7 +117,7 @@ class Middleware(Protocol):
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Response:
         ...
 
@@ -122,7 +129,7 @@ class AsyncMiddleware(Protocol):
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...
 
@@ -132,7 +139,7 @@ class Handler(Protocol):
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Response:
         ...
 
@@ -142,6 +149,6 @@ class AsyncHandler(Protocol):
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...

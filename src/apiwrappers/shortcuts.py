@@ -7,7 +7,7 @@ from apiwrappers import utils
 from apiwrappers.entities import Request, Response
 from apiwrappers.protocols import AsyncDriver, Driver
 from apiwrappers.structures import NoValue
-from apiwrappers.typedefs import Timeout
+from apiwrappers.typedefs import Timeout, Verify
 
 T = TypeVar("T")
 
@@ -21,7 +21,7 @@ def fetch(
     driver: Driver,
     request: Request,
     timeout: _Timeout = NoValue(),
-    verify: Union[bool, NoValue] = NoValue(),
+    verify: Union[Verify, NoValue] = NoValue(),
     model: None = None,
     source: Optional[str] = None,
 ) -> Response:
@@ -33,7 +33,7 @@ def fetch(
     driver: AsyncDriver,
     request: Request,
     timeout: _Timeout = NoValue(),
-    verify: Union[bool, NoValue] = NoValue(),
+    verify: Union[Verify, NoValue] = NoValue(),
     model: None = None,
     source: Optional[str] = None,
 ) -> Awaitable[Response]:
@@ -45,7 +45,7 @@ def fetch(
     driver: Driver,
     request: Request,
     timeout: _Timeout = NoValue(),
-    verify: Union[bool, NoValue] = NoValue(),
+    verify: Union[Verify, NoValue] = NoValue(),
     model: Union[Callable[..., T], Type[T]] = None,
     source: Optional[str] = None,
 ) -> T:
@@ -57,7 +57,7 @@ def fetch(
     driver: AsyncDriver,
     request: Request,
     timeout: _Timeout = NoValue(),
-    verify: Union[bool, NoValue] = NoValue(),
+    verify: Union[Verify, NoValue] = NoValue(),
     model: Union[Callable[..., T], Type[T]] = None,
     source: Optional[str] = None,
 ) -> Awaitable[T]:
@@ -68,7 +68,7 @@ def fetch(
     driver: Union[Driver, AsyncDriver],
     request: Request,
     timeout: _Timeout = NO_VALUE,
-    verify: Union[bool, NoValue] = NoValue(),
+    verify: Union[Verify, NoValue] = NoValue(),
     model: Optional[Union[Callable[..., T], Type[T]]] = None,
     source: Optional[str] = None,
 ) -> Union[Response, Awaitable[Response], T, Awaitable[T]]:
@@ -86,8 +86,10 @@ def fetch(
         timeout: how many seconds to wait for the server to send data before giving up.
             If set to ``None`` waits infinitely. If provided, will take precedence over
             the ``driver.timeout``.
-        verify: whether to verify the server's TLS certificate or not. If provided
-            will take precedence over the ``driver.verify``.
+        verify: Either a boolean, in which case it controls whether to verify the
+            server's TLS certificate, or a string, in which case it must be a path
+            to a CA bundle to use. If provided will take precedence over the
+            ``driver.verify``.
         model: parser for a json response. This can be either type, e.g. List[int], or
             a callable that accepts json.
         source: name of the key in the json, which value will be passed to the model.

@@ -6,7 +6,7 @@ from typing import Awaitable, Generic, NoReturn, TypeVar, Union, overload
 from apiwrappers.entities import Request, Response
 from apiwrappers.protocols import AsyncHandler, Handler
 from apiwrappers.structures import NoValue
-from apiwrappers.typedefs import Timeout
+from apiwrappers.typedefs import Timeout, Verify
 
 T = TypeVar("T", Handler, AsyncHandler)
 
@@ -31,7 +31,7 @@ class BaseMiddleware(Generic[T]):
         self: BaseMiddleware[Handler],
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Response:
         ...
 
@@ -40,7 +40,7 @@ class BaseMiddleware(Generic[T]):
         self: BaseMiddleware[AsyncHandler],
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...
 

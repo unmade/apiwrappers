@@ -10,7 +10,7 @@ from apiwrappers.middleware import MiddlewareChain
 from apiwrappers.middleware.auth import Authentication
 from apiwrappers.protocols import AsyncMiddleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
-from apiwrappers.typedefs import QueryParams, Timeout
+from apiwrappers.typedefs import QueryParams, Timeout, Verify
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
@@ -22,7 +22,7 @@ class AioHttpDriver:
         self,
         *middleware: Type[AsyncMiddleware],
         timeout: Timeout = DEFAULT_TIMEOUT,
-        verify: bool = True,
+        verify: Verify = True,
     ):
         self.middleware = middleware
         self.timeout = timeout
@@ -48,7 +48,7 @@ class AioHttpDriver:
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify: Union[bool, NoValue] = NoValue(),
+        verify: Union[Verify, NoValue] = NoValue(),
     ) -> Response:
         async with aiohttp.ClientSession() as session:
             try:
@@ -97,7 +97,7 @@ class AioHttpDriver:
             return self.timeout
         return timeout
 
-    def _prepare_ssl(self, verify: Union[bool, NoValue]) -> bool:
+    def _prepare_ssl(self, verify: Union[Verify, NoValue]) -> Verify:
         if isinstance(verify, NoValue):
             return self.verify
         return verify

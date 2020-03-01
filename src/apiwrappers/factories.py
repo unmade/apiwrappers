@@ -3,14 +3,13 @@ from typing import Tuple, Type, Union, overload
 
 from apiwrappers.compat import Literal
 from apiwrappers.protocols import AsyncDriver, AsyncMiddleware, Driver, Middleware
-from apiwrappers.typedefs import Timeout
+from apiwrappers.typedefs import Timeout, Verify
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 DRIVER_MAP = {
     "requests": ("apiwrappers.drivers.requests", "RequestsDriver"),
     "aiohttp": ("apiwrappers.drivers.aiohttp", "AioHttpDriver"),
 }
-DRIVERS = Literal["requests", "aiohttp"]
 
 
 @overload
@@ -18,7 +17,7 @@ def make_driver(
     driver_type: Literal["requests"],
     *middleware: Type[Middleware],
     timeout: Timeout = DEFAULT_TIMEOUT,
-    verify: bool = True,
+    verify: Verify = True,
 ) -> Driver:
     ...
 
@@ -28,7 +27,7 @@ def make_driver(
     driver_type: Literal["aiohttp"],
     *middleware: Type[AsyncMiddleware],
     timeout: Timeout = DEFAULT_TIMEOUT,
-    verify: bool = True,
+    verify: Verify = True,
 ) -> AsyncDriver:
     ...
 
@@ -39,7 +38,7 @@ def make_driver(
     driver_type: str,
     *middleware: Union[Type[Middleware], Type[AsyncMiddleware]],
     timeout: Timeout = DEFAULT_TIMEOUT,
-    verify: bool = True,
+    verify: Verify = True,
 ) -> Union[Driver, AsyncDriver]:
     ...
 
@@ -48,7 +47,7 @@ def make_driver(
     driver_type: str,
     *middleware: Union[Type[Middleware], Type[AsyncMiddleware]],
     timeout: Timeout = DEFAULT_TIMEOUT,
-    verify: bool = True,
+    verify: Verify = True,
 ) -> Union[Driver, AsyncDriver]:
     """
     Creates driver instance and returns it
@@ -65,7 +64,9 @@ def make_driver(
             for regular drivers and ``Type[AsyncMiddleware]`` for asynchronous ones.
         timeout: how many seconds to wait for the server to send data before giving up.
             If set to ``None`` waits infinitely.
-        verify: whether to verify the server's TLS certificate or not.
+        verify: Either a boolean, in which case it controls whether to verify the
+            server's TLS certificate, or a string, in which case it must be a path
+            to a CA bundle to use.
 
     Returns:
         * **Driver** if ``driver_type`` is ``requests``.
