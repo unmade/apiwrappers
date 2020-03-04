@@ -70,6 +70,7 @@ async def echo(request: Request):
         body = json.loads(await request.text())  # type: ignore
     except (TypeError, ValueError):
         body = await request.text()
+
     return Response(
         status=200,
         headers=headers,
