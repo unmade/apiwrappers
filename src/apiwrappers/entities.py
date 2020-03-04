@@ -18,7 +18,7 @@ from typing import (
 )
 
 from apiwrappers.structures import CaseInsensitiveDict
-from apiwrappers.typedefs import JSON, Data, QueryParams
+from apiwrappers.typedefs import JSON, Data, Files, QueryParams
 
 _SimpleAuth = Callable[[], Dict[str, str]]
 _AuthFlow = Callable[[], Generator["Request", "Response", Dict[str, str]]]
@@ -82,11 +82,16 @@ class Request:
             authorization headers, e.g. '{"Authorization": "Bearer ..."}'
         data: the body to attach to the request. If a dictionary or list of tuples
             ``[(key, value)]`` is provided, form-encoding will take place.
+        files: Dictionary of ``'name': file-like-objects`` (or ``{'name': file-tuple}``)
+            for multipart encoding upload.
+            ``file-tuple`` can be a 2-tuple ``('filename', fileobj)``,
+            3-tuple ``('filename', fileobj, 'content_type')``, where ``'content-type'``
+            is a string defining the content type of the given file.
         json: json for the body to attach to the request (mutually exclusive with
-            ``data`` arg)
+            ``data`` arg).
 
     Raises:
-        ValueError: If both ``data`` and ``json`` args provided
+        ValueError: If both ``data`` and ``json`` args provided.
 
     Usage::
 
@@ -103,6 +108,7 @@ class Request:
     cookies: MutableMapping[str, str] = field(default_factory=dict)
     auth: _Auth = None
     data: Data = None
+    files: Files = None
     json: JSON = None
 
     def __post_init__(self):

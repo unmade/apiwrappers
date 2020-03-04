@@ -27,6 +27,10 @@ class APIWrapper:
         request = Request(Method.POST, self.host, "/", data=payload)
         return self.driver.fetch(request)
 
+    def send_files(self, payload):
+        request = Request(Method.POST, self.host, "/", files=payload)
+        return self.driver.fetch(request)
+
     def send_json(self, payload):
         request = Request(Method.POST, self.host, "/", json=payload)
         return self.driver.fetch(request)
