@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-import re
 import ssl
 import uuid
 from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import TYPE_CHECKING, Type
+from unittest import mock
 
 import pytest
 
@@ -22,7 +22,7 @@ from .wrappers import APIWrapper
 
 if TYPE_CHECKING:
     from aiohttp.web import Request
-    from aioresponses import aioresponses
+    from aresponses import ResponsesMockServer as ResponsesMock
     from apiwrappers.drivers.aiohttp import AioHttpDriver
 
 
@@ -40,58 +40,22 @@ CLIENT_CERT_PAIR = (
 )
 
 
-@pytest.fixture
-def responses():
-    from aioresponses import aioresponses
-
-    with aioresponses() as mocked_responses:
-        yield mocked_responses
-
-
 def aiohttp_driver(*middleware: Type[AsyncMiddleware], **kwargs) -> AioHttpDriver:
     from apiwrappers.drivers.aiohttp import AioHttpDriver
 
     return AioHttpDriver(*middleware, **kwargs)
 
 
-async def echo(url, **kwargs):
-    from aioresponses import CallbackResult
-    from aiohttp import ClientResponse, hdrs
+async def mock_request(*args, **kwargs):
+    # pylint: disable=unused-argument
+    async def read():
+        return b""
 
-    # see: https://github.com/pnuckowski/aioresponses/issues/155
-    class Response(ClientResponse):
-        def headers_getter(self):
-            return self.__headers
-
-        def headers_setter(self, value):
-            self.__headers = value
-            for hdr in value.getall(hdrs.SET_COOKIE, ()):
-                self.cookies.load(hdr)
-
-        __headers = {}
-        _headers = property(headers_getter, headers_setter)
-
-    headers = kwargs["headers"]
-    for name, value in kwargs["cookies"].items():
-        headers["Set-Cookie"] = f"{name}={value}"
-
-    assert isinstance(kwargs["ssl"], ssl.SSLContext), "Bad ssl provided"
-
-    return CallbackResult(
-        response_class=Response,
-        status=200,
-        headers=headers,
-        body=json.dumps(
-            {
-                "path_url": f"{url.path}?{url.query_string}",
-                "timeout": kwargs["timeout"],
-                "verify": "SSLContext",
-            },
-        ),
-    )
+    response = mock.MagicMock(read=read)
+    return response
 
 
-async def echo_(request: Request):
+async def echo(request: Request):
     from aiohttp.web import Response
 
     # Zero Content-Length causing parsing error so remove it
@@ -99,11 +63,13 @@ async def echo_(request: Request):
     excluded = ("content-length",)
     headers = {k: v for k, v in request.headers.items() if k.lower() not in excluded}
 
+    if "Cookie" in request.headers:
+        headers["Set-Cookie"] = request.headers["Cookie"]
+
     try:
         body = json.loads(await request.text())  # type: ignore
     except (TypeError, ValueError):
         body = await request.text()
-
     return Response(
         status=200,
         headers=headers,
@@ -137,33 +103,35 @@ async def test_string_representation() -> None:
     assert str(driver) == "<AsyncDriver 'aiohttp'>"
 
 
-async def test_get_content(responses: aioresponses):
-    responses.get("https://example.com", body="Hello, World!")
+async def test_get_content(aresponses: ResponsesMock):
+    aresponses.add("example.com", "/", "GET", "Hello, World!")
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.get_hello_world()
     assert response.status_code == 200
     assert response.content == b"Hello, World!"
 
 
-async def test_get_text(responses: aioresponses):
-    responses.get("https://example.com", body="Hello, World!")
+async def test_get_text(aresponses: ResponsesMock):
+    aresponses.add("example.com", "/", "GET", "Hello, World!")
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.get_hello_world()
     assert response.status_code == 200
     assert response.text() == "Hello, World!"
 
 
-async def test_get_json(responses: aioresponses):
-    data = {"message": "Hello, World!"}
-    responses.get("https://example.com", payload=data)
+async def test_get_json(aresponses: ResponsesMock):
+    response_mock = aresponses.Response(
+        body=b'{"message": "Hello, World!"}', content_type="application/json"
+    )
+    aresponses.add("example.com", "/", "GET", response_mock)
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.get_hello_world()
     assert response.status_code == 200
     assert response.json() == {"message": "Hello, World!"}
 
 
-async def test_headers(responses: aioresponses):
-    responses.post("https://example.com", callback=echo)
+async def test_headers(aresponses: ResponsesMock):
+    aresponses.add("example.com", "/", "POST", echo)
     headers = {"X-Request-ID": str(uuid.uuid4())}
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.echo_headers(headers)
@@ -171,17 +139,17 @@ async def test_headers(responses: aioresponses):
     assert response.headers["X-Request-ID"] == headers["X-Request-ID"]
 
 
-async def test_query_params(responses: aioresponses):
+async def test_query_params(aresponses: ResponsesMock):
     query_params: QueryParams = {"type": "user", "id": ["1", "2"], "name": None}
-    path = "/?id=1&id=2&type=user"
-    responses.get(re.compile(rf"^https://example\.com/\?{path}$"), callback=echo)
+    path = "/?type=user&id=1&id=2"
+    aresponses.add("example.com", path, "GET", echo, match_querystring=True)
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.echo_query_params(query_params)
     assert response.json()["path_url"] == path  # type: ignore
 
 
-async def test_cookies(responses: aioresponses):
-    responses.get("https://example.com", callback=echo)
+async def test_cookies(aresponses: ResponsesMock):
+    aresponses.add("example.com", "/", "GET", echo)
     cookies = {"csrftoken": "YWxhZGRpbjpvcGVuc2VzYW1l"}
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.echo_cookies(cookies)
@@ -207,12 +175,12 @@ async def test_cookies(responses: aioresponses):
         ],
     ],
 )
-async def test_send_data(responses: aioresponses, payload):
+async def test_send_data(aresponses: ResponsesMock, payload):
     form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
-    responses.post("https://example.com", body=form_data)
+    aresponses.add("example.com", "/", "POST", echo)
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.send_data(payload)
-    assert response.text() == form_data
+    assert response.json()["body"] == form_data  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -227,8 +195,8 @@ async def test_send_data(responses: aioresponses, payload):
         ),
     ],
 )
-async def test_send_files(aresponses, files, filename, has_content_type) -> None:
-    aresponses.add("example.com", "/", "POST", echo_)
+async def test_send_files(aresponses: ResponsesMock, files, filename, has_content_type):
+    aresponses.add("example.com", "/", "POST", echo)
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.send_files(files)
     content = response.json()["body"]  # type: ignore
@@ -237,7 +205,7 @@ async def test_send_files(aresponses, files, filename, has_content_type) -> None
     assert ("Content-Type: text/plain" in content) is has_content_type
 
 
-async def test_send_json(responses: aioresponses):
+async def test_send_json(aresponses: ResponsesMock):
     payload = {
         "name": "apiwrappers",
         "tags": ["api", "wrapper"],
@@ -245,14 +213,14 @@ async def test_send_json(responses: aioresponses):
         "version": 1,
     }
 
-    responses.post("https://example.com", payload=payload)
+    aresponses.add("example.com", "/", "POST", echo)
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.send_json(payload)
-    assert response.json() == payload
+    assert response.json()["body"] == payload  # type: ignore
 
 
 @pytest.mark.parametrize(
-    ["driver_timeout", "fetch_timeout", "timeout"],
+    ["driver_timeout", "fetch_timeout", "expected"],
     [
         (None, None, None),
         (None, NoValue(), None),
@@ -262,12 +230,14 @@ async def test_send_json(responses: aioresponses):
         (300, NoValue(), 300),
     ],
 )
-async def test_timeout(responses: aioresponses, driver_timeout, fetch_timeout, timeout):
-    responses.get("https://example.com", callback=echo)
+async def test_timeout(driver_timeout, fetch_timeout, expected) -> None:
     driver = aiohttp_driver(timeout=driver_timeout)
     wrapper = APIWrapper("https://example.com", driver=driver)
-    response = await wrapper.timeout(fetch_timeout)
-    assert response.json()["timeout"] == timeout  # type: ignore
+    target = "aiohttp.client.ClientSession.request"
+    with mock.patch(target, side_effect=mock_request) as request_mock:
+        await wrapper.timeout(fetch_timeout)
+    _, call_kwargs = request_mock.call_args
+    assert call_kwargs["timeout"] == expected
 
 
 @pytest.mark.parametrize(
@@ -278,14 +248,14 @@ async def test_timeout(responses: aioresponses, driver_timeout, fetch_timeout, t
         (CA_BUNDLE, ssl.CERT_REQUIRED),
     ],
 )
-async def test_verify(responses: aioresponses, verify, verify_mode):
-    responses.get("https://example.com", callback=echo)
+async def test_verify(verify, verify_mode) -> None:
     driver = aiohttp_driver(verify=verify)
-    context = driver._prepare_ssl()  # pylint: disable=protected-access
-    assert context.verify_mode == verify_mode
     wrapper = APIWrapper("https://example.com", driver=driver)
-    response = await wrapper.verify()
-    assert response.json()["verify"] == "SSLContext"  # type: ignore
+    target = "aiohttp.client.ClientSession.request"
+    with mock.patch(target, side_effect=mock_request) as request_mock:
+        await wrapper.verify()
+    _, call_kwargs = request_mock.call_args
+    assert call_kwargs["ssl"].verify_mode == verify_mode
 
 
 async def test_verify_with_invalid_ca_bundle() -> None:
@@ -310,12 +280,14 @@ async def test_verify_with_invalid_path_to_ca_bundle() -> None:
 @pytest.mark.parametrize(
     "cert", [CLIENT_CERT, CLIENT_CERT_PAIR],
 )
-async def test_cert(responses: aioresponses, cert):
-    responses.get("https://example.com", callback=echo)
+async def test_cert(cert) -> None:
     driver = aiohttp_driver(cert=cert)
     wrapper = APIWrapper("https://example.com", driver=driver)
-    response = await wrapper.cert()
-    assert response.json()["verify"] == "SSLContext"  # type: ignore
+    target = "aiohttp.client.ClientSession.request"
+    with mock.patch(target, side_effect=mock_request) as request_mock:
+        await wrapper.verify()
+    _, call_kwargs = request_mock.call_args
+    assert call_kwargs["ssl"]
 
 
 async def test_invalid_cert() -> None:
@@ -345,29 +317,33 @@ async def test_invalid_path_to_cert() -> None:
         ("ServerTimeoutError", exceptions.Timeout),
     ],
 )
-async def test_reraise_aiohttp_errors(responses: aioresponses, exc_name, raised):
+async def test_reraise_aiohttp_errors(exc_name, raised) -> None:
     import aiohttp
 
     exc_class = getattr(aiohttp, exc_name)
-    responses.get("https://example.com", exception=exc_class())
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
-    with pytest.raises(raised):
+    target = "aiohttp.client.ClientSession.request"
+    with mock.patch(target, side_effect=exc_class()), pytest.raises(raised):
         await wrapper.exception()
 
 
 @pytest.mark.parametrize(
-    "response", [{"body": b"Plaint Text"}, {"payload": None}],
+    "response",
+    [
+        {"body": b"Plaint Text"},
+        {"body": b"Plaint Text", "content_type": "application/json"},
+    ],
 )
-async def test_invalid_json_response(responses: aioresponses, response):
-    responses.get("https://example.com", **response)
+async def test_invalid_json_response(aresponses: ResponsesMock, response):
+    aresponses.add("example.com", "/", "GET", aresponses.Response(**response))
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     json_response = await wrapper.get_hello_world()
     with pytest.raises(json.JSONDecodeError):
         json_response.json()
 
 
-async def test_middleware(responses: aioresponses):
-    responses.get("https://example.com", callback=echo)
+async def test_middleware(aresponses: ResponsesMock):
+    aresponses.add("example.com", "/", "GET", echo)
     driver = aiohttp_driver(RequestMiddleware, ResponseMiddleware)
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.middleware()
@@ -375,23 +351,26 @@ async def test_middleware(responses: aioresponses):
     assert response.headers["x-response-id"] == "response_middleware"
 
 
-async def test_basic_auth(responses: aioresponses):
-    responses.get("https://example.com", callback=echo)
+async def test_basic_auth(aresponses: ResponsesMock):
+    aresponses.add("example.com", "/", "GET", echo)
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.basic_auth()
     assert "Basic " in response.headers["Authorization"]
 
 
-async def test_token_auth(responses: aioresponses):
-    responses.get("https://example.com", callback=echo)
+async def test_token_auth(aresponses: ResponsesMock):
+    aresponses.add("example.com", "/", "GET", echo)
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.token_auth()
     assert "Bearer " in response.headers["Authorization"]
 
 
-async def test_complex_auth_flow(responses: aioresponses):
-    responses.post("https://example.com/auth", payload={"token": "authtoken"})
-    responses.get("https://example.com", callback=echo)
+async def test_complex_auth_flow(aresponses: ResponsesMock):
+    token_payload = aresponses.Response(
+        body=b'{"token": "authtoken"}', content_type="application/json"
+    )
+    aresponses.add("example.com", "/auth", "POST", token_payload)
+    aresponses.add("example.com", "/", "GET", echo)
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.complex_auth_flow()
     assert response.headers["Authorization"] == "Bearer authtoken"
