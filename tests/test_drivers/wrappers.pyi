@@ -10,7 +10,7 @@ from typing import (
 
 from apiwrappers import AsyncDriver, Driver, Response
 from apiwrappers.structures import NoValue
-from apiwrappers.typedefs import JSON, Data, QueryParams, Timeout
+from apiwrappers.typedefs import JSON, Data, QueryParams, Timeout, Files
 
 DT = TypeVar("DT", Driver, AsyncDriver)
 
@@ -60,6 +60,14 @@ class APIWrapper(Generic[DT]):
 
     @overload
     def send_data(self: APIWrapper[AsyncDriver], payload: Data) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def send_files(self: APIWrapper[Driver], payload: Files) -> Response:
+        ...
+
+    @overload
+    def send_files(self: APIWrapper[AsyncDriver], payload: Files) -> Awaitable[Response]:
         ...
 
     @overload

@@ -21,6 +21,7 @@ from .middleware import RequestMiddleware, ResponseMiddleware
 from .wrappers import APIWrapper
 
 if TYPE_CHECKING:
+    from aiohttp.web import Request
     from aioresponses import aioresponses
     from apiwrappers.drivers.aiohttp import AioHttpDriver
 
@@ -86,6 +87,31 @@ async def echo(url, **kwargs):
                 "timeout": kwargs["timeout"],
                 "verify": "SSLContext",
             },
+        ),
+    )
+
+
+async def echo_(request: Request):
+    from aiohttp.web import Response
+
+    # Zero Content-Length causing parsing error so remove it
+    # https://github.com/aio-libs/aiohttp/issues/3641
+    excluded = ("content-length",)
+    headers = {k: v for k, v in request.headers.items() if k.lower() not in excluded}
+
+    try:
+        body = json.loads(await request.text())  # type: ignore
+    except (TypeError, ValueError):
+        body = await request.text()
+
+    return Response(
+        status=200,
+        headers=headers,
+        body=json.dumps(
+            {
+                "path_url": f"{request.url.path}?{request.url.query_string}",
+                "body": body,
+            }
         ),
     )
 
@@ -187,6 +213,28 @@ async def test_send_data(responses: aioresponses, payload):
     wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
     response = await wrapper.send_data(payload)
     assert response.text() == form_data
+
+
+@pytest.mark.parametrize(
+    ["files", "filename", "has_content_type"],
+    [
+        ({"file": open(CA_BUNDLE, "rb")}, "ca-bundle.crt", False),
+        ({"file": ("ca-bundle", open(CA_BUNDLE, "rb"))}, "ca-bundle", False),
+        (
+            {"file": ("ca-bundle", open(CA_BUNDLE, "rb"), "text/plain")},
+            "ca-bundle",
+            True,
+        ),
+    ],
+)
+async def test_send_files(aresponses, files, filename, has_content_type) -> None:
+    aresponses.add("example.com", "/", "POST", echo_)
+    wrapper = APIWrapper("https://example.com", driver=aiohttp_driver())
+    response = await wrapper.send_files(files)
+    content = response.json()["body"]  # type: ignore
+    disposition = f'Content-Disposition: form-data; name="file"; filename="{filename}"'
+    assert disposition in content
+    assert ("Content-Type: text/plain" in content) is has_content_type
 
 
 async def test_send_json(responses: aioresponses):

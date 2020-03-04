@@ -58,6 +58,7 @@ class RequestsDriver:
                 headers=request.headers,
                 cookies=request.cookies,
                 data=request.data,
+                files=request.files,
                 json=request.json,
                 timeout=self._prepare_timeout(timeout),
                 verify=self.verify,

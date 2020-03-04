@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import ssl
 from http.cookies import SimpleCookie
@@ -5,6 +7,7 @@ from ssl import SSLContext
 from typing import Iterable, List, Optional, Tuple, Type, Union, cast
 
 import aiohttp
+from aiohttp import FormData
 
 from apiwrappers import exceptions, utils
 from apiwrappers.entities import Request, Response
@@ -12,7 +15,7 @@ from apiwrappers.middleware import MiddlewareChain
 from apiwrappers.middleware.auth import Authentication
 from apiwrappers.protocols import AsyncMiddleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
-from apiwrappers.typedefs import ClientCert, QueryParams, Timeout, Verify
+from apiwrappers.typedefs import ClientCert, Data, QueryParams, Timeout, Verify
 
 DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
 
@@ -59,7 +62,7 @@ class AioHttpDriver:
                     headers=request.headers,
                     cookies=request.cookies,
                     params=self._prepare_query_params(request.query_params),
-                    data=request.data,
+                    data=self._prepare_data(request),
                     json=request.json,
                     timeout=self._prepare_timeout(timeout),
                     ssl=self._prepare_ssl(),
@@ -97,6 +100,27 @@ class AioHttpDriver:
         if isinstance(timeout, NoValue):
             return self.timeout
         return timeout
+
+    @staticmethod
+    def _prepare_data(request: Request) -> Optional[Union[Data, FormData]]:
+        if request.data is not None:
+            return request.data
+        if request.files is not None:
+            data = FormData()
+            for name, value in request.files.items():
+                filename, content_type = None, None
+                if isinstance(value, tuple):
+                    if len(value) == 2:
+                        filename, content = value  # type: ignore
+                    else:
+                        filename, content, content_type = value  # type: ignore
+                else:
+                    content = value
+                data.add_field(
+                    name, content, filename=filename, content_type=content_type,
+                )
+            return data
+        return None
 
     def _prepare_ssl(self) -> SSLContext:
         if self.verify is True:

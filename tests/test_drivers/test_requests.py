@@ -63,6 +63,9 @@ def echo(request: PreparedRequest):
     except (TypeError, ValueError):
         body = request.body
 
+    if isinstance(body, bytes):
+        body = body.decode()
+
     return (
         200,
         headers,
@@ -169,6 +172,28 @@ def test_send_data(responses: RequestsMock, payload):
     wrapper = APIWrapper("https://example.com", driver=requests_driver())
     response = wrapper.send_data(payload)
     assert response.json()["body"] == form_data  # type: ignore
+
+
+@pytest.mark.parametrize(
+    ["files", "filename", "has_content_type"],
+    [
+        ({"file": open(CA_BUNDLE, "rb")}, "ca-bundle.crt", False),
+        ({"file": ("ca-bundle", open(CA_BUNDLE, "rb"))}, "ca-bundle", False),
+        (
+            {"file": ("ca-bundle", open(CA_BUNDLE, "rb"), "text/plain")},
+            "ca-bundle",
+            True,
+        ),
+    ],
+)
+def test_send_files(responses: RequestsMock, files, filename, has_content_type):
+    responses.add_callback("POST", "https://example.com", callback=echo)
+    wrapper = APIWrapper("https://example.com", driver=requests_driver())
+    response = wrapper.send_files(files)
+    disposition = f'Content-Disposition: form-data; name="file"; filename="{filename}"'
+    content = response.json()["body"]  # type: ignore
+    assert disposition in content
+    assert ("Content-Type: text/plain" in content) is has_content_type
 
 
 def test_send_json(responses: RequestsMock):
