@@ -38,6 +38,7 @@ jobs:
         key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('**/poetry.lock') }}
 
     - name: Cache pre-commit dependencies
+      if: 'false'
       uses: actions/cache@v1.1.2
       with:
         path: ~/.cache/pre-commit
