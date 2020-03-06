@@ -32,18 +32,12 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache pip dependencies
-      env:
-        NO_CACHE: ${{ secrets.NO_CACHE }}
-      if: env.NO_CACHE != 1
       uses: actions/cache@v1.1.2
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('**/poetry.lock') }}
 
     - name: Cache pre-commit dependencies
-      env:
-        NO_CACHE: ${{ secrets.NO_CACHE }}
-      if: env.NO_CACHE != 1
       uses: actions/cache@v1.1.2
       with:
         path: ~/.cache/pre-commit
