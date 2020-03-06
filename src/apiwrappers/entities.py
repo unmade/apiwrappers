@@ -1,28 +1,15 @@
 # pylint: disable=too-many-instance-attributes
+
 from __future__ import annotations
 
 import enum
 import json
 from dataclasses import dataclass, field
 from http.cookies import SimpleCookie
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    MutableMapping,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import Any, MutableMapping, cast
 
 from apiwrappers.structures import CaseInsensitiveDict
-from apiwrappers.typedefs import JSON, Data, Files, QueryParams
-
-_SimpleAuth = Callable[[], Dict[str, str]]
-_AuthFlow = Callable[[], Generator["Request", "Response", Dict[str, str]]]
-_Auth = Optional[Union[Tuple[str, str], _SimpleAuth, _AuthFlow]]
+from apiwrappers.typedefs import JSON, Auth, Data, Files, QueryParams
 
 
 class Method(enum.Enum):
@@ -106,7 +93,7 @@ class Request:
     query_params: QueryParams = field(default_factory=dict)
     headers: MutableMapping[str, str] = field(default_factory=dict)
     cookies: MutableMapping[str, str] = field(default_factory=dict)
-    auth: _Auth = None
+    auth: Auth = None
     data: Data = None
     files: Files = None
     json: JSON = None

@@ -3,21 +3,19 @@
 from __future__ import annotations
 
 import logging
-from typing import Awaitable, Generic, List, Optional, Tuple, TypeVar, Union, overload
+from typing import Awaitable, Generic, List, Optional, TypeVar, overload
 
 from example.middleware import LoggingMiddleware
 from example.models import Me, User, UserDetail
 
 from apiwrappers import AsyncDriver, Driver, Method, Request, fetch, make_driver
-from apiwrappers.auth import TokenAuth
+from apiwrappers.typedefs import Auth
 
 T = TypeVar("T", Driver, AsyncDriver)
 
 
 class GitHub(Generic[T]):
-    def __init__(
-        self, host: str, driver: T, auth: Union[None, Tuple[str, str], TokenAuth] = None
-    ):
+    def __init__(self, host: str, driver: T, auth: Auth = None):
         self.host = host
         self.driver: T = driver
         self.auth = auth
