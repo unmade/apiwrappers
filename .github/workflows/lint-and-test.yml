@@ -53,6 +53,13 @@ jobs:
       run: |
         tox -e lint
 
+    - name: Cache pre-commit dependencies
+      if: success()
+      uses: actions/cache@v1.1.2
+      with:
+        path: ~/.cache/pre-commit
+        key: ${{ runner.os }}-${{ matrix.python-version }}-pre-commit-${{ hashFiles('**/.pre-commit-config.yaml') }}
+
     - name: Test
       run: |
         tox -e py
