@@ -32,20 +32,16 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v1
+      uses: actions/cache@v1.1.2
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('**/poetry.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.python-version }}-pip-
 
     - name: Cache pre-commit dependencies
       uses: actions/cache@v1
       with:
         path: ~/.cache/pre-commit
         key: ${{ runner.os }}-${{ matrix.python-version }}-pre-commit-${{ hashFiles('**/.pre-commit-config.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.python-version }}-pre-commit-
 
     - name: Install dependencies
       run: |
