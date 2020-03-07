@@ -3,22 +3,21 @@
 from __future__ import annotations
 
 import logging
-from typing import Awaitable, Generic, List, Optional, Tuple, TypeVar, Union, overload
+from typing import Awaitable, Generic, List, Optional, TypeVar, overload
 
 from example.middleware import LoggingMiddleware
 from example.models import Me, User, UserDetail
 
 from apiwrappers import AsyncDriver, Driver, Method, Request, fetch, make_driver
-from apiwrappers.auth import TokenAuth
+from apiwrappers.structures import Url
+from apiwrappers.typedefs import Auth
 
 T = TypeVar("T", Driver, AsyncDriver)
 
 
 class GitHub(Generic[T]):
-    def __init__(
-        self, host: str, driver: T, auth: Union[None, Tuple[str, str], TokenAuth] = None
-    ):
-        self.host = host
+    def __init__(self, host: str, driver: T, auth: Auth = None):
+        self.url = Url(host)
         self.driver: T = driver
         self.auth = auth
 
@@ -43,7 +42,7 @@ class GitHub(Generic[T]):
             List of GitHub users
         """
         params = {"since": str(since)}
-        request = Request(Method.GET, self.host, "/users", query_params=params)
+        request = Request(Method.GET, self.url("/users"), query_params=params)
         return fetch(self.driver, request, model=List[User])
 
     @overload
@@ -64,7 +63,7 @@ class GitHub(Generic[T]):
         Returns:
             Public profile information for GitHub User.
         """
-        request = Request(Method.GET, self.host, f"/users/{username}")
+        request = Request(Method.GET, self.url("/users/{username}", username=username))
         return fetch(self.driver, request, model=UserDetail)
 
     @overload
@@ -84,7 +83,7 @@ class GitHub(Generic[T]):
             Public and private profile information for currently authenticated user.
         """
         assert self.auth is not None, "`auth` must be set for this method"
-        request = Request(Method.GET, self.host, "/user", auth=self.auth)
+        request = Request(Method.GET, self.url("/user"), auth=self.auth)
         return fetch(self.driver, request, model=Me)
 
     @overload
@@ -120,7 +119,7 @@ class GitHub(Generic[T]):
         assert self.auth is not None, "`auth` must be set for this method"
         data = {k: v for k, v in vars().items() if v is not None}
         assert data, "At least one field to update must be provided"
-        request = Request(Method.PATCH, self.host, "/user", json=data, auth=self.auth)
+        request = Request(Method.PATCH, self.url("/user"), json=data, auth=self.auth)
         return fetch(self.driver, request, model=Me)
 
 

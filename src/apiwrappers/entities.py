@@ -1,28 +1,15 @@
 # pylint: disable=too-many-instance-attributes
+
 from __future__ import annotations
 
 import enum
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from http.cookies import SimpleCookie
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    MutableMapping,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import Any, MutableMapping, Union, cast
 
-from apiwrappers.structures import CaseInsensitiveDict
-from apiwrappers.typedefs import JSON, Data, Files, QueryParams
-
-_SimpleAuth = Callable[[], Dict[str, str]]
-_AuthFlow = Callable[[], Generator["Request", "Response", Dict[str, str]]]
-_Auth = Optional[Union[Tuple[str, str], _SimpleAuth, _AuthFlow]]
+from apiwrappers.structures import CaseInsensitiveDict, Url
+from apiwrappers.typedefs import JSON, Auth, Data, Files, QueryParams
 
 
 class Method(enum.Enum):
@@ -71,8 +58,7 @@ class Request:
 
     Args:
         method: HTTP Method to use.
-        host: host name of the resource with scheme.
-        path: path to a resource.
+        url: URL to send request to.
         query_params: dictionary or list of tuples to send in the query string. Param
             with None values will not be added to the query string. Default value is
             empty dict.
@@ -91,29 +77,52 @@ class Request:
             ``data`` arg).
 
     Raises:
-        ValueError: If both ``data`` and ``json`` args provided.
+        ValueError: If both ``data`` or ``files`` or ``json`` args provided.
 
     Usage::
 
         >>> from apiwrappers import Request
-        >>> Request(Method.GET, 'https://example.org', '/')
+        >>> Request(Method.GET, 'https://example.org')
         Request(method=<Method.GET: 'GET'>, ...)
     """
 
     method: Method
-    host: str
-    path: str
-    query_params: QueryParams = field(default_factory=dict)
-    headers: MutableMapping[str, str] = field(default_factory=dict)
-    cookies: MutableMapping[str, str] = field(default_factory=dict)
-    auth: _Auth = None
+    url: Url
+    query_params: QueryParams
+    headers: MutableMapping[str, str]
+    cookies: MutableMapping[str, str]
+    auth: Auth = None
     data: Data = None
     files: Files = None
     json: JSON = None
 
-    def __post_init__(self):
-        if self.data is not None and self.json is not None:
-            raise ValueError("`data` and `json` parameters are mutually exclusive")
+    def __init__(
+        self,
+        method: Union[str, Method],
+        url: Union[str, Url],
+        query_params: QueryParams = None,
+        headers: MutableMapping[str, str] = None,
+        cookies: MutableMapping[str, str] = None,
+        auth: Auth = None,
+        data: Data = None,
+        files: Files = None,
+        json: JSON = None,
+    ):
+        # pylint: disable=redefined-outer-name,too-many-arguments
+        if sum((data is not None, files is not None, json is not None)) > 1:
+            raise ValueError(
+                "`data`, `files` and `json` parameters are mutually exclusive"
+            )
+
+        self.method = Method(method)
+        self.url = Url(url) if isinstance(url, str) else url
+        self.query_params = query_params or {}
+        self.headers = headers or {}
+        self.cookies = cookies or {}
+        self.auth = auth
+        self.data = data
+        self.files = files
+        self.json = json
 
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} [{self.method.value}]>"

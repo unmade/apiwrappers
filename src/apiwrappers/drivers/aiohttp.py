@@ -9,7 +9,7 @@ from typing import Iterable, List, Optional, Tuple, Type, Union, cast
 import aiohttp
 from aiohttp import FormData
 
-from apiwrappers import exceptions, utils
+from apiwrappers import exceptions
 from apiwrappers.entities import Request, Response
 from apiwrappers.middleware import MiddlewareChain
 from apiwrappers.middleware.auth import Authentication
@@ -58,7 +58,7 @@ class AioHttpDriver:
             try:
                 response = await session.request(
                     request.method.value,
-                    utils.build_url(request.host, request.path),
+                    str(request.url),
                     headers=request.headers,
                     cookies=request.cookies,
                     params=self._prepare_query_params(request.query_params),

@@ -89,7 +89,7 @@ def test_chain_on_instance_set_new_middleware_with_defaults() -> None:
 def test_chain_order_of_execution_in_driver() -> None:
     response_mock = factories.make_response(b"")
     driver = factories.make_driver(response_mock, First, Second)
-    response = driver.fetch(Request(Method.GET, "", ""))
+    response = driver.fetch(Request(Method.GET, "https://example.org"))
     assert response.request.headers["x-request-id"] == "12"
     assert response.headers["x-response-id"] == "21"
 
@@ -98,6 +98,6 @@ def test_chain_order_of_execution_in_driver() -> None:
 async def test_chain_order_of_execution_in_async_driver() -> None:
     response_mock = factories.make_response(b"")
     driver = factories.make_async_driver(response_mock, First, Second)
-    response = await driver.fetch(Request(Method.GET, "", ""))
+    response = await driver.fetch(Request(Method.GET, "https://example.org"))
     assert response.request.headers["x-request-id"] == "12"
     assert response.headers["x-response-id"] == "21"

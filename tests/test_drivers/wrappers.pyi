@@ -8,7 +8,7 @@ from typing import (
     overload,
 )
 
-from apiwrappers import AsyncDriver, Driver, Response
+from apiwrappers import AsyncDriver, Driver, Response, Url
 from apiwrappers.structures import NoValue
 from apiwrappers.typedefs import JSON, Data, QueryParams, Timeout, Files
 
@@ -16,7 +16,7 @@ DT = TypeVar("DT", Driver, AsyncDriver)
 
 
 class APIWrapper(Generic[DT]):
-    host: str
+    url: Url
     driver: DT
 
     def __init__(self, host: str, driver: DT):

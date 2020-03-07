@@ -75,10 +75,12 @@ Here is how a typical API client would look like:
 
 .. code-block:: python
 
+    from __future__ import annotations
+
     from dataclasses import dataclass
     from typing import Awaitable, Generic, List, TypeVar, overload
 
-    from apiwrappers import AsyncDriver, Driver, Method, Request, fetch
+    from apiwrappers import AsyncDriver, Driver, Request, Url, fetch
 
     T = TypeVar("T", Driver, AsyncDriver)
 
@@ -91,24 +93,24 @@ Here is how a typical API client would look like:
 
     class Github(Generic[T]):
         def __init__(self, host: str, driver: T):
-            self.host = host
+            self.url = Url(host)
             self.driver: T = driver
 
         @overload
         def get_repos(
-            self: "Github[Driver]", username: str
+            self: Github[Driver], username: str
         ) -> List[Repo]:
             ...
 
         @overload
         def get_repos(
-            self: "Github[AsyncDriver]", username: str
+            self: Github[AsyncDriver], username: str
         ) -> Awaitable[List[Repo]]:
             ...
 
         def get_repos(self, username: str):
-            path = f"/users/{username}/repos"
-            request = Request(Method.GET, self.host, path)
+            url = self.url("/users/{username}/repos", username=username)
+            request = Request("GET", url)
             return fetch(self.driver, request, model=List[Repo])
 
 This is small, but fully typed, API client for one of the

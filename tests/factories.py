@@ -45,7 +45,7 @@ class AsyncDriverMock:
 
 def make_response(content: bytes, **kwargs) -> Response:
     defaults: Dict[str, Any] = {
-        "request": Request(Method.GET, "https://example.com", "/"),
+        "request": Request(Method.GET, "https://example.com"),
         "status_code": 200,
         "url": "https://example.com/",
         "headers": CaseInsensitiveDict(),

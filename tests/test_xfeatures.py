@@ -5,7 +5,7 @@ from typing import Generic, TypeVar
 
 import pytest
 
-from apiwrappers import AsyncDriver, Driver, Method, Request
+from apiwrappers import AsyncDriver, Driver, Method, Request, Url
 from apiwrappers.xfeatures import Fetch
 
 from . import factories
@@ -22,12 +22,12 @@ class APIWrapper(Generic[DT]):
     user = Fetch(User)
 
     def __init__(self, driver: DT):
-        self.host = "https://example.com"
+        self.url = Url("https://example.com")
         self.driver: DT = driver
 
     @user.request
     def user_request(self, user_id: int) -> Request:
-        return Request(Method.GET, self.host, f"/users/{user_id}")
+        return Request(Method.GET, self.url("/users/{user_id}", user_id=user_id))
 
 
 def test_fetch_as_descriptor() -> None:

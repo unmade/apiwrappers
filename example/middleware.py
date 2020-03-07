@@ -1,6 +1,6 @@
 import logging
 
-from apiwrappers import Request, Response, utils
+from apiwrappers import Request, Response
 from apiwrappers.middleware import BaseMiddleware
 
 logger = logging.getLogger(__name__)
@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class LoggingMiddleware(BaseMiddleware):
     def process_request(self, request: Request) -> Request:
-        logger.info("Request: %s %s", request.method, self._url(request))
+        logger.info("Request: %s %s", request.method, request.url.template)
         return super().process_request(request)
 
     def process_response(self, response: Response) -> Response:
@@ -16,10 +16,5 @@ class LoggingMiddleware(BaseMiddleware):
         return super().process_response(response)
 
     def process_exception(self, request, exception):
-        url = self._url(request)
-        logger.exception("Response: %s %s: %s", request.method, url, exception)
+        logger.exception("Response: %s %s: %s", request.method, request.url, exception)
         return super().process_exception(request, exception)
-
-    @staticmethod
-    def _url(request: Request) -> str:
-        return utils.build_url(request.host, request.path)

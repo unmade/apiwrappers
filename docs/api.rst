@@ -28,7 +28,8 @@ Request and Response
 .. autoclass:: Request
 .. autoclass:: Response
     :members: text, json
-
+.. autoclass:: Url
+    :members: __call__
 
 Exceptions
 ----------
