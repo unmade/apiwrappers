@@ -5,12 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Awaitable, Generic, List, Optional, TypeVar, overload
 
-from example.middleware import LoggingMiddleware
 from example.models import Me, User, UserDetail
 
-from apiwrappers import AsyncDriver, Driver, Method, Request, fetch, make_driver
+from apiwrappers import AsyncDriver, Driver, Method, Request, fetch
 from apiwrappers.structures import Url
 from apiwrappers.typedefs import Auth
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T", Driver, AsyncDriver)
 
@@ -121,11 +122,3 @@ class GitHub(Generic[T]):
         assert data, "At least one field to update must be provided"
         request = Request(Method.PATCH, self.url("/user"), json=data, auth=self.auth)
         return fetch(self.driver, request, model=Me)
-
-
-if __name__ == "__main__":
-    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
-    creds = ("username", "password_or_token")
-    driver = make_driver("requests", LoggingMiddleware)
-    github = GitHub("https://api.github.com", driver=driver, auth=creds)
-    github.me()

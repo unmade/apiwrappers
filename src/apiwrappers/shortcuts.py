@@ -104,7 +104,7 @@ def fetch(
 
         >>> from apiwrappers import Method, Request, fetch, make_driver
         >>> driver = make_driver("requests")
-        >>> request = Request(Method.GET, "https://example.org", "/")
+        >>> request = Request(Method.GET, "https://example.org")
         >>> response = fetch(driver, request)
         <Response [200]>
 
@@ -112,7 +112,7 @@ def fetch(
 
         >>> from apiwrappers import Method, Request, fetch, make_driver
         >>> driver = make_driver("aiohttp")
-        >>> request = Request(Method.GET, "https://example.org", "/")
+        >>> request = Request(Method.GET, "https://example.org")
         >>> response = await fetch(driver, request)
         <Response [200]>
 
@@ -127,8 +127,7 @@ def fetch(
         >>> driver = make_driver("requests")
         >>> Request(
         ...     Method.GET,
-        ...     "https://api.github.com",
-        ...     "/users/unmade/repos",
+        ...     "https://api.github.com/users/unmade/repos",
         ... )
         >>> fetch(driver, request, model=List[Repo])
         [Repo(name='am-date-picker'), ...]
