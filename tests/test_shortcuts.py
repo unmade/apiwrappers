@@ -13,7 +13,7 @@ class User:
 
 
 def test_fetch_returns_response() -> None:
-    request = Request(Method.GET, "https://example.com", "/")
+    request = Request(Method.GET, "https://example.com")
     driver_response = factories.make_response(b"Hello, World")
     driver = factories.make_driver(driver_response)
     response = fetch(driver, request)
@@ -22,7 +22,7 @@ def test_fetch_returns_response() -> None:
 
 @pytest.mark.asyncio
 async def test_fetch_returns_response_async() -> None:
-    request = Request(Method.GET, "https://example.com", "/")
+    request = Request(Method.GET, "https://example.com")
     driver_response = factories.make_response(b"Hello, World")
     driver = factories.make_async_driver(driver_response)
     response = await fetch(driver, request)
@@ -30,7 +30,7 @@ async def test_fetch_returns_response_async() -> None:
 
 
 def test_fetch_returns_model() -> None:
-    request = Request(Method.GET, "https://example.com", "/")
+    request = Request(Method.GET, "https://example.com")
     driver_response = factories.make_response(b'{"id": 1}')
     driver = factories.make_driver(driver_response)
     user = fetch(driver, request, model=User)
@@ -39,7 +39,7 @@ def test_fetch_returns_model() -> None:
 
 @pytest.mark.asyncio
 async def test_fetch_returns_model_async() -> None:
-    request = Request(Method.GET, "https://example.com", "/")
+    request = Request(Method.GET, "https://example.com")
     driver_response = factories.make_response(b'{"id": 1}')
     driver = factories.make_async_driver(driver_response)
     user = await fetch(driver, request, model=User)
@@ -47,7 +47,7 @@ async def test_fetch_returns_model_async() -> None:
 
 
 def test_fetch_returns_model_from_source() -> None:
-    request = Request(Method.GET, "https://example.com", "/")
+    request = Request(Method.GET, "https://example.com")
     driver_response = factories.make_response(b'{"user": {"id": 1}}')
     driver = factories.make_driver(driver_response)
     user = fetch(driver, request, model=User, source="user")
@@ -56,7 +56,7 @@ def test_fetch_returns_model_from_source() -> None:
 
 @pytest.mark.asyncio
 async def test_fetch_returns_model_from_source_async() -> None:
-    request = Request(Method.GET, "https://example.com", "/")
+    request = Request(Method.GET, "https://example.com")
     driver_response = factories.make_response(b'{"user": {"id": 1}}')
     driver = factories.make_async_driver(driver_response)
     user = await fetch(driver, request, model=User, source="user")
