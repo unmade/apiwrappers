@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import (
     Any,
     Dict,
@@ -52,26 +54,55 @@ class CaseInsensitiveDict(MutableMapping[str, VT]):
 
 
 class Url:
-    def __init__(self, url: str, **params: Any):
-        self.template = url
-        self.params = params
+    """
+    Class representing URL
+
+    Args:
+        template: a URL as format string, e.g. "https://example.org/users/{id}".
+        replacements: values to format template with.
+
+    Usage::
+
+        >>> from apiwrappers import Url
+        >>> url = Url("https://example.org")
+        >>> url("/users/{id}", id=1)
+        Url('https://example.org/users/{id}', id=1)
+        >>> str(url("/users/{id}", id=1))
+        'https://example.org/users/1'
+    """
+
+    def __init__(self, template: str, **replacements: Any):
+        self.template = template
+        self.replacements = replacements
 
     def __str__(self) -> str:
-        return self.template.format_map(self.params)
+        return self.template.format_map(self.replacements)
 
     def __repr__(self) -> str:
-        params = ", ".join(f"{k}={repr(v)}" for k, v in self.params.items())
-        if self.params:
+        params = ", ".join(f"{k}={repr(v)}" for k, v in self.replacements.items())
+        if self.replacements:
             return f"{self.__class__.__name__}({repr(self.template)}, {params})"
         return f"{self.__class__.__name__}({repr(self.template)})"
 
-    def __call__(self, path: str, **path_params: Any):
+    def __call__(self, path: str, **replacements: Any) -> Url:
+        """
+        Adds path to the current URL and return a new instance.
+
+        Args:
+            path: a path as format string, e.g. "/users/{id}".
+            replacements: values to path with.
+
+        Returns: New instance with updated url.
+        """
         url = utils.build_url(self.template, path)
-        return Url(url, **{**self.params, **path_params})
+        return Url(url, **{**self.replacements, **replacements})
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, str):
             return str(self) == other
         if isinstance(other, self.__class__):
-            return self.template == other.template and self.params == other.params
+            return (
+                self.template == other.template
+                and self.replacements == other.replacements
+            )
         return NotImplemented
