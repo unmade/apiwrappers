@@ -26,19 +26,14 @@ def test_method_string_representation():
 def test_request_mutually_exclusive_parameters(data, files, json):
     with pytest.raises(ValueError) as excinfo:
         Request(
-            Method.GET,
-            host="https://example.com",
-            path="/",
-            data=data,
-            files=files,
-            json=json,
+            Method.GET, "https://example.com", data=data, files=files, json=json,
         )
     expected = "`data`, `files` and `json` parameters are mutually exclusive"
     assert str(excinfo.value) == expected
 
 
 def test_request_string_representation() -> None:
-    request = Request(Method.GET, "https://example.com", "/")
+    request = Request(Method.GET, "https://example.com")
     assert str(request) == "<Request [GET]>"
 
 

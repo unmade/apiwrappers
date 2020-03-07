@@ -23,9 +23,9 @@ Giving that, it behaves exactly like if you are working with driver:
 
 .. code-block:: python
 
-    >>> from apiwrappers import Method, Request, fetch, make_driver
+    >>> from apiwrappers import Request, fetch, make_driver
     >>> driver = make_driver("requests")
-    >>> request = Request(Method.GET, "https://example.org", "/")
+    >>> request = Request("GET", "https://example.org")
     >>> response = fetch(driver, request)
     <Response [200]>
 
@@ -43,14 +43,14 @@ returning new instance of the type provided to the ``model`` argument:
     from dataclasses import dataclass
     from typing import List
 
-    from apiwrappers import Method, Request, fetch, make_driver
+    from apiwrappers import Request, fetch, make_driver
 
     @dataclass
     class Repo:
         name: str
 
-    host = "https://api.github.com"
-    request = Request(Method.GET, host, "/users/unmade/repos")
+    url = "https://api.github.com/users/unmade/repos"
+    request = Request("GET", url)
 
     driver = make_driver("requests")
     fetch(driver, request, model=List[Repo])  # [Repo(name='am-date-picker'), ...]
@@ -73,7 +73,7 @@ lets write API client class:
     from dataclasses import dataclass
     from typing import List
 
-    from apiwrappers import Method, Request, fetch
+    from apiwrappers import Request, Url, fetch
 
 
     @dataclass
@@ -82,14 +82,14 @@ lets write API client class:
         name: str
 
 
-    class Github:
+    class GitHub:
         def __init__(self, host, driver):
-            self.host = host
+            self.url = Url(host)
             self.driver = driver
 
         def get_repos(self, username):
-            path = f"/users/{username}/repos"
-            request = Request(Method.GET, self.host, path)
+            url = self.url("/users/{username}/repos", username=username)
+            request = Request("GET", url)
             return fetch(self.driver, request, model=List[Repo])
 
 Here we defined ``.get_repos`` method to get all user's repos.
@@ -114,7 +114,7 @@ We can simply specify return type as:
 
     Union[List[Repo], Awaitable[List[Repo]]
 
-and that will be enough to have a good autocompletion,
+and that will be enough to have a good auto-completion,
 but what we want here to do is a little bit trickier.
 
 We want to tell mypy,
@@ -126,10 +126,12 @@ It can be done like that:
 
 .. code-block:: python
 
+    from __future__ import annotations
+
     from dataclasses import dataclass
     from typing import Awaitable, Generic, List, TypeVar, overload
 
-    from apiwrappers import AsyncDriver, Driver, Method, Request, fetch
+    from apiwrappers import AsyncDriver, Driver, Request, Url, fetch
 
     T = TypeVar("T", Driver, AsyncDriver)
 
@@ -140,26 +142,26 @@ It can be done like that:
         name: str
 
 
-    class Github(Generic[T]):
+    class GitHub(Generic[T]):
         def __init__(self, host: str, driver: T):
-            self.host = host
+            self.url = Url(host)
             self.driver: T = driver
 
         @overload
         def get_repos(
-            self: "Github[Driver]", username: str
+            self: GitHub[Driver], username: str
         ) -> List[Repo]:
             ...
 
         @overload
         def get_repos(
-            self: "Github[AsyncDriver]", username: str
+            self: GitHub[AsyncDriver], username: str
         ) -> Awaitable[List[Repo]]:
             ...
 
         def get_repos(self, username: str):
-            path = f"/users/{username}/repos"
-            request = Request(Method.GET, self.host, path)
+            url = self.url("/users/{username}/repos", username=username)
+            request = Request("GET", url)
             return fetch(self.driver, request, model=List[Repo])
 
 Here, we defined a ``T`` type variable, constrained to
@@ -177,7 +179,7 @@ Here is how we can use our client:
 
     >>> from apiwrappers import make_driver
     >>> driver = make_driver("requests")
-    >>> github = Github("https://api.github.com", driver=driver)
+    >>> github = GitHub("https://api.github.com", driver=driver)
     >>> github.get_repos("unmade")
     [Repo(id=47463599, name='am-date-picker'),
      ...
@@ -189,7 +191,7 @@ Or to use it asynchronously:
 
     >>> from apiwrappers import make_driver
     >>> driver = make_driver("aiohttp")
-    >>> github = Github("https://api.github.com", driver=driver)
+    >>> github = GitHub("https://api.github.com", driver=driver)
     >>> await github.get_repos("unmade")
     [Repo(id=47463599, name='am-date-picker'),
      ...

@@ -23,9 +23,9 @@ for `requests <https://requests.readthedocs.io/en/master/>`_ library:
 
 .. code-block:: python
 
-    >>> from apiwrappers import Method, Request, make_driver
+    >>> from apiwrappers import Request, make_driver
     >>> driver = make_driver("requests")
-    >>> request = Request(Method.GET, "https://example.org", "/")
+    >>> request = Request("GET", "https://example.org")
     >>> response = driver.fetch(request)
     >>> response
     <Response [200]>
@@ -43,9 +43,9 @@ to try this code interactively*
 
 .. code-block:: python
 
-    >>> from apiwrappers import Method, Request, make_driver
+    >>> from apiwrappers import Request, make_driver
     >>> driver = make_driver("aiohttp")
-    >>> request = Request(Method.GET, "https://example.org", "/")
+    >>> request = Request("GET", "https://example.org")
     >>> response = await driver.fetch(request)
     >>> response
     <Response [200]>
@@ -71,14 +71,13 @@ driver should have this fields and methods:
 .. code-block:: python
 
         timeout: Timeout
-        verify_ssl: bool
+        verify: bool
         middleware: List[Type[Middleware]]
 
         def fetch(
             self,
             request: Request,
             timeout: Union[Timeout, NoValue] = NoValue(),
-            verify_ssl: Union[bool, NoValue] = NoValue(),
         ) -> Response:
             ...
 
@@ -91,14 +90,13 @@ driver should have this fields and methods:
 .. code-block:: python
 
     timeout: Timeout
-    verify_ssl: bool
+    verify: bool
     middleware: List[Type[AsyncMiddleware]]
 
     async def fetch(
         self,
         request: Request,
         timeout: Union[Timeout, NoValue] = NoValue(),
-        verify_ssl: Union[bool, NoValue] = NoValue(),
     ) -> Response:
         ...
 
@@ -114,7 +112,7 @@ Here is how you can change it:
 
 .. code-block:: python
 
-    from apiwrappers import Method, Request, make_driver
+    from apiwrappers import make_driver
 
     driver = make_driver("requests", timeout=5)
 
@@ -141,16 +139,16 @@ Here is how you can change it:
 
 .. code-block:: python
 
-    from apiwrappers import Method, Request, make_driver
+    from apiwrappers import make_driver
 
     # disable SSL verification
-    driver = make_driver("requests", verify_ssl=False)
+    driver = make_driver("requests", verify=False)
 
     # making a request without SSL verification
     driver.fetch(request)
 
     # making a request with SSL verification
-    driver.fetch(request, verify_ssl=True)
+    driver.fetch(request)
 
 Writing your own driver
 =======================

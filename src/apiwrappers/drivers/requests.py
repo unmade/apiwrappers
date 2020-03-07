@@ -5,7 +5,7 @@ from typing import Type, Union
 import requests
 import requests.exceptions
 
-from apiwrappers import exceptions, utils
+from apiwrappers import exceptions
 from apiwrappers.entities import Request, Response
 from apiwrappers.middleware import MiddlewareChain
 from apiwrappers.middleware.auth import Authentication
@@ -53,7 +53,7 @@ class RequestsDriver:
         try:
             response = requests.request(
                 request.method.value,
-                utils.build_url(request.host, request.path),
+                str(request.url),
                 params=request.query_params,
                 headers=request.headers,
                 cookies=request.cookies,

@@ -22,6 +22,20 @@ def test_build_url(host, path, expected):
     assert expected == url
 
 
+@pytest.mark.parametrize("host", ["http://example.com/api"])
+@pytest.mark.parametrize(
+    ["path", "expected"],
+    [
+        ("/join", "http://example.com/api/join"),
+        ("join", "http://example.com/api/join"),
+        ("join/", "http://example.com/api/join/"),
+    ],
+)
+def test_build_url_with_prefix(host, path, expected):
+    url = utils.build_url(host, path)
+    assert expected == url
+
+
 @pytest.mark.parametrize(
     ["data", "key", "expected"],
     [

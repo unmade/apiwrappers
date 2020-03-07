@@ -27,11 +27,9 @@ The most simple way is to write a middleware as function:
 
     def simple_middleware(handler):
 
-        def middleware(
-            request, timeout=NoValue(), verify_ssl=NoValue()
-        ):
+        def middleware(request, timeout=NoValue()):
             # Code to be executed before request is made
-            response = handler(request, timeout, verify_ssl)
+            response = handler(request, timeout)
             # Code to be executed after request is made
             return response
 
@@ -47,11 +45,9 @@ only by regular driver, we also need to provide an async implementation:
 
     def simple_async_middleware(handler):
 
-        async def middleware(
-            request, timeout=NoValue(), verify_ssl=NoValue()
-        ):
+        async def middleware(request, timeout=NoValue()):
             # Code to be executed before request is made
-            response = await handler(request, timeout, verify_ssl)
+            response = await handler(request, timeout)
             # Code to be executed after request is made
             return response
 

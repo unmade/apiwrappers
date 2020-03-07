@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from http.cookies import SimpleCookie
 from typing import Any, MutableMapping, Union, cast
 
-from apiwrappers.structures import CaseInsensitiveDict
+from apiwrappers.structures import CaseInsensitiveDict, Url
 from apiwrappers.typedefs import JSON, Auth, Data, Files, QueryParams
 
 
@@ -58,8 +58,7 @@ class Request:
 
     Args:
         method: HTTP Method to use.
-        host: host name of the resource with scheme.
-        path: path to a resource.
+        url: URL to send request to.
         query_params: dictionary or list of tuples to send in the query string. Param
             with None values will not be added to the query string. Default value is
             empty dict.
@@ -83,13 +82,12 @@ class Request:
     Usage::
 
         >>> from apiwrappers import Request
-        >>> Request(Method.GET, 'https://example.org', '/')
+        >>> Request(Method.GET, 'https://example.org')
         Request(method=<Method.GET: 'GET'>, ...)
     """
 
     method: Method
-    host: str
-    path: str
+    url: Url
     query_params: QueryParams
     headers: MutableMapping[str, str]
     cookies: MutableMapping[str, str]
@@ -101,8 +99,7 @@ class Request:
     def __init__(
         self,
         method: Union[str, Method],
-        host: str,
-        path: str,
+        url: Union[str, Url],
         query_params: QueryParams = None,
         headers: MutableMapping[str, str] = None,
         cookies: MutableMapping[str, str] = None,
@@ -118,8 +115,7 @@ class Request:
             )
 
         self.method = Method(method)
-        self.host = host
-        self.path = path
+        self.url = Url(url) if isinstance(url, str) else url
         self.query_params = query_params or {}
         self.headers = headers or {}
         self.cookies = cookies or {}

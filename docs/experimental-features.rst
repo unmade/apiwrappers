@@ -12,7 +12,7 @@ in almost declarative way:
     from dataclasses import dataclass
     from typing import Any, Generic, List, Mapping, TypeVar
 
-    from apiwrappers import AsyncDriver, Driver, Method, Request
+    from apiwrappers import AsyncDriver, Driver, Request, Url
     from apiwrappers.xfeatures import Fetch
 
     T = TypeVar("T", Driver, AsyncDriver)
@@ -27,13 +27,13 @@ in almost declarative way:
         get_repos = Fetch(List[Repo])
 
         def __init__(self, host: str, driver: T):
-            self.host = host
+            self.url = Url(host)
             self.driver: T = driver
 
         @get_repos.request
         def get_repos_request(self, username: str) -> Request:
-            path = f"/users/{username}/repos"
-            return Request(Method.GET, self.host, path)
+            url = self.url("/users/{username}/repos", username=username)
+            return Request("GET", url)
 
 Here we did the following:
 

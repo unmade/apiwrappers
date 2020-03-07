@@ -16,7 +16,7 @@ Making request with HTTP Basic Auth is rather straightforward:
 
 .. code-block:: python
 
-    from apiwrappers import Method, Request
+    from apiwrappers import Request
 
     Request(..., auth=("user", "pass"))
 
@@ -27,7 +27,7 @@ To make a request with a Token Based Authentication:
 
 .. code-block:: python
 
-    from apiwrappers import Method, Request
+    from apiwrappers import Request
     from apiwrappers.auth import TokenAuth
 
     Request(..., auth=TokenAuth("your_token", kind="JWT"))
