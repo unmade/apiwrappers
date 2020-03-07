@@ -1,12 +1,29 @@
 import logging
 
+from example.exceptions import GitHubException
+
 from apiwrappers import Request, Response
 from apiwrappers.middleware import BaseMiddleware
 
 logger = logging.getLogger(__name__)
 
 
+class ErrorMiddleware(BaseMiddleware):
+    """
+    Raises GitHubException for every response with status code 400 and above.
+    """
+
+    def process_response(self, response: Response) -> Response:
+        if response.status_code >= 400:
+            raise GitHubException(response) from None
+        return super().process_response(response)
+
+
 class LoggingMiddleware(BaseMiddleware):
+    """
+    Logs request/response/exception being made.
+    """
+
     def process_request(self, request: Request) -> Request:
         logger.info("Request: %s %s", request.method, request.url.template)
         return super().process_request(request)
