@@ -1,4 +1,15 @@
-from typing import Dict, Iterator, Mapping, MutableMapping, Optional, Tuple, TypeVar
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+    TypeVar,
+)
+
+from apiwrappers import utils
 
 VT = TypeVar("VT")
 
@@ -38,3 +49,29 @@ class CaseInsensitiveDict(MutableMapping[str, VT]):
         if self._data:
             return f"{self.__class__.__name__}({dict(self)})"
         return f"{self.__class__.__name__}()"
+
+
+class Url:
+    def __init__(self, url: str, **params: Any):
+        self.template = url
+        self.params = params
+
+    def __str__(self) -> str:
+        return self.template.format_map(self.params)
+
+    def __repr__(self) -> str:
+        params = ", ".join(f"{k}={repr(v)}" for k, v in self.params.items())
+        if self.params:
+            return f"{self.__class__.__name__}({repr(self.template)}, {params})"
+        return f"{self.__class__.__name__}({repr(self.template)})"
+
+    def __call__(self, path: str, **path_params: Any):
+        url = utils.build_url(self.template, path)
+        return Url(url, **{**self.params, **path_params})
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, str):
+            return str(self) == other
+        if isinstance(other, self.__class__):
+            return self.template == other.template and self.params == other.params
+        return NotImplemented

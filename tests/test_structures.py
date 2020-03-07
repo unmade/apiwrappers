@@ -1,3 +1,4 @@
+from apiwrappers import Url
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
 
 
@@ -52,3 +53,42 @@ def test_repr():
 def test_repr_with_empty_data():
     data = CaseInsensitiveDict()
     assert repr(data) == "CaseInsensitiveDict()"
+
+
+def test_url_representation():
+    url = Url("https://example.org")
+    assert repr(url) == "Url('https://example.org')"
+
+    url = Url("https://example.org/users/{id}", id=1)
+    assert repr(url) == "Url('https://example.org/users/{id}', id=1)"
+
+
+def test_url_string_representation():
+    url = Url("https://example.org")
+    assert url == "https://example.org"
+
+    url = Url("https://example.org/users/{id}", id=1)
+    assert url == "https://example.org/users/1"
+
+
+def test_url_comparison():
+    url_a = Url("https://example.org/users/{id}", id=1)
+    url_b = Url("https://example.org/users/{id}", id=1)
+    assert url_a == url_b
+
+    url_a = Url("https://example.org/users/{id}", id=1)
+    url_b = Url("https://example.org/users/{id}", id=2)
+    assert url_a != url_b
+
+
+def test_invalid_comparison():
+    url = Url("https://example.org")
+    assert url != 1
+
+
+def test_url_join_path():
+    url = Url("https://example.org")
+    assert url("/users/{id}", id=1) == "https://example.org/users/1"
+
+    url = Url("https://example.org")("/{version}", version="v1")("/users/{id}", id=1)
+    assert url == "https://example.org/v1/users/1"

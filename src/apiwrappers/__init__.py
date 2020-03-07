@@ -3,3 +3,4 @@ from apiwrappers.exceptions import ConnectionFailed, DriverError, Timeout  # noq
 from apiwrappers.factories import make_driver  # noqa: F401
 from apiwrappers.protocols import AsyncDriver, Driver  # noqa: F401
 from apiwrappers.shortcuts import fetch  # noqa: F401
+from apiwrappers.structures import Url  # noqa: F401
