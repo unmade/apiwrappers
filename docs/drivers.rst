@@ -17,8 +17,8 @@ Out of the box *apiwrappers* provides drivers for
 `aiohttp <https://docs.aiohttp.org/en/stable/client.html>`_
 libraries.
 
-You can create them with a ``make_driver`` factory.
-Let's learn how to make a simple request using a driver
+You can create them with a :py:func:`make_driver() <apiwrappers.make_driver>`
+factory. Let's learn how to make a simple request using a driver
 for `requests <https://requests.readthedocs.io/en/master/>`_ library:
 
 .. code-block:: python
@@ -57,48 +57,10 @@ follows, rather than what library it uses underneath.
 Driver protocols
 ================
 
-All drivers should follow either `Driver` or `AsyncDriver` protocols,
-depending on which HTTP client is used.
-Protocols also help to abstract away from concrete driver implementations
-and ease type checking and annotation.
-
-Driver
-------
-
-To be compliant with ``Driver`` protocol
-driver should have this fields and methods:
-
-.. code-block:: python
-
-        timeout: Timeout
-        verify: bool
-        middleware: List[Type[Middleware]]
-
-        def fetch(
-            self,
-            request: Request,
-            timeout: Union[Timeout, NoValue] = NoValue(),
-        ) -> Response:
-            ...
-
-AsyncDriver
------------
-
-To be compliant with ``AsyncDriver`` protocol
-driver should have this fields and methods:
-
-.. code-block:: python
-
-    timeout: Timeout
-    verify: bool
-    middleware: List[Type[AsyncMiddleware]]
-
-    async def fetch(
-        self,
-        request: Request,
-        timeout: Union[Timeout, NoValue] = NoValue(),
-    ) -> Response:
-        ...
+All drivers should follow either :py:class:`Driver <apiwrappers.Driver>`
+or :py:class:`AsyncDriver <apiwrappers.AsyncDriver>` protocols, depending on
+which HTTP client is used.Protocols also help to abstract away from concrete
+driver implementations and ease type checking and annotation.
 
 Timeouts
 ========
@@ -130,8 +92,9 @@ In case timeout value is exceeded ``Timeout`` error will be raised
 SSL Verification
 ================
 
-You can enable/disable SSL verification when creating a driver or
-when making a request. The later will take precedences over driver settings.
+You can enable/disable SSL verification or provide custom SSL certs
+when creating a driver. Note that default trusted CAs depends on a
+driver you're using.
 
 By default SSL verification is enabled.
 
@@ -144,11 +107,12 @@ Here is how you can change it:
     # disable SSL verification
     driver = make_driver("requests", verify=False)
 
-    # making a request without SSL verification
-    driver.fetch(request)
+    # custom SSL with trusted CAs
+    driver = make_driver("requests", verify="/path/to/ca-bundle.crt")
 
-    # making a request with SSL verification
-    driver.fetch(request)
+    # custom Client Side Certificates
+    certs = ('/path/to/client.cert', '/path/to/client.key')
+    driver = make_driver("requests", cert=certs)
 
 Writing your own driver
 =======================

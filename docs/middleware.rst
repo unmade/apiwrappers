@@ -16,7 +16,7 @@ Writing your own middleware
 
 A middleware factory is a callable that takes a callable and returns
 a middleware. A middleware is a callable that takes same argument as
-``driver.fetch`` and returns a response.
+:py:class:`Driver.fetch() <apiwrappers.Driver.fetch>` and returns a response.
 
 The most simple way is to write a middleware as function:
 
@@ -93,31 +93,32 @@ it still can be used like that:
 
 .. code-block:: python
 
-    from apiwrappers import make_driver
-
-
-    driver = make_driver("requests", SimpleMiddleware)
-    # RequestsDriver(Authorization, SimpleMiddleware, ...)
+    >>> from apiwrappers import make_driver
+    >>> driver = make_driver("requests", SimpleMiddleware)
+    >>> driver
+    # RequestsDriver(Authorization, SimpleMiddleware, ...
 
 *Note, that even we provide only ``SimpleMiddleware`` the driver also has
 ``Authorization`` middleware. That's because some drivers have middleware
 that should always be present.*
 
 You can also change driver middleware after creation by simply reassigning
-``driver.middleware`` attribute:
+:py:attr:`Driver.middleware <apiwrappers.Driver.middleware>` attribute:
 
 .. code-block:: python
 
-    driver.middleware = []
-    # RequestsDriver(Authorization, ...)
+    >>> driver.middleware = []
+    >>> driver
+    # RequestsDriver(Authorization, ...
 
 The order of the default middleware can be overridden by explicitly
 specifying it:
 
 .. code-block:: python
 
-    driver.middleware = [SimpleMiddleware, Authorization]
-    # RequestsDriver(SimpleMiddleware, Authorization, ...)
+    >>> driver.middleware = [SimpleMiddleware, Authorization]
+    >>> driver
+    # RequestsDriver(SimpleMiddleware, Authorization, ...
 
 Middleware order
 ================

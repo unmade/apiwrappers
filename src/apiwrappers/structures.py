@@ -55,7 +55,11 @@ class CaseInsensitiveDict(MutableMapping[str, VT]):
 
 class Url:
     """
-    Class representing URL
+    Class to work with formatted string URLs and joining urls and path.
+
+    Sometimes it useful to keep original format string in place, for example,
+    for logging or metrics. This class stores original format string and its
+    replacements fields, substituting it when needed.
 
     Args:
         template: a URL as format string, e.g. "https://example.org/users/{id}".
@@ -86,13 +90,13 @@ class Url:
 
     def __call__(self, path: str, **replacements: Any) -> Url:
         """
-        Adds path to the current URL and return a new instance.
+        Joins path with current URL and return a new instance.
 
         Args:
             path: a path as format string, e.g. "/users/{id}".
             replacements: values to path with.
 
-        Returns: New instance with updated url.
+        Returns: New instance with a url joined with path.
         """
         url = utils.build_url(self.template, path)
         return Url(url, **{**self.replacements, **replacements})
