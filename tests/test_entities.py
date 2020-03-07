@@ -15,15 +15,26 @@ def test_method_string_representation():
     assert str(Method.GET) == "<Method [GET]>"
 
 
-def test_request_mutually_exclusive_parameters():
-    with pytest.raises(ValueError):
+@pytest.mark.parametrize(
+    ["data", "files", "json"],
+    [
+        (None, {"some": "files"}, {"some": "json"}),
+        ({"some": "data"}, None, {"some": "json"}),
+        ({"some": "data"}, {"some": "files"}, None),
+    ],
+)
+def test_request_mutually_exclusive_parameters(data, files, json):
+    with pytest.raises(ValueError) as excinfo:
         Request(
             Method.GET,
             host="https://example.com",
             path="/",
-            data={"some": "data"},
-            json={"some": "data"},
+            data=data,
+            files=files,
+            json=json,
         )
+    expected = "`data`, `files` and `json` parameters are mutually exclusive"
+    assert str(excinfo.value) == expected
 
 
 def test_request_string_representation() -> None:

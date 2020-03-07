@@ -62,7 +62,10 @@ class GitHub(Generic[T]):
         Returns:
             Public profile information for GitHub User.
         """
+        # url = url_factory(self.host, "/users/{username}", username=username)
+        # url = Url(self.host, "/users/{username}", username=username)
         request = Request(Method.GET, self.host, f"/users/{username}")
+        # reveal_type(request.method)
         return fetch(self.driver, request, model=UserDetail)
 
     @overload

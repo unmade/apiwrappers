@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import enum
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from http.cookies import SimpleCookie
-from typing import Any, MutableMapping, cast
+from typing import Any, MutableMapping, Union, cast
 
 from apiwrappers.structures import CaseInsensitiveDict
 from apiwrappers.typedefs import JSON, Auth, Data, Files, QueryParams
@@ -78,7 +78,7 @@ class Request:
             ``data`` arg).
 
     Raises:
-        ValueError: If both ``data`` and ``json`` args provided.
+        ValueError: If both ``data`` or ``files`` or ``json`` args provided.
 
     Usage::
 
@@ -90,17 +90,43 @@ class Request:
     method: Method
     host: str
     path: str
-    query_params: QueryParams = field(default_factory=dict)
-    headers: MutableMapping[str, str] = field(default_factory=dict)
-    cookies: MutableMapping[str, str] = field(default_factory=dict)
+    query_params: QueryParams
+    headers: MutableMapping[str, str]
+    cookies: MutableMapping[str, str]
     auth: Auth = None
     data: Data = None
     files: Files = None
     json: JSON = None
 
-    def __post_init__(self):
-        if self.data is not None and self.json is not None:
-            raise ValueError("`data` and `json` parameters are mutually exclusive")
+    def __init__(
+        self,
+        method: Union[str, Method],
+        host: str,
+        path: str,
+        query_params: QueryParams = None,
+        headers: MutableMapping[str, str] = None,
+        cookies: MutableMapping[str, str] = None,
+        auth: Auth = None,
+        data: Data = None,
+        files: Files = None,
+        json: JSON = None,
+    ):
+        # pylint: disable=redefined-outer-name,too-many-arguments
+        if sum((data is not None, files is not None, json is not None)) > 1:
+            raise ValueError(
+                "`data`, `files` and `json` parameters are mutually exclusive"
+            )
+
+        self.method = Method(method)
+        self.host = host
+        self.path = path
+        self.query_params = query_params or {}
+        self.headers = headers or {}
+        self.cookies = cookies or {}
+        self.auth = auth
+        self.data = data
+        self.files = files
+        self.json = json
 
     def __str__(self) -> str:
         return f"<{self.__class__.__name__} [{self.method.value}]>"
