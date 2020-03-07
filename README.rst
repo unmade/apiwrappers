@@ -43,9 +43,10 @@ Features
 ========
 
 - **DRY** - support both regular and async code with one implementation
-- **Customizable** - middleware mechanism to customize request/response
+- **Flexible** - middleware mechanism to customize request/response
 - **Typed** - library is fully typed and it's relatively easy
-  to get fully typed wrapper
+  to get fully typed wrappers
+- **Modern** - decode JSON with no effort using dataclasses and type annotations
 - **Unified interface** - work with different python HTTP client libraries
   in the same way. Currently supported:
 
@@ -62,14 +63,38 @@ Installation
 *Note: extras are optional and mainly needed for the final
 user of your future API wrapper*
 
-Getting Started
-===============
+QuickStart
+==========
 
-With *apiwrappers* you can bootstrap clients for different API
-pretty fast and easily.
+Making request is rather straightforward:
+
+.. code-block:: python
+
+    from dataclasses import dataclass
+    from typing import List
+
+    from apiwrappers import Request, fetch, make_driver
+
+    @dataclass
+    class Repo:
+        name: str
+
+    url = "https://api.github.com/users/unmade/repos"
+    request = Request("GET", url)
+
+    driver = make_driver("requests")
+    fetch(driver, request)  # Response(..., status_code=200, ...)
+    fetch(driver, request, model=List[Repo])  # [Repo(name='am-date-picker'), ...]
+
+    driver = make_driver("aiohttp")
+    await fetch(driver, request)  # Response(..., status_code=200, ...)
+    await fetch(driver, request, model=List[Repo])  # [Repo(name='am-date-picker'), ...]
 
 Writing a Simple API Client
 ---------------------------
+
+With *apiwrappers* you can bootstrap clients for different API
+pretty fast and easily.
 
 Here is how a typical API client would look like:
 
@@ -91,21 +116,17 @@ Here is how a typical API client would look like:
         name: str
 
 
-    class Github(Generic[T]):
+    class GitHub(Generic[T]):
         def __init__(self, host: str, driver: T):
             self.url = Url(host)
             self.driver: T = driver
 
         @overload
-        def get_repos(
-            self: Github[Driver], username: str
-        ) -> List[Repo]:
+        def get_repos(self: Github[Driver], username: str) -> List[Repo]:
             ...
 
         @overload
-        def get_repos(
-            self: Github[AsyncDriver], username: str
-        ) -> Awaitable[List[Repo]]:
+        def get_repos(self: Github[AsyncDriver], username: str) -> Awaitable[List[Repo]]:
             ...
 
         def get_repos(self, username: str):
@@ -121,6 +142,16 @@ Here we defined ``Repo`` dataclass that describes what we want
 to get from response and pass it to the ``fetch`` function.
 ``fetch`` will then make a request and will cast response to that type.
 
+Note how we create URL:
+
+.. code-block:: python
+
+    url = self.url("/users/{username}/repos", username=username)
+
+Sometimes, it's useful to have an URL template, for example, for logging
+or for aggregating metrics, so instead of formatting immediately, we
+provide a template and replacement fields.
+
 Using the API Client
 --------------------
 
@@ -130,7 +161,7 @@ Here how we can use it:
 
     >>> from apiwrappers import make_driver
     >>> driver = make_driver("requests")
-    >>> github = Github("https://api.github.com", driver=driver)
+    >>> github = GitHub("https://api.github.com", driver=driver)
     >>> github.get_repos("unmade")
     [Repo(id=47463599, name='am-date-picker'),
      Repo(id=231653904, name='apiwrappers'),
@@ -148,7 +179,7 @@ to try this code interactively*
 
     >>> from apiwrappers import make_driver
     >>> driver = make_driver("aiohttp")
-    >>> github = Github("https://api.github.com", driver=driver)
+    >>> github = GitHub("https://api.github.com", driver=driver)
     >>> await github.get_repos("unmade")
     [Repo(id=47463599, name='am-date-picker'),
      Repo(id=231653904, name='apiwrappers'),
@@ -162,6 +193,8 @@ Documentation
 Documentation for *apiwrappers* can be found at
 `Read The Docs <https://apiwrappers.readthedocs.io/>`_.
 
+Check out `Extended Client Example <example/README.md>`_.
+
 Contributing
 ============
 
@@ -170,6 +203,6 @@ little bit helps, and credit will always be given.
 
 See `contributing guide <CONTRIBUTING.rst>`_ to learn more.
 
-Currently the code and the issues are hosted on Github.
+Currently the code and the issues are hosted on GitHub.
 
 The project is licensed under MIT.

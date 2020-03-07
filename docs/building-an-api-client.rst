@@ -10,15 +10,17 @@ Making a Request
 Each wrapper needs a HTTP client to make requests to the API.
 
 You can easily use one of the :doc:`drivers <drivers>` to make requests, but
-``driver.fetch`` call returns a ``Response`` object, which is not
-always suitable for building good API clients.
+:py:meth:`Driver.fetch() <apiwrappers.Driver.fetch>` call returns a
+:py:class:`Response <apiwrappers.Response>` object, which is not always
+suitable for building good API clients.
 
 For API client it can be better to return typed data,
 such as dataclasses, than let the final user deal with json.
 
-*apiwrappers* provides a ``fetch`` function,
+*apiwrappers* provides a :py:func:`fetch() <apiwrappers.fetch>` function,
 which takes driver as a first argument, and all other
-arguments are the same as with ``driver.fetch``.
+arguments are the same as with
+:py:meth:`Driver.fetch() <apiwrappers.Driver.fetch>`.
 Giving that, it behaves exactly like if you are working with driver:
 
 .. code-block:: python
@@ -35,8 +37,8 @@ You can also provide two additional arguments:
 - ``source`` - optional key name in the json, which value will be passed
   to the ``model``. You may use dotted notation to traverse keys - ``key1.key2``
 
-With these arguments, ``fetch`` function acts like a factory,
-returning new instance of the type provided to the ``model`` argument:
+With these arguments, :py:func:`fetch() <apiwrappers.fetch>` function acts like
+a factory, returning new instance of the type provided to the ``model`` argument:
 
 .. code-block:: python
 
@@ -99,6 +101,16 @@ or a coroutine - ``Awaitable[List[Repo]]``
 *You never want to await the fetch call here,
 just return it immediately and let the final user await it if needed*
 
+Another thing to notice is how we create URL:
+
+.. code-block:: python
+
+    url = self.url("/users/{username}/repos", username=username)
+
+Sometimes, it's useful to have an URL template, for example, for logging
+or for aggregating metrics, so instead of formatting immediately, we
+provide a template and replacement fields.
+
 The wrapper above is good enough to satisfy most cases,
 however it lacks one of the important features nowadays - type annotations.
 
@@ -115,12 +127,13 @@ We can simply specify return type as:
     Union[List[Repo], Awaitable[List[Repo]]
 
 and that will be enough to have a good auto-completion,
-but what we want here to do is a little bit trickier.
+but what we want precise type annotations.
 
-We want to tell mypy,
-that when driver corresponds to ``Driver`` protocol
+We want to tell mypy, that when driver corresponds to
+:py:class:`Driver <apiwrappers.Driver>` protocol
 ``.get_repos`` has return type ``List[Repo]``
-and for ``AsyncDriver`` protocol - ``Awaitable[List[Repo]]``.
+and for :py:class:`AsyncDriver <apiwrappers.AsyncDriver>` protocol -
+``Awaitable[List[Repo]]``.
 
 It can be done like that:
 
@@ -165,7 +178,8 @@ It can be done like that:
             return fetch(self.driver, request, model=List[Repo])
 
 Here, we defined a ``T`` type variable, constrained to
-``Driver`` and ``AsyncDriver`` protocols.
+:py:class:`Driver <apiwrappers.Driver>`
+and :py:class:`AsyncDriver <apiwrappers.AsyncDriver>` protocols.
 Our wrapper is now a generic class of that variable.
 We also used :py:func:`overload <typing.overload>` with self-type to define return type based on
 the driver provided to our wrapper.

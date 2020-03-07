@@ -14,9 +14,10 @@ Features
 ========
 
 - **DRY** - support both regular and async code with one implementation
-- **Customizable** - middleware mechanism to customize request/response
+- **Flexible** - middleware mechanism to customize request/response
 - **Typed** - library is fully typed and it's relatively easy
-  to get fully typed wrapper
+  to get fully typed wrappers
+- **Modern** - decode JSON with no effort using dataclasses and type annotations
 - **Unified interface** - work with different python HTTP client libraries
   in the same way. Currently supported:
 
@@ -86,8 +87,9 @@ This is small, but fully typed, API client for one of the
 by username:
 
 Here we defined ``Repo`` dataclass that describes what we want
-to get from response and pass it to the ``fetch`` function.
-``fetch`` will then make a request and will cast response to that type.
+to get from response and pass it to the :py:func:`fetch() <apiwrappers.fetch>`
+function. :py:func:`fetch() <apiwrappers.fetch>` will then make a request and
+cast response to that type.
 
 And here how we can use it:
 
