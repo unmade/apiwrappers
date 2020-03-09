@@ -348,8 +348,8 @@ async def test_middleware(aresponses: ResponsesMock):
     driver = aiohttp_driver(RequestMiddleware, ResponseMiddleware)
     wrapper = APIWrapper("https://example.com", driver=driver)
     response = await wrapper.middleware()
-    assert response.headers["x-request-id"] == "request_middleware"
-    assert response.headers["x-response-id"] == "response_middleware"
+    assert response.headers["Request-Middleware"] == "request_middleware"
+    assert response.headers["Response-Middleware"] == "response_middleware"
 
 
 async def test_basic_auth(aresponses: ResponsesMock):

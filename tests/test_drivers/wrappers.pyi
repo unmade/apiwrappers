@@ -6,13 +6,109 @@ from typing import (
     TypeVar,
     Union,
     overload,
-)
+    Optional)
 
 from apiwrappers import AsyncDriver, Driver, Response, Url
 from apiwrappers.structures import NoValue
 from apiwrappers.typedefs import JSON, Data, QueryParams, Timeout, Files
 
 DT = TypeVar("DT", Driver, AsyncDriver)
+
+
+class HttpBin(Generic[DT]):
+    url: Url
+    driver: DT
+
+    def __init__(self, host: str, driver: DT):
+        ...
+
+    @overload
+    def get(self: APIWrapper[Driver], query_params: QueryParams = None) -> Response:
+        ...
+
+    @overload
+    def get(self: APIWrapper[AsyncDriver], query_params: QueryParams = None) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def post(self: APIWrapper[Driver], data: Optional[Data] = None, files: Optional[Files] = None, json: Optional[JSON] = None) -> Response:
+        ...
+
+    @overload
+    def post(self: APIWrapper[AsyncDriver], data: Optional[Data] = None, files: Optional[Files] = None, json: Optional[JSON] = None) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def headers(self: APIWrapper[Driver], headers: MutableMapping[str, str]) -> Response:
+        ...
+
+    @overload
+    def headers(self: APIWrapper[AsyncDriver], headers: MutableMapping[str, str]) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def response_headers(self: APIWrapper[Driver], headers: MutableMapping[str, str]) -> Response:
+        ...
+
+    @overload
+    def response_headers(self: APIWrapper[AsyncDriver], headers: MutableMapping[str, str]) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def cookies(self: APIWrapper[Driver], cookies: MutableMapping[str, str]) -> Response:
+        ...
+
+    @overload
+    def cookies(self: APIWrapper[AsyncDriver], cookies: MutableMapping[str, str]) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def set_cookie(self: APIWrapper[Driver], name: str, value: str) -> Response:
+        ...
+
+    @overload
+    def set_cookie(self: APIWrapper[AsyncDriver], name: str, value: str) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def delay(self: APIWrapper[Driver], delay: int, timeout: Timeout) -> Response:
+        ...
+
+    @overload
+    def delay(self: APIWrapper[AsyncDriver], delay: int, timeout: Timeout) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def html(self: APIWrapper[Driver]) -> Response:
+        ...
+
+    @overload
+    def html(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def basic_auth(self: APIWrapper[Driver], login: str, password: str) -> Response:
+        ...
+
+    @overload
+    def basic_auth(self: APIWrapper[Driver], login: str, password: str) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def token_auth(self: APIWrapper[Driver], token: str) -> Response:
+        ...
+
+    @overload
+    def token_auth(self: APIWrapper[AsyncDriver], token: str) -> Awaitable[Response]:
+        ...
+
+    @overload
+    def complex_auth_flow(self: APIWrapper[Driver]) -> Response:
+        ...
+
+    @overload
+    def complex_auth_flow(self: APIWrapper[AsyncDriver]) -> Awaitable[Response]:
+        ...
 
 
 class APIWrapper(Generic[DT]):
