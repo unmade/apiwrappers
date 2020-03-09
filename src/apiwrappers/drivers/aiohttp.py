@@ -70,6 +70,8 @@ class AioHttpDriver:
                 )
             except asyncio.TimeoutError as exc:
                 raise exceptions.Timeout from exc
+            except aiohttp.ClientSSLError as exc:
+                raise ssl.SSLError(str(exc)) from exc
             except aiohttp.ClientConnectionError as exc:
                 raise exceptions.ConnectionFailed from exc
             except aiohttp.ClientError as exc:

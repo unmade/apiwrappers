@@ -1,4 +1,4 @@
-# pylint: disable=import-outside-toplevel,redefined-outer-name,too-many-lines
+# pylint: disable=import-outside-toplevel,too-many-lines
 
 from __future__ import annotations
 
@@ -13,22 +13,18 @@ from unittest import mock
 import pytest
 
 from apiwrappers import exceptions
-from apiwrappers.entities import QueryParams
 from apiwrappers.protocols import Middleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
 
+from .httpbin_client import HttpBin
 from .middleware import RequestMiddleware, ResponseMiddleware
-from .wrappers import APIWrapper
 
 if TYPE_CHECKING:
-    from responses import RequestsMock
-    from requests import PreparedRequest
     from apiwrappers.drivers.requests import RequestsDriver
 
 pytestmark = [pytest.mark.requests]
 
 BASE_DIR = Path(__file__).absolute().parent
-CA_BUNDLE = str(BASE_DIR.joinpath("certs/ca-bundle.crt"))
 INVALID_CA_BUNDLE = str(BASE_DIR.joinpath("certs/invalid-ca-bundle.crt"))
 INVALID_CA_BUNDLE_PATH = str(BASE_DIR.joinpath("certs/no-ca-bundle.crt"))
 
@@ -39,38 +35,10 @@ CLIENT_CERT_PAIR = (
 )
 
 
-@pytest.fixture
-def responses():
-    import responses
-
-    with responses.RequestsMock() as mocked_responses:
-        yield mocked_responses
-
-
 def requests_driver(*middleware: Type[Middleware], **kwargs) -> RequestsDriver:
     from apiwrappers.drivers.requests import RequestsDriver
 
     return RequestsDriver(*middleware, **kwargs)
-
-
-def echo(request: PreparedRequest):
-    headers = dict(request.headers)
-    if "Cookie" in request.headers:
-        headers["Set-Cookie"] = request.headers["Cookie"]
-
-    try:
-        body = json.loads(request.body)  # type: ignore
-    except (TypeError, ValueError):
-        body = request.body
-
-    if isinstance(body, bytes):
-        body = body.decode()
-
-    return (
-        200,
-        headers,
-        json.dumps({"path_url": request.path_url, "body": body}),
-    )
 
 
 def test_representation() -> None:
@@ -90,11 +58,11 @@ def test_representation_with_middleware() -> None:
 
 
 def test_representation_with_verify_and_cert() -> None:
-    driver = requests_driver(verify=CA_BUNDLE, cert=CLIENT_CERT_PAIR)
+    driver = requests_driver(verify=INVALID_CA_BUNDLE, cert=CLIENT_CERT_PAIR)
     assert repr(driver) == (
         "RequestsDriver("
         "Authentication, "
-        f"timeout=300, verify='{CA_BUNDLE}', cert={CLIENT_CERT_PAIR}"
+        f"timeout=300, verify='{INVALID_CA_BUNDLE}', cert={CLIENT_CERT_PAIR}"
         ")"
     )
 
@@ -104,58 +72,61 @@ def test_string_representation() -> None:
     assert str(driver) == "<Driver 'requests'>"
 
 
-def test_get_content(responses: RequestsMock):
-    data = "Hello, World!"
-    responses.add("GET", "https://example.com/", body=data)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.get_hello_world()
+def test_get_content(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.get()
+    assert b"/get" in response.content
     assert response.status_code == 200
-    assert response.content == data.encode()
 
 
-def test_get_text(responses: RequestsMock):
-    data = "Hello, World!"
-    responses.add("GET", "https://example.com/", body=data)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.get_hello_world()
+def test_get_text(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.get()
+    assert "/get" in response.text()
     assert response.status_code == 200
-    assert response.text() == data
 
 
-def test_get_json(responses: RequestsMock):
-    data = {"message": "Hello, World!"}
-    responses.add("GET", "https://example.com/", json=data)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.get_hello_world()
+def test_get_json(httpbin) -> None:
+    client = HttpBin(str(httpbin.url), driver=requests_driver())
+    response = client.get()
+    assert response.json()["url"].endswith("/get")  # type: ignore
     assert response.status_code == 200
-    assert response.json() == data
 
 
-def test_headers(responses: RequestsMock):
-    responses.add_callback("POST", "https://example.com", callback=echo)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    headers = {"X-Request-ID": str(uuid.uuid4())}
-    response = wrapper.echo_headers(headers=headers)
+def test_query_params(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.get(params={"type": "user", "id": ["1", "2"], "name": None})
+    assert response.json()["url"].endswith("/get?type=user&id=1&id=2")  # type: ignore
+
+
+def test_headers(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.headers({"Custom-Header": "value"})
     assert isinstance(response.headers, CaseInsensitiveDict)
-    assert response.headers["X-Request-ID"] == headers["X-Request-ID"]
+    assert response.json()["headers"]["Custom-Header"] == "value"  # type: ignore
 
 
-def test_query_params(responses: RequestsMock):
-    query_params: QueryParams = {"type": "user", "id": ["1", "2"], "name": None}
-    path = "/?type=user&id=1&id=2"
-    responses.add_callback("GET", f"https://example.com{path}", callback=echo)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.echo_query_params(query_params)
-    assert response.json()["path_url"] == path  # type: ignore
+def test_response_headers(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.response_headers({"Custom-Header": "value"})
+    assert isinstance(response.headers, CaseInsensitiveDict)
+    assert response.headers["Custom-Header"] == "value"
 
 
-def test_cookies(responses: RequestsMock):
-    responses.add_callback("GET", "https://example.com", callback=echo)
-    cookies = {"csrftoken": "YWxhZGRpbjpvcGVuc2VzYW1l"}
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.echo_cookies(cookies)
+def test_cookies_sent(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.cookies({"mycookie": "mycookievalue"})
     assert isinstance(response.cookies, SimpleCookie)
-    assert response.cookies["csrftoken"].value == cookies["csrftoken"]
+    assert "mycookie" not in response.cookies
+    assert response.json()["cookies"]["mycookie"] == "mycookievalue"  # type: ignore
+
+
+def test_set_cookie(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.set_cookie("mycookie", "mycookievalue")
+    assert isinstance(response.cookies, SimpleCookie)
+    assert "mycookie" not in response.cookies
+    assert response.json()["cookies"]["mycookie"] == "mycookievalue"  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -163,62 +134,56 @@ def test_cookies(responses: RequestsMock):
     [
         {
             "name": "apiwrappers",
-            "tags": ["api", "wrapper"],
+            "tags": ["api", "client"],
             "pre-release": True,
             "version": 1,
         },
         [
             ("name", "apiwrappers"),
             ("tags", "api"),
-            ("tags", "wrapper"),
+            ("tags", "client"),
             ("pre-release", True),
             ("version", 1),
         ],
     ],
 )
-def test_send_data(responses: RequestsMock, payload):
-    responses.add_callback("POST", "https://example.com", callback=echo)
-    form_data = "name=apiwrappers&tags=api&tags=wrapper&pre-release=True&version=1"
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.send_data(payload)
-    assert response.json()["body"] == form_data  # type: ignore
+def test_send_data(httpbin, payload) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.post(data=payload)
+    assert response.json()["form"] == {  # type: ignore
+        "name": "apiwrappers",
+        "tags": ["api", "client"],
+        "pre-release": "True",
+        "version": "1",
+    }
 
 
 @pytest.mark.parametrize(
-    ["files", "filename", "has_content_type"],
+    "files",
     [
-        ({"file": open(CA_BUNDLE, "rb")}, "ca-bundle.crt", False),
-        ({"file": ("ca-bundle", open(CA_BUNDLE, "rb"))}, "ca-bundle", False),
-        (
-            {"file": ("ca-bundle", open(CA_BUNDLE, "rb"), "text/plain")},
-            "ca-bundle",
-            True,
-        ),
+        {"file": open(CLIENT_CERT, "rb")},
+        {"file": ("ca-bundle", open(CLIENT_CERT, "rb"))},
+        {"file": ("ca-bundle", open(CLIENT_CERT, "rb"), "text/plain")},
     ],
 )
-def test_send_files(responses: RequestsMock, files, filename, has_content_type):
-    responses.add_callback("POST", "https://example.com", callback=echo)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.send_files(files)
-    disposition = f'Content-Disposition: form-data; name="file"; filename="{filename}"'
-    content = response.json()["body"]  # type: ignore
-    assert disposition in content
-    assert ("Content-Type: text/plain" in content) is has_content_type
+def test_send_files(httpbin, files) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.post(files=files)
+    line = "-----BEGIN PRIVATE KEY-----"
+    assert response.json()["files"]["file"].startswith(line)  # type: ignore
 
 
-def test_send_json(responses: RequestsMock):
-    responses.add_callback("POST", "https://example.com", callback=echo)
-
+def test_send_json(httpbin) -> None:
     payload = {
         "name": "apiwrappers",
-        "tags": ["api", "wrapper"],
+        "tags": ["api", "client"],
         "pre-release": True,
         "version": 1,
     }
 
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.send_json(payload)
-    assert response.json()["body"] == payload  # type: ignore
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.post(json=payload)
+    assert response.json()["json"] == payload  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -233,136 +198,145 @@ def test_send_json(responses: RequestsMock):
 )
 def test_timeout(driver_timeout, fetch_timeout, expected):
     driver = requests_driver(timeout=driver_timeout)
-    wrapper = APIWrapper("https://example.com", driver=driver)
+    client = HttpBin("https://httpbin.org", driver=driver)
     with mock.patch("requests.request") as request_mock:
-        wrapper.timeout(fetch_timeout)
+        client.delay(2, timeout=fetch_timeout)
     _, call_kwargs = request_mock.call_args
     assert call_kwargs["timeout"] == expected
 
 
-@pytest.mark.parametrize(
-    "verify", [True, False, CA_BUNDLE],
-)
-def test_verify(verify) -> None:
-    driver = requests_driver(verify=verify)
-    wrapper = APIWrapper("https://example.com", driver=driver)
-    with mock.patch("requests.request") as request_mock:
-        wrapper.verify()
-    _, call_kwargs = request_mock.call_args
-    assert call_kwargs["verify"] == verify
+def test_timeout_exceeds(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    with pytest.raises(exceptions.Timeout):
+        client.delay(1, timeout=0.1)
 
 
-def test_verify_with_invalid_ca_bundle() -> None:
+def test_verify_with_invalid_ca_bundle(httpbin_secure) -> None:
     driver = requests_driver(verify=INVALID_CA_BUNDLE)
-    wrapper = APIWrapper("https://example.com", driver=driver)
+    client = HttpBin(httpbin_secure.url, driver=driver)
     with pytest.raises(ssl.SSLError) as excinfo:
-        wrapper.verify()
+        client.get()
     assert "[X509] no certificate or crl found" in str(excinfo.value)
 
 
-def test_verify_with_invalid_path_to_ca_bundle() -> None:
+def test_verify_with_invalid_path_to_ca_bundle(httpbin_secure) -> None:
     driver = requests_driver(verify=INVALID_CA_BUNDLE_PATH)
-    wrapper = APIWrapper("https://example.com", driver=driver)
+    client = HttpBin(httpbin_secure.url, driver=driver)
     with pytest.raises(OSError) as excinfo:
-        wrapper.verify()
+        client.get()
     assert str(excinfo.value) == (
         f"Could not find a suitable TLS CA certificate bundle, "
         f"invalid path: {INVALID_CA_BUNDLE_PATH}"
     )
 
 
+def test_verify_failure(httpbin_secure) -> None:
+    client = HttpBin(httpbin_secure.url, driver=requests_driver())
+    with pytest.raises(ssl.SSLError) as excinfo:
+        client.get()
+    assert "CERTIFICATE_VERIFY_FAILED" in str(excinfo)
+
+
+def test_verify_disabled(httpbin_secure) -> None:
+    from urllib3.exceptions import InsecureRequestWarning
+
+    driver = requests_driver(verify=False)
+    client = HttpBin(httpbin_secure.url, driver=driver)
+    with pytest.warns(InsecureRequestWarning):
+        response = client.get()
+    assert response.status_code == 200
+
+
+def test_verify_with_custom_ca_bundle(httpbin_secure, httpbin_ca_bundle) -> None:
+    driver = requests_driver(verify=httpbin_ca_bundle)
+    client = HttpBin(httpbin_secure.url, driver=driver)
+    response = client.get()
+    assert response.status_code == 200
+
+
 @pytest.mark.parametrize(
     "cert", [CLIENT_CERT, CLIENT_CERT_PAIR],
 )
-def test_cert(cert) -> None:
-    driver = requests_driver(cert=cert)
-    wrapper = APIWrapper("https://example.com", driver=driver)
+def test_cert(httpbin_secure, httpbin_ca_bundle, cert) -> None:
+    driver = requests_driver(verify=httpbin_ca_bundle, cert=cert)
+    client = HttpBin(httpbin_secure.url, driver=driver)
+    response = client.get()
+    assert response.status_code == 200
+
     with mock.patch("requests.request") as request_mock:
-        wrapper.cert()
+        client.get()
     _, call_kwargs = request_mock.call_args
     assert call_kwargs["cert"] == cert
 
 
-def test_invalid_cert() -> None:
-    driver = requests_driver(cert=INVALID_CA_BUNDLE)
-    wrapper = APIWrapper("https://example.com", driver=driver)
+def test_invalid_cert(httpbin_secure, httpbin_ca_bundle) -> None:
+    driver = requests_driver(verify=httpbin_ca_bundle, cert=INVALID_CA_BUNDLE)
+    client = HttpBin(httpbin_secure.url, driver=driver)
     with pytest.raises(ssl.SSLError) as excinfo:
-        wrapper.cert()
+        client.get()
     assert "[SSL] PEM lib" in str(excinfo.value)
 
 
-def test_invalid_path_to_cert() -> None:
+def test_invalid_path_to_cert(httpbin) -> None:
     driver = requests_driver(cert=INVALID_CA_BUNDLE_PATH)
-    wrapper = APIWrapper("https://example.com", driver=driver)
+    client = HttpBin(httpbin.url, driver=driver)
     with pytest.raises(OSError) as excinfo:
-        wrapper.cert()
+        client.get()
     assert str(excinfo.value) == (
         f"Could not find the TLS certificate file, "
         f"invalid path: {INVALID_CA_BUNDLE_PATH}"
     )
 
 
-@pytest.mark.parametrize(
-    ["exc_name", "raised"],
-    [
-        ("RequestException", exceptions.DriverError),
-        ("ConnectionError", exceptions.ConnectionFailed),
-        ("Timeout", exceptions.Timeout),
-        ("ConnectTimeout", exceptions.Timeout),
-    ],
-)
-def test_reraise_requests_exceptions(responses: RequestsMock, exc_name, raised):
-    import requests
-
-    exc_class = getattr(requests, exc_name)
-    responses.add("GET", "https://example.com", body=exc_class())
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    with pytest.raises(raised):
-        wrapper.exception()
+def test_connection_failed() -> None:
+    client = HttpBin("http://doesnotexist.google.com", driver=requests_driver())
+    with pytest.raises(exceptions.ConnectionFailed):
+        client.get()
 
 
-@pytest.mark.parametrize(
-    "response",
-    [
-        {"body": b"Plaint Text"},
-        {"body": b"Plaint Text", "content_type": "application/json"},
-    ],
-)
-def test_invalid_json_response(responses: RequestsMock, response):
-    responses.add("GET", "https://example.com", **response)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    json_response = wrapper.get_hello_world()
+def test_reraise_unhandled_exceptions(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    with pytest.raises(exceptions.DriverError):
+        # requests raises InvalidHeader
+        client.headers({"Tags": ["api", "client"]})  # type: ignore
+
+
+def test_invalid_json_response(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.html()
     with pytest.raises(json.JSONDecodeError):
-        json_response.json()
+        response.json()
 
 
-def test_middleware(responses: RequestsMock):
-    responses.add_callback(responses.GET, "https://example.com", callback=echo)
+def test_middleware(httpbin) -> None:
     driver = requests_driver(RequestMiddleware, ResponseMiddleware)
-    wrapper = APIWrapper("https://example.com", driver=driver)
-    response = wrapper.middleware()
-    assert response.headers["x-request-id"] == "request_middleware"
-    assert response.headers["x-response-id"] == "response_middleware"
+    client = HttpBin(httpbin.url, driver=driver)
+    response = client.get()
+    assert response.json()["headers"]["Request"] == "middleware"  # type: ignore
+    assert "Response" not in response.json()["headers"]  # type: ignore
+    assert response.headers["Response"] == "middleware"
 
 
-def test_basic_auth(responses: RequestsMock):
-    responses.add_callback(responses.GET, "https://example.com", callback=echo)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.basic_auth()
-    assert "Basic " in response.headers["Authorization"]
+def test_basic_auth(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.basic_auth("admin", "root")
+    assert response.json() == {
+        "authenticated": True,
+        "user": "admin",
+    }
 
 
-def test_token_auth(responses: RequestsMock):
-    responses.add_callback("GET", "https://example.com", callback=echo)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.token_auth()
-    assert "Bearer " in response.headers["Authorization"]
+def test_token_auth(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.bearer_auth("vF9dft4qmT")
+    assert response.json() == {
+        "authenticated": True,
+        "token": "vF9dft4qmT",
+    }
 
 
-def test_complex_auth_flow(responses: RequestsMock):
-    data = {"token": "authtoken"}
-    responses.add("POST", "https://example.com/auth", json=data)
-    responses.add_callback(responses.GET, "https://example.com", callback=echo)
-    wrapper = APIWrapper("https://example.com", driver=requests_driver())
-    response = wrapper.complex_auth_flow()
-    assert response.headers["Authorization"] == "Bearer authtoken"
+def test_complex_auth_flow(httpbin) -> None:
+    client = HttpBin(httpbin.url, driver=requests_driver())
+    response = client.complex_auth_flow()
+    assert response.json()["authenticated"] is True  # type: ignore
+    assert uuid.UUID(response.json()["token"])  # type: ignore

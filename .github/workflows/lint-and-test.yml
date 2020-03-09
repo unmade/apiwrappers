@@ -52,10 +52,16 @@ jobs:
       run: |
         tox -e lint
 
-    - name: Test
+    - name: Basic Test Suit
       run: |
         tox -e py
+
+    - name: Test AioHttp Driver
+      run: |
         tox -e py-aiohttp
+
+    - name: Test Requests Driver
+      run: |
         tox -e py-requests
 
     - name: Generate coverage report
