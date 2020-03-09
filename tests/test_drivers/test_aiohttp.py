@@ -13,12 +13,11 @@ from unittest import mock
 import pytest
 
 from apiwrappers import exceptions
-from apiwrappers.entities import QueryParams
 from apiwrappers.protocols import AsyncMiddleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
 
+from .httpbin_client import HttpBin
 from .middleware import RequestMiddleware, ResponseMiddleware
-from .wrappers import HttpBin
 
 if TYPE_CHECKING:
     from apiwrappers.drivers.aiohttp import AioHttpDriver
@@ -27,7 +26,6 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.aiohttp, pytest.mark.asyncio]
 
 BASE_DIR = Path(__file__).absolute().parent
-CA_BUNDLE = str(BASE_DIR.joinpath("certs/ca-bundle.crt"))
 INVALID_CA_BUNDLE = str(BASE_DIR.joinpath("certs/invalid-ca-bundle.crt"))
 INVALID_CA_BUNDLE_PATH = str(BASE_DIR.joinpath("certs/no-ca-bundle.crt"))
 
@@ -91,22 +89,21 @@ async def test_get_text(httpbin) -> None:
 async def test_get_json(httpbin) -> None:
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
     response = await client.get()
-    assert response.json()["url"].endswith("/get")
+    assert response.json()["url"].endswith("/get")  # type: ignore
     assert response.status_code == 200
 
 
 async def test_query_params(httpbin) -> None:
-    query_params: QueryParams = {"type": "user", "id": ["1", "2"], "name": None}
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
-    response = await client.get(query_params=query_params)
-    assert response.json()["url"].endswith("/get?type=user&id=1&id=2")
+    response = await client.get(params={"type": "user", "id": ["1", "2"], "name": None})
+    assert response.json()["url"].endswith("/get?type=user&id=1&id=2")  # type: ignore
 
 
 async def test_headers(httpbin) -> None:
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
     response = await client.headers({"Custom-Header": "value"})
     assert isinstance(response.headers, CaseInsensitiveDict)
-    assert response.json()["headers"]["Custom-Header"] == "value"
+    assert response.json()["headers"]["Custom-Header"] == "value"  # type: ignore
 
 
 async def test_response_headers(httpbin) -> None:
@@ -121,7 +118,7 @@ async def test_cookies_sent(httpbin) -> None:
     response = await client.cookies({"mycookie": "mycookievalue"})
     assert isinstance(response.cookies, SimpleCookie)
     assert "mycookie" not in response.cookies
-    assert response.json()["cookies"]["mycookie"] == "mycookievalue"
+    assert response.json()["cookies"]["mycookie"] == "mycookievalue"  # type: ignore
 
 
 async def test_set_cookie(httpbin) -> None:
@@ -156,7 +153,7 @@ async def test_set_cookie(httpbin) -> None:
 async def test_send_data(httpbin, payload) -> None:
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
     response = await client.post(data=payload)
-    assert response.json()["form"] == {
+    assert response.json()["form"] == {  # type: ignore
         "name": "apiwrappers",
         "tags": ["api", "client"],
         "pre-release": "True",
@@ -167,15 +164,16 @@ async def test_send_data(httpbin, payload) -> None:
 @pytest.mark.parametrize(
     "files",
     [
-        {"file": open(CA_BUNDLE, "rb")},
-        {"file": ("ca-bundle", open(CA_BUNDLE, "rb"))},
-        {"file": ("ca-bundle", open(CA_BUNDLE, "rb"), "text/plain")},
+        {"file": open(CLIENT_CERT, "rb")},
+        {"file": ("ca-bundle", open(CLIENT_CERT, "rb"))},
+        {"file": ("ca-bundle", open(CLIENT_CERT, "rb"), "text/plain")},
     ],
 )
 async def test_send_files(httpbin, files) -> None:
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
     response = await client.post(files=files)
-    assert response.json()["files"]["file"].startswith("# Issuer")
+    line = "-----BEGIN PRIVATE KEY-----"
+    assert response.json()["files"]["file"].startswith(line)  # type: ignore
 
 
 async def test_send_json(httpbin) -> None:
@@ -188,7 +186,7 @@ async def test_send_json(httpbin) -> None:
 
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
     response = await client.post(json=payload)
-    assert response.json()["json"] == payload
+    assert response.json()["json"] == payload  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -317,9 +315,9 @@ async def test_middleware(httpbin) -> None:
     driver = aiohttp_driver(RequestMiddleware, ResponseMiddleware)
     client = HttpBin(httpbin.url, driver=driver)
     response = await client.get()
-    assert response.json()["headers"]["Request-Middleware"] == "request_middleware"
-    assert "Response-Middleware" not in response.json()["headers"]
-    assert response.headers["Response-Middleware"] == "response_middleware"
+    assert response.json()["headers"]["Request"] == "middleware"  # type: ignore
+    assert "Response" not in response.json()["headers"]  # type: ignore
+    assert response.headers["Response"] == "middleware"
 
 
 async def test_basic_auth(httpbin) -> None:
@@ -333,7 +331,7 @@ async def test_basic_auth(httpbin) -> None:
 
 async def test_token_auth(httpbin) -> None:
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
-    response = await client.token_auth("vF9dft4qmT")
+    response = await client.bearer_auth("vF9dft4qmT")
     assert response.json() == {
         "authenticated": True,
         "token": "vF9dft4qmT",
@@ -343,5 +341,5 @@ async def test_token_auth(httpbin) -> None:
 async def test_complex_auth_flow(httpbin) -> None:
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
     response = await client.complex_auth_flow()
-    assert response.json()["authenticated"] is True
-    assert uuid.UUID(response.json()["token"])
+    assert response.json()["authenticated"] is True  # type: ignore
+    assert uuid.UUID(response.json()["token"])  # type: ignore
