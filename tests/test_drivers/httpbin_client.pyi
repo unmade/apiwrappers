@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Awaitable, Generic, MutableMapping, Optional, TypeVar, overload
 
 from apiwrappers import AsyncDriver, Driver, Response, Url
-from apiwrappers.typedefs import JSON, Data, Files, QueryParams, Timeout
+from apiwrappers.typedefs import Data, Files, Json, QueryParams, Timeout
 
 T = TypeVar("T", Driver, AsyncDriver)
 
@@ -22,14 +22,14 @@ class HttpBin(Generic[T]):
         self: HttpBin[Driver],
         data: Optional[Data] = None,
         files: Optional[Files] = None,
-        json: Optional[JSON] = None,
+        json: Optional[Json] = None,
     ) -> Response: ...
     @overload
     def post(
         self: HttpBin[AsyncDriver],
         data: Optional[Data] = None,
         files: Optional[Files] = None,
-        json: Optional[JSON] = None,
+        json: Optional[Json] = None,
     ) -> Awaitable[Response]: ...
     @overload
     def headers(

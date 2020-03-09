@@ -9,7 +9,7 @@ from http.cookies import SimpleCookie
 from typing import Any, MutableMapping, Union, cast
 
 from apiwrappers.structures import CaseInsensitiveDict, Url
-from apiwrappers.typedefs import JSON, Auth, Data, Files, QueryParams
+from apiwrappers.typedefs import Auth, Data, Files, Json, QueryParams
 
 
 class Method(enum.Enum):
@@ -94,7 +94,7 @@ class Request:
     auth: Auth = None
     data: Data = None
     files: Files = None
-    json: JSON = None
+    json: Json = None
 
     def __init__(
         self,
@@ -106,7 +106,7 @@ class Request:
         auth: Auth = None,
         data: Data = None,
         files: Files = None,
-        json: JSON = None,
+        json: Json = None,
     ):
         # pylint: disable=redefined-outer-name,too-many-arguments
         if sum((data is not None, files is not None, json is not None)) > 1:
@@ -164,11 +164,11 @@ class Response:
         """
         return self.content.decode(self.encoding)
 
-    def json(self) -> JSON:
+    def json(self) -> Json:
         """
         Returns the json-encoded content of the response.
 
         Raises:
              ValueError: if the response body does not contain valid json.
         """
-        return cast(JSON, json.loads(self.content.decode(self.encoding)))
+        return cast(Json, json.loads(self.content.decode(self.encoding)))

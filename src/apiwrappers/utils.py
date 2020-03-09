@@ -13,7 +13,7 @@ from typing import (
     get_type_hints,
 )
 
-from apiwrappers.typedefs import JSON
+from apiwrappers.typedefs import Json
 
 T = TypeVar("T")
 
@@ -24,7 +24,7 @@ def build_url(host: str, path: str) -> str:
     return urllib.parse.urlunsplit((scheme, netloc, path, query, fragment))
 
 
-def getitem(data: JSON, key: Optional[str]) -> JSON:
+def getitem(data: Json, key: Optional[str]) -> Json:
     if not key:
         return data
     parts = key.split(".")
@@ -38,7 +38,7 @@ def getitem(data: JSON, key: Optional[str]) -> JSON:
     return data
 
 
-def fromjson(objtype: Union[Callable[..., T], Type[T]], data: JSON) -> T:
+def fromjson(objtype: Union[Callable[..., T], Type[T]], data: Json) -> T:
     if objtype is Any:
         obj = data
     elif dataclasses.is_dataclass(objtype):
@@ -60,7 +60,7 @@ def _is_generic_type(obj: Any) -> bool:
     return hasattr(obj, "__origin__") and hasattr(obj, "__args__")
 
 
-def _handle_dataclass(objtype: Any, data: JSON) -> Any:
+def _handle_dataclass(objtype: Any, data: Json) -> Any:
     if not isinstance(data, Mapping):
         raise ValueError(f"Expected `Mapping`, got: {type(data)}")
     kwargs = {}
@@ -79,7 +79,7 @@ def _handle_dataclass(objtype: Any, data: JSON) -> Any:
     return objtype(**kwargs)
 
 
-def _handle_namedtuple(objtype: Any, data: JSON) -> Any:
+def _handle_namedtuple(objtype: Any, data: Json) -> Any:
     hints = get_type_hints(objtype)
     field_defaults = objtype._field_defaults  # pylint: disable=protected-access
     if isinstance(data, list):
@@ -97,7 +97,7 @@ def _handle_namedtuple(objtype: Any, data: JSON) -> Any:
     raise ValueError(f"Expected `List` or `Mapping`, got: {type(data)}")
 
 
-def _handle_generic_type(objtype: Any, data: JSON) -> Any:
+def _handle_generic_type(objtype: Any, data: Json) -> Any:
     origin = objtype.__origin__
     args = objtype.__args__
     if origin in (list, set, tuple):
