@@ -54,7 +54,7 @@ async def mock_request(*args, **kwargs):
 async def test_representation() -> None:
     driver = aiohttp_driver()
     setattr(driver, "_middleware", [])
-    assert repr(driver) == "AioHttpDriver(timeout=300, verify=True)"
+    assert repr(driver) == "AioHttpDriver(timeout=300, verify=True, cert=None)"
 
 
 async def test_representation_with_middleware() -> None:
@@ -62,7 +62,17 @@ async def test_representation_with_middleware() -> None:
     assert repr(driver) == (
         "AioHttpDriver("
         "Authentication, RequestMiddleware, ResponseMiddleware, "
-        "timeout=300, verify=True"
+        "timeout=300, verify=True, cert=None"
+        ")"
+    )
+
+
+async def test_representation_with_verify_and_cert() -> None:
+    driver = aiohttp_driver(verify=INVALID_CA_BUNDLE, cert=CLIENT_CERT_PAIR)
+    assert repr(driver) == (
+        "AioHttpDriver("
+        "Authentication, "
+        f"timeout=300, verify='{INVALID_CA_BUNDLE}', cert={CLIENT_CERT_PAIR}"
         ")"
     )
 
@@ -213,7 +223,7 @@ async def test_timeout(driver_timeout, fetch_timeout, expected) -> None:
 async def test_timeout_exceeds(httpbin) -> None:
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
     with pytest.raises(exceptions.Timeout):
-        await client.delay(1, timeout=0.1)
+        await client.delay(2, timeout=0.1)
 
 
 async def test_verify_with_invalid_ca_bundle(httpbin_secure) -> None:

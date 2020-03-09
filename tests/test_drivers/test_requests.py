@@ -44,7 +44,7 @@ def requests_driver(*middleware: Type[Middleware], **kwargs) -> RequestsDriver:
 def test_representation() -> None:
     driver = requests_driver()
     setattr(driver, "_middleware", [])
-    assert repr(driver) == "RequestsDriver(timeout=300, verify=True)"
+    assert repr(driver) == "RequestsDriver(timeout=300, verify=True, cert=None)"
 
 
 def test_representation_with_middleware() -> None:
@@ -52,7 +52,17 @@ def test_representation_with_middleware() -> None:
     assert repr(driver) == (
         "RequestsDriver("
         "Authentication, RequestMiddleware, ResponseMiddleware, "
-        "timeout=300, verify=True"
+        "timeout=300, verify=True, cert=None"
+        ")"
+    )
+
+
+def test_representation_with_verify_and_cert() -> None:
+    driver = requests_driver(verify=INVALID_CA_BUNDLE, cert=CLIENT_CERT_PAIR)
+    assert repr(driver) == (
+        "RequestsDriver("
+        "Authentication, "
+        f"timeout=300, verify='{INVALID_CA_BUNDLE}', cert={CLIENT_CERT_PAIR}"
         ")"
     )
 
