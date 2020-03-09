@@ -43,7 +43,8 @@ class AioHttpDriver:
             f"{self.__class__.__name__}("
             f"{', '.join(middleware)}"
             f"timeout={self.timeout}, "
-            f"verify={self.verify}"
+            f"verify={repr(self.verify)}, "
+            f"cert={repr(self.cert)}"
             ")"
         )
 
