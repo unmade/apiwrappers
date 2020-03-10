@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apiwrappers"
-version = "0.2.0"
+version = "0.3.0"
 description = "apiwrappers is a library for building API clients that work both with regular and async code"
 keywords = ["api", "wrapper", "http", "client"]
 readme = "README.rst"
@@ -22,6 +22,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.7"
 aiohttp = {version = "^3.6.2", optional = true}
+certifi = {version = ">= 2017.4.17", optional = true}
 requests = {version = "^2.22.0", optional = true}
 typing-extensions = {version = "^3.7.4", python = "~3.7"}
 
@@ -29,7 +30,7 @@ typing-extensions = {version = "^3.7.4", python = "~3.7"}
 tox = "^3.14.3"
 
 [tool.poetry.extras]
-aiohttp = ["aiohttp"]
+aiohttp = ["aiohttp", "certifi"]
 requests = ["requests"]
 
 [build-system]

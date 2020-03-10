@@ -63,12 +63,12 @@ class HttpBin:
         request = Request(Method.GET, self.url("/bearer"), auth=TokenAuth(token))
         return self.driver.fetch(request)
 
-    def complex_auth_flow(self):
-        """Gets a UUID4 and uses it for bearer authentication."""
+    def complex_auth_flow(self, token: str):
+        """Echoes passed token and uses it for bearer authentication."""
 
         def auth_flow():
-            response = yield Request(Method.GET, self.url("/uuid"))
-            return TokenAuth(response.json()["uuid"])()
+            response = yield Request(Method.POST, self.url("/anything"), data=token)
+            return TokenAuth(response.json()["data"])()
 
         request = Request(Method.GET, self.url("/bearer"), auth=auth_flow)
         return self.driver.fetch(request)
