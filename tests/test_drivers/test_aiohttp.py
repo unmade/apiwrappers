@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import ssl
-import uuid
 from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import TYPE_CHECKING, Type
@@ -350,6 +349,8 @@ async def test_token_auth(httpbin) -> None:
 
 async def test_complex_auth_flow(httpbin) -> None:
     client = HttpBin(httpbin.url, driver=aiohttp_driver())
-    response = await client.complex_auth_flow()
-    assert response.json()["authenticated"] is True  # type: ignore
-    assert uuid.UUID(response.json()["token"])  # type: ignore
+    response = await client.complex_auth_flow("vF9dft4qmT")
+    assert response.json() == {  # type: ignore
+        "authenticated": True,
+        "token": "vF9dft4qmT",
+    }
