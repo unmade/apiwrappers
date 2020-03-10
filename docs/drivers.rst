@@ -93,8 +93,8 @@ SSL Verification
 ================
 
 You can enable/disable SSL verification or provide custom SSL certs
-when creating a driver. Note that default trusted CAs depends on a
-driver you're using.
+upon driver instantiation. Default CA bundle provided by
+`certifi <https://github.com/certifi/python-certifi>`_ library.
 
 By default SSL verification is enabled.
 

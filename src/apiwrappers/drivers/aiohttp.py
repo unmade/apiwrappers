@@ -7,6 +7,7 @@ from ssl import SSLContext
 from typing import Iterable, List, Optional, Tuple, Type, Union, cast
 
 import aiohttp
+import certifi
 from aiohttp import FormData
 
 from apiwrappers import exceptions
@@ -127,7 +128,7 @@ class AioHttpDriver:
 
     def _prepare_ssl(self) -> SSLContext:
         if self.verify is True:
-            context = ssl.create_default_context()
+            context = ssl.create_default_context(cafile=certifi.where())
         elif self.verify is False:
             context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         else:
