@@ -29,10 +29,9 @@ Installation
 
 .. code-block:: bash
 
-    pip install apiwrappers[requests,aiohttp]
+    pip install 'apiwrappers[aiohttp,requests]'
 
-*Note: extras are optional and mainly needed for the final
-user of your future API wrapper*
+*Note: extras are mainly needed for the final user of your API client*
 
 Getting Started
 ===============
