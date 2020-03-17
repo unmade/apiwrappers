@@ -38,13 +38,14 @@ CLIENT_CERT_PAIR = (
 def requests_driver(*middleware: Type[Middleware], **kwargs) -> RequestsDriver:
     from apiwrappers.drivers.requests import RequestsDriver
 
+    kwargs.setdefault("timeout", 30)
     return RequestsDriver(*middleware, **kwargs)
 
 
 def test_representation() -> None:
     driver = requests_driver()
     setattr(driver, "_middleware", [])
-    assert repr(driver) == "RequestsDriver(timeout=300, verify=True, cert=None)"
+    assert repr(driver) == "RequestsDriver(timeout=30, verify=True, cert=None)"
 
 
 def test_representation_with_middleware() -> None:
@@ -52,7 +53,7 @@ def test_representation_with_middleware() -> None:
     assert repr(driver) == (
         "RequestsDriver("
         "Authentication, RequestMiddleware, ResponseMiddleware, "
-        "timeout=300, verify=True, cert=None"
+        "timeout=30, verify=True, cert=None"
         ")"
     )
 
@@ -62,7 +63,7 @@ def test_representation_with_verify_and_cert() -> None:
     assert repr(driver) == (
         "RequestsDriver("
         "Authentication, "
-        f"timeout=300, verify='{INVALID_CA_BUNDLE}', cert={CLIENT_CERT_PAIR}"
+        f"timeout=30, verify='{INVALID_CA_BUNDLE}', cert={CLIENT_CERT_PAIR}"
         ")"
     )
 

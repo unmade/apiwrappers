@@ -39,6 +39,7 @@ CLIENT_CERT_PAIR = (
 def aiohttp_driver(*middleware: Type[AsyncMiddleware], **kwargs) -> AioHttpDriver:
     from apiwrappers.drivers.aiohttp import AioHttpDriver
 
+    kwargs.setdefault("timeout", 30)
     return AioHttpDriver(*middleware, **kwargs)
 
 
@@ -54,7 +55,7 @@ async def mock_request(*args, **kwargs):
 async def test_representation() -> None:
     driver = aiohttp_driver()
     setattr(driver, "_middleware", [])
-    assert repr(driver) == "AioHttpDriver(timeout=300, verify=True, cert=None)"
+    assert repr(driver) == "AioHttpDriver(timeout=30, verify=True, cert=None)"
 
 
 async def test_representation_with_middleware() -> None:
@@ -62,7 +63,7 @@ async def test_representation_with_middleware() -> None:
     assert repr(driver) == (
         "AioHttpDriver("
         "Authentication, RequestMiddleware, ResponseMiddleware, "
-        "timeout=300, verify=True, cert=None"
+        "timeout=30, verify=True, cert=None"
         ")"
     )
 
@@ -72,7 +73,7 @@ async def test_representation_with_verify_and_cert() -> None:
     assert repr(driver) == (
         "AioHttpDriver("
         "Authentication, "
-        f"timeout=300, verify='{INVALID_CA_BUNDLE}', cert={CLIENT_CERT_PAIR}"
+        f"timeout=30, verify='{INVALID_CA_BUNDLE}', cert={CLIENT_CERT_PAIR}"
         ")"
     )
 

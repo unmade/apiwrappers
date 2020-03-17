@@ -68,13 +68,16 @@ Timeouts
 You can set timeouts in seconds when creating a driver or
 when making a request. The later will take precedences over driver settings.
 
-By default timeout is ``5 minutes``.
+By default timeout is ``30 seconds``.
 
 Here is how you can change it:
 
 .. code-block:: python
 
+    from datetime import timedelta
+
     from apiwrappers import make_driver
+
 
     driver = make_driver("requests", timeout=5)
 
@@ -83,6 +86,9 @@ Here is how you can change it:
 
     # making a request with timeout set to 2.5 seconds
     driver.fetch(request, timeout=2.5)
+
+    # or more explicitly
+    driver.fetch(request, timeout=timedelta(minutes=1))
 
     # timeout is disabled, wait infinitely
     driver.fetch(request, timeout=None)
