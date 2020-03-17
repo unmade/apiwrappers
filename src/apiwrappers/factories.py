@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import importlib
+from datetime import timedelta
 from typing import Tuple, Type, Union, overload
 
 from apiwrappers.compat import Literal
 from apiwrappers.protocols import AsyncDriver, AsyncMiddleware, Driver, Middleware
 from apiwrappers.typedefs import ClientCert, Timeout, Verify
 
-DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
+DEFAULT_TIMEOUT = timedelta(seconds=30)
+
 DRIVER_MAP = {
     "requests": ("apiwrappers.drivers.requests", "RequestsDriver"),
     "aiohttp": ("apiwrappers.drivers.aiohttp", "AioHttpDriver"),

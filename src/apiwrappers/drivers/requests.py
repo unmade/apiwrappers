@@ -1,4 +1,5 @@
 import ssl
+from datetime import timedelta
 from http.cookies import SimpleCookie
 from typing import Type, Union
 
@@ -13,8 +14,6 @@ from apiwrappers.protocols import Middleware
 from apiwrappers.structures import CaseInsensitiveDict, NoValue
 from apiwrappers.typedefs import ClientCert, Timeout, Verify
 
-DEFAULT_TIMEOUT = 5 * 60  # 5 minutes
-
 
 class RequestsDriver:
     middleware = MiddlewareChain(Authentication)
@@ -22,7 +21,7 @@ class RequestsDriver:
     def __init__(
         self,
         *middleware: Type[Middleware],
-        timeout: Timeout = DEFAULT_TIMEOUT,
+        timeout: Timeout,
         verify: Verify = True,
         cert: ClientCert = None,
     ):
@@ -84,7 +83,11 @@ class RequestsDriver:
             content=response.content,
         )
 
-    def _prepare_timeout(self, timeout: Union[Timeout, NoValue]) -> Timeout:
+    def _prepare_timeout(
+        self, timeout: Union[Timeout, NoValue]
+    ) -> Union[int, float, None]:
         if isinstance(timeout, NoValue):
-            return self.timeout
+            return self._prepare_timeout(self.timeout)
+        if isinstance(timeout, timedelta):
+            return timeout.total_seconds()
         return timeout
