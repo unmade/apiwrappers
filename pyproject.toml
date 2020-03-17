@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apiwrappers"
-version = "0.3.0"
+version = "0.4.0"
 description = "apiwrappers is a library for building API clients that work both with regular and async code"
 keywords = ["api", "wrapper", "http", "client"]
 readme = "README.rst"
