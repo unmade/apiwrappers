@@ -1,4 +1,5 @@
 import ssl
+from datetime import timedelta
 from http.cookies import SimpleCookie
 from typing import Type, Union
 
@@ -84,7 +85,11 @@ class RequestsDriver:
             content=response.content,
         )
 
-    def _prepare_timeout(self, timeout: Union[Timeout, NoValue]) -> Timeout:
+    def _prepare_timeout(
+        self, timeout: Union[Timeout, NoValue]
+    ) -> Union[int, float, None]:
         if isinstance(timeout, NoValue):
-            return self.timeout
+            return self._prepare_timeout(self.timeout)
+        if isinstance(timeout, timedelta):
+            return timeout.total_seconds()
         return timeout

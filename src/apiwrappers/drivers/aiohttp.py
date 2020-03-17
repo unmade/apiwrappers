@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import ssl
+from datetime import timedelta
 from http.cookies import SimpleCookie
 from ssl import SSLContext
 from typing import Iterable, List, Optional, Tuple, Type, Union, cast
@@ -100,9 +101,13 @@ class AioHttpDriver:
                 query_params.append((key, value))
         return tuple(query_params)
 
-    def _prepare_timeout(self, timeout: Union[Timeout, NoValue]) -> Timeout:
+    def _prepare_timeout(
+        self, timeout: Union[Timeout, NoValue]
+    ) -> Union[int, float, None]:
         if isinstance(timeout, NoValue):
-            return self.timeout
+            return self._prepare_timeout(self.timeout)
+        if isinstance(timeout, timedelta):
+            return timeout.total_seconds()
         return timeout
 
     @staticmethod

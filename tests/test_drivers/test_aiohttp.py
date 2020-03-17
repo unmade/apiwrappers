@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import ssl
+from datetime import timedelta
 from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import TYPE_CHECKING, Type
@@ -207,6 +208,8 @@ async def test_send_json(httpbin) -> None:
         (300, None, None),
         (300, 1, 1),
         (300, NoValue(), 300),
+        (timedelta(minutes=1), NoValue(), 60),
+        (None, timedelta(minutes=1), 60),
     ],
 )
 async def test_timeout(driver_timeout, fetch_timeout, expected) -> None:

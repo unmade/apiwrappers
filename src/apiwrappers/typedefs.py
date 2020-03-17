@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -29,5 +30,5 @@ FilesValue = Union[BinaryIO, Tuple[str, BinaryIO], Tuple[str, BinaryIO, str]]
 Files = Optional[Dict[str, FilesValue]]
 Json = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
 QueryParams = Mapping[str, Optional[Iterable[str]]]
-Timeout = Union[int, float, None]
+Timeout = Union[int, float, None, timedelta]
 Verify = Union[bool, str]
