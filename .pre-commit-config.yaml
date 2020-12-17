@@ -16,13 +16,9 @@ repos:
         additional_dependencies:
         -   toml
 -   repo: https://github.com/PyCQA/flake8
-    rev: 3.7.9
+    rev: 3.8.4
     hooks:
     -   id: flake8
-        additional_dependencies: [
-            '-e', 'git+https://github.com/pycqa/pyflakes@master#egg=pyflakes',
-            '-e', 'git+https://github.com/pycqa/pycodestyle@master#egg=pycodestyle',
-        ]
 -   repo: local
     hooks:
       - id: pylint

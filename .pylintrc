@@ -66,6 +66,7 @@ disable=missing-docstring,
                     # when subclassing from typing.MutableMapping, etc...
         bad-continuation,  # handled by black
         ungrouped-imports,  # handled by isort, don't work with TYPE_CHECKING
+        isinstance-second-argument-not-valid-type,  # false positive in the latest versions of pylint
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
