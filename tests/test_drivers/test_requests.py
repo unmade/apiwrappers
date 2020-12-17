@@ -219,7 +219,8 @@ def test_verify_with_invalid_ca_bundle(httpbin_secure) -> None:
     client = HttpBin(httpbin_secure.url, driver=driver)
     with pytest.raises(ssl.SSLError) as excinfo:
         client.get()
-    assert "[X509] no certificate or crl found" in str(excinfo.value)
+    assert "X509" in str(excinfo.value)
+    assert "no certificate or crl found" in str(excinfo.value)
 
 
 def test_verify_with_invalid_path_to_ca_bundle(httpbin_secure) -> None:

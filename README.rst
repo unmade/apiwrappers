@@ -4,9 +4,9 @@ Overview
 
 .. start-badges
 
-.. image:: https://github.com/unmade/apiwrappers/workflows/lint%20and%20test/badge.svg?branch=master
+.. image:: https://github.com/unmade/apiwrappers/workflows/test/badge.svg?branch=master
     :alt: Build Status
-    :target: https://github.com/unmade/apiwrappers/blob/master/.github/workflows/lint-and-test.yml
+    :target: https://github.com/unmade/apiwrappers/blob/master/.github/workflows/test.yml
 
 .. image:: https://readthedocs.org/projects/apiwrappers/badge/?version=latest
     :alt: Documentation Status
