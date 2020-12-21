@@ -131,6 +131,9 @@ def fetch(
         ... )
         >>> fetch(driver, request, model=List[Repo])
         [Repo(name='am-date-picker'), ...]
+
+    Do note, it's highly discourage to use ``Optional`` if a ``fetch`` call, because
+    mypy can't infer proper type for that case and the return type will be ``object``
     """
     if asyncio.iscoroutinefunction(driver.fetch):
 

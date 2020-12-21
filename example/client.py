@@ -51,7 +51,7 @@ class GitHub(Generic[T]):
         ...
 
     @overload
-    def user(self: GitHub[AsyncDriver], username: str) -> UserDetail:
+    def user(self: GitHub[AsyncDriver], username: str) -> Awaitable[UserDetail]:
         ...
 
     def user(self, username: str):
