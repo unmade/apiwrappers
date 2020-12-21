@@ -1,7 +1,18 @@
 import enum
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import pytest
 
@@ -93,7 +104,7 @@ def test_fromjson_generic_types_invalid_data(tp, given, expected):
 
 def test_fromjson_union_are_not_supported() -> None:
     with pytest.raises(TypeError) as excinfo:
-        utils.fromjson(Union[int, float], {})
+        utils.fromjson(Union[int, float], {})  # type: ignore
 
     assert str(excinfo.value) == "Union is not supported"
 
@@ -213,3 +224,12 @@ def test_fromjson_namedtuple_invalid_data() -> None:
         utils.fromjson(Position, data)
 
     assert str(excinfo.value) == "Expected `List` or `Mapping`, got: <class 'int'>"
+
+
+def test_fromjson_callable() -> None:
+    def get_x(data) -> int:
+        return cast(int, data["x"])
+
+    data = {"x": 1}
+    value = utils.fromjson(get_x, data)
+    assert value == 1

@@ -11,6 +11,7 @@ from typing import (
     Union,
     cast,
     get_type_hints,
+    overload,
 )
 
 from apiwrappers.typedefs import Json
@@ -38,7 +39,17 @@ def getitem(data: Json, key: Optional[str]) -> Json:
     return data
 
 
+@overload
 def fromjson(objtype: Union[Callable[..., T], Type[T]], data: Json) -> T:
+    ...
+
+
+@overload
+def fromjson(objtype: T, data: Json) -> T:
+    ...
+
+
+def fromjson(objtype: Union[Callable[..., T], Type[T], T], data: Json) -> T:
     if objtype is Any:
         obj = data
     elif dataclasses.is_dataclass(objtype):
