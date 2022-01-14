@@ -42,7 +42,7 @@ To make a request with a Api key Based Authentication:
     from apiwrappers import Request
     from apiwrappers.auth import ApiKeyAuth
 
-    Request(..., auth=ApiKeyAuth("your_key", header="apikey"))
+    Request(..., auth=ApiKeyAuth("your_key", header="X-Api-Key"))
 
 Custom Authentication
 =====================
