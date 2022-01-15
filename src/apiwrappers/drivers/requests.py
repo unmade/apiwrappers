@@ -48,7 +48,9 @@ class RequestsDriver:
 
     @middleware.wrap
     def fetch(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         try:
             response = requests.request(

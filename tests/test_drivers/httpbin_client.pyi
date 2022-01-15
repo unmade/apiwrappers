@@ -12,7 +12,9 @@ class HttpBin(Generic[T]):
     driver: T
     def __init__(self, host: str, driver: T): ...
     @overload
-    def get(self: HttpBin[Driver], params: Optional[QueryParams] = None) -> Response: ...
+    def get(
+        self: HttpBin[Driver], params: Optional[QueryParams] = None
+    ) -> Response: ...
     @overload
     def get(
         self: HttpBin[AsyncDriver], params: Optional[QueryParams] = None

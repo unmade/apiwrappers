@@ -5,11 +5,10 @@ from __future__ import annotations
 import logging
 from typing import Awaitable, Generic, List, Optional, TypeVar, overload
 
-from example.models import Me, User, UserDetail
-
 from apiwrappers import AsyncDriver, Driver, Method, Request, fetch
 from apiwrappers.structures import Url
 from apiwrappers.typedefs import Auth
+from example.models import Me, User, UserDetail
 
 logger = logging.getLogger(__name__)
 

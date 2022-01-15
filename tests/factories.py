@@ -20,7 +20,9 @@ class DriverMock:
 
     @middleware.wrap
     def fetch(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         # pylint: disable=unused-argument
         return dataclasses.replace(self.response, request=request)
@@ -37,7 +39,9 @@ class AsyncDriverMock:
 
     @middleware.wrap
     async def fetch(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         # pylint: disable=unused-argument
         return dataclasses.replace(self.response, request=request)

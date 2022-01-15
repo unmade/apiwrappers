@@ -159,6 +159,7 @@ def test_send_data(httpbin, payload) -> None:
     }
 
 
+# pylint: disable=consider-using-with
 @pytest.mark.parametrize(
     "files",
     [
@@ -259,7 +260,8 @@ def test_verify_with_custom_ca_bundle(httpbin_secure, httpbin_ca_bundle) -> None
 
 
 @pytest.mark.parametrize(
-    "cert", [CLIENT_CERT, CLIENT_CERT_PAIR],
+    "cert",
+    [CLIENT_CERT, CLIENT_CERT_PAIR],
 )
 def test_cert(httpbin_secure, httpbin_ca_bundle, cert) -> None:
     driver = requests_driver(verify=httpbin_ca_bundle, cert=cert)

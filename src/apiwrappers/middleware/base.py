@@ -58,8 +58,12 @@ class BaseMiddleware(Generic[T]):
     def process_exception(self, request: Request, exception: Exception) -> NoReturn:
         raise exception
 
-    def call_next(
-        self, handler: Handler, request: Request, *args, **kwargs,
+    def call_next(  # pylint: disable=inconsistent-return-statements
+        self,
+        handler: Handler,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> Response:
         request = self.process_request(request)
         try:
@@ -70,7 +74,11 @@ class BaseMiddleware(Generic[T]):
             return self.process_response(response)
 
     async def call_next_async(
-        self, handler: AsyncHandler, request: Request, *args, **kwargs,
+        self,
+        handler: AsyncHandler,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> Response:
         request = self.process_request(request)
         try:
