@@ -134,11 +134,11 @@ class AioHttpDriver:
             return data
         return None
 
-    def _prepare_ssl(self) -> SSLContext:
+    def _prepare_ssl(self) -> Union[bool, SSLContext]:
+        if self.verify is False:
+            return False
         if self.verify is True:
             context = ssl.create_default_context(cafile=certifi.where())
-        elif self.verify is False:
-            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         else:
             try:
                 context = ssl.create_default_context(cafile=self.verify)
