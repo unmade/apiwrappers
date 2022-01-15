@@ -8,7 +8,11 @@ from apiwrappers.protocols import AsyncHandler, Handler
 
 class Authentication(BaseMiddleware):
     def call_next(
-        self, handler: Handler, request: Request, *args, **kwargs,
+        self,
+        handler: Handler,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> Response:
         gen = self.set_auth_headers(request)
         try:
@@ -23,7 +27,11 @@ class Authentication(BaseMiddleware):
         return super().call_next(handler, request, *args, **kwargs)
 
     async def call_next_async(
-        self, handler: AsyncHandler, request: Request, *args, **kwargs,
+        self,
+        handler: AsyncHandler,
+        request: Request,
+        *args,
+        **kwargs,
     ) -> Response:
         gen = self.set_auth_headers(request)
         try:

@@ -5,7 +5,7 @@ import ssl
 from datetime import timedelta
 from http.cookies import SimpleCookie
 from ssl import SSLContext
-from typing import Iterable, List, Optional, Tuple, Type, Union, cast
+from typing import Iterable, List, Optional, Tuple, Type, Union
 
 import aiohttp
 import certifi
@@ -53,7 +53,9 @@ class AioHttpDriver:
 
     @middleware.wrap
     async def fetch(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         async with aiohttp.ClientSession() as session:
             try:
@@ -124,19 +126,22 @@ class AioHttpDriver:
                 else:
                     content = value
                 data.add_field(
-                    name, content, filename=filename, content_type=content_type,
+                    name,
+                    content,
+                    filename=filename,
+                    content_type=content_type,
                 )
             return data
         return None
 
-    def _prepare_ssl(self) -> SSLContext:
+    def _prepare_ssl(self) -> Union[bool, SSLContext]:
+        if self.verify is False:
+            return False
         if self.verify is True:
             context = ssl.create_default_context(cafile=certifi.where())
-        elif self.verify is False:
-            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         else:
             try:
-                context = ssl.create_default_context(cafile=cast(str, self.verify))
+                context = ssl.create_default_context(cafile=self.verify)
             except FileNotFoundError as exc:
                 msg = (
                     f"Could not find a suitable TLS CA certificate bundle, "

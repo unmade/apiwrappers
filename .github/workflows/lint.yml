@@ -21,13 +21,13 @@ jobs:
       id: set-python
       uses: actions/setup-python@v2
       with:
-        python-version: "3.8"  # be careful to update cache key accordingly
+        python-version: "3.10"  # be careful to update cache key accordingly
 
     - name: Cache pip dependencies
       uses: actions/cache@v1.1.2
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-3.8-pip-${{ hashFiles('**/poetry.lock') }}
+        key: ${{ runner.os }}-3.10-pip-${{ hashFiles('**/poetry.lock') }}
 
     - name: Cache pre-commit dependencies
       uses: actions/cache@v1.1.2

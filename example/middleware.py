@@ -1,9 +1,8 @@
 import logging
 
-from example.exceptions import GitHubException
-
 from apiwrappers import Request, Response
 from apiwrappers.middleware import BaseMiddleware
+from example.exceptions import GitHubException
 
 logger = logging.getLogger(__name__)
 

@@ -9,10 +9,10 @@ from apiwrappers.utils import fromjson
 
 
 class ErrorCode(str, Enum):
-    missing = "missing"
-    missing_field = "missing_field"
-    invalid = "invalid"
-    already_exists = "already_exists"
+    MISSING = "missing"
+    MISSING_FIELD = "missing_field"
+    INVALID = "invalid"
+    ALREADY_EXISTS = "already_exists"
 
 
 @dataclass

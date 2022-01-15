@@ -118,11 +118,11 @@ def test_fromjson_abstract_types() -> None:
 
 def test_fromjson_enum() -> None:
     class Genre(enum.Enum):
-        indie = 1
-        shoegaze = 2
+        INDIE = 1
+        SHOEGAZE = 2
 
     genre = utils.fromjson(Genre, 1)
-    assert genre == Genre.indie
+    assert genre == Genre.INDIE
 
 
 def test_fromjson_dataclass() -> None:

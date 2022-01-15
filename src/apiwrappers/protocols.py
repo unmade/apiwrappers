@@ -38,7 +38,9 @@ class Driver(Protocol):
     cert: ClientCert
 
     def fetch(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         """
         Makes actual request and returns response from the server.
@@ -80,7 +82,9 @@ class AsyncDriver(Protocol):
     cert: ClientCert
 
     async def fetch(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         """
         Makes actual request and returns response from the server.
@@ -106,7 +110,9 @@ class Middleware(Protocol):
     handler: Handler
 
     def __call__(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         ...
 
@@ -115,20 +121,26 @@ class AsyncMiddleware(Protocol):
     handler: Handler
 
     def __call__(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...
 
 
 class Handler(Protocol):
     def __call__(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Response:
         ...
 
 
 class AsyncHandler(Protocol):
     def __call__(
-        self, request: Request, timeout: Union[Timeout, NoValue] = NoValue(),
+        self,
+        request: Request,
+        timeout: Union[Timeout, NoValue] = NoValue(),
     ) -> Awaitable[Response]:
         ...
