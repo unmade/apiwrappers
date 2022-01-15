@@ -31,3 +31,18 @@ class TokenAuth:
 
     def __call__(self) -> Dict[str, str]:
         return {"Authorization": str(self)}
+
+
+class ApiKeyAuth:
+    def __init__(self, key: str, header: str = "X-Api-Key"):
+        self.key = key
+        self.header = header
+
+    def __str__(self) -> str:
+        return f"{self.header}:{self.key}"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} '{self.header} ...'>"
+
+    def __call__(self) -> Dict[str, str]:
+        return {self.header: self.key}
